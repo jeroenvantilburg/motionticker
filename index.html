@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Motion Ticker</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="style.css" media="screen,projection" />
+  <link rel="stylesheet" 
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <base target="_blank">
+</head>  
+<body>
+  <div class="header">    
+    <div class="titlebar"><i class="fa fa-film"></i> Motion Ticker</div>    
+    <div class="menubar">    
+      <div class="dropdown"> 
+        <button class="dropbtn"><i class="fa fa-bars"></i></button>    
+        <div class="dropdown-content">  
+          <a id="showAbout"><i class="fa fa-vcard"></i> About</a>
+          <a id="showSettings"><i class="fa fa-cogs"></i> Settings</a>
+          <a id="videoImport" disabled><i class="fa fa-upload"></i> Upload new video</a>
+          <input id="videoInput" type="file" accept="video/*,.mkv" hidden/>
+          <a id="csvExport"><i class="fa fa-download"></i> Export csv-file</a>
+          <a id="csvImport"><i class="fa fa-upload"></i> Import csv-file</a>
+          <input id="csvInput" type="file" accept="text/plain,text/csv,.csv,.tsv" hidden>
+          <a id="deleteData"><i class="fa fa-trash-o"></i> Delete data</a>
+          <a id="showHelp"><i class="fa fa-question-circle-o"></i> Help</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="body">
+    <div class="page">  
+	  	<div class="page-header">               
+        <div class="center">
+          <button id="startAndStopAuto" disabled hidden>Automatic</button>
+          <button id="startAndStopManual" class="main-button button-on" disabled>Start analysis</button>
+          <input id="automaticAnalysis" type="checkbox">Automatic</input>
+        </div>
+        <div class="center">
+           <nobr id="statusMsg"></nobr>
+        </div>
+        <div class="center">
+          <button id="prev" disabled><i class="fa fa-step-backward"></i></button>
+          <button id="play" disabled><i class="fa fa-play"></i></button>
+          <button id="next" disabled><i class="fa fa-step-forward"></i></button>
+          <input id="slider" type="range" min="0" max="100" step=1 value="0" disabled>
+          <nobr id="frameNumber">0 / 0</nobr>
+          <button id="zoomOut" disabled><i class="fa fa-search-minus"></i></button>
+          <button id="zoomIn" disabled><i class="fa fa-search-plus"></i></button>
+        </div>
+      </div>
+      <div class="page-content">
+        <div class="container" style="position:relative">
+          <video id="video" autoplay playsinline muted style="display:block;border:1px solid #ccc"></video>
+          <canvas style="position:absolute;top:0;border:1px solid #ccc" id="canvasOutput"></canvas>
+        </div>    
+      </div>
+		</div>
+    
+    <div class="sidebar">
+      <div class="side-header">
+        Data        
+      </div>
+      <div class="side-content">
+        <table style="border-spacing: 0;">
+          <tr>
+            <td>Frame rate:</td>
+            <td><input id="fpsInput" type="text" style="width:60px"></input> fps</td>
+            <td><button id="showMediaInfo" disabled>Media info</button></td>
+          </tr>
+          <tr>
+            <td>Scale:</td>
+            <td><input id="scaleInput" type="text" style="width:60px"></input> px/m</td>
+            <td><button id="scale" disabled>Set scale</button></td>
+          </tr>
+          <tr>
+            <td>Origin (x,y): (</td>
+            <td><input id="originXInput" type="text" style="width:40px"></input>,
+                <input id="originYInput" type="text" style="width:40px"></input>) px</td>
+            <td><button id="origin" disabled>Set origin</button></td>
+          </tr>
+        </table>
+        <!--canvas id="positionChart" class="chart" width="350" height="250"></canvas-->
+
+        <canvas id="positionChart" class="chart" width="350" height="250"></canvas>
+        <canvas id="velocityChart" class="chart" width="350" height="250"></canvas>
+        <canvas id="accelerationChart" class="chart" width="350" height="250" style="display: none"></canvas>
+      </div>
+    </div>
+  </div>
+  
+  <!-- The Modal boxes -->
+  <div id="aboutModal" class="modal">
+    <div class="modal-content modal-small"> <span class="close">&times;</span>
+      <center>
+        <h3>Motion Ticker</h3>
+          <!--img src="favicon-apple-touch-114.png"/--><br clear="all"/><br/>
+          Version <version></version><br/>
+          &copy; 2021 Jeroen van Tilburg, MIT licentie <br/>
+          Feedback to <feedback></feedback> <br/> 
+          Source code: <a href="https://github.com/jeroenvantilburg/motionticker">Github</a> <br/>
+      </center>
+    </div>
+  </div>
+
+  <div id="helpModal" class="modal">
+    <div class="modal-content"> <span class="close">&times;</span>
+      <h2>Help</h2>
+      <b>General</b><br/>
+      javascript-application for schools
+      Security/privacy:
+      no data leaves your computer. No cookies
+      <br/><br/>
+        
+      <b>Instructions</b><br/>
+      ...
+            The velocity is calculated from two positions. The corresponding time is the average of these points. 
+      The velocity fields have their own time stamps, which may not overlap with the time stamps from the positions. This may cause empty cells in the CSV file.
+      
+      <b>Compatibility</b><br/>
+      Motion Ticker does not work in Internet Explorer. Please consider moving to a modern browser like
+      Chrome, Edge, Firefox of Safari.
+      <br/><br/>
+
+      <b>Embed code</b><br/>
+      Teachers and others can embed Motion Ticker in their own virtual learning environment (VLE).
+      The embed code would be for example:<br/>
+      <pre>   &lt;iframe src=&quot;https://jeroenvantilburg.nl/motionticker/&quot; width=&quot;100%&quot; height=&quot;800&quot;&gt;&lt;/iframe&gt;</pre><br/>
+      The width and height should be adjusted for your own environment.
+      <br/><br>
+
+      <b>Source code</b><br>
+      The source code from this website is freely available on 
+      <a href="https://github.com/jeroenvantilburg/motionticker">Github</a> under the 
+      <a href="https://nl.wikipedia.org/wiki/MIT-licentie">MIT license</a>. The souce code
+      may be freely copied and hosted on every web server. Please make sure to keep the code
+      up-to-date since new updates and bug fixes come out regularly.
+      Suggestions for improvements are welcome.
+      <br/><br/>
+
+      <b>Feedback and questions</b><br/>
+      The keep this website as user-friendly as possible I depend on your feedback. Please send your
+      questions, improvements, bug reports, suggestions, comments and compliments 
+      to <feedback></feedback>. 
+      <br/><br> 
+
+      <b>Other applications</b><br/>
+      There are a number of other, third-party applications that can be used to analyse videos. Select
+      the applications that suits your needs.
+      <ul>
+        <li><a href="https://cma.nl">Coach</a></li>
+        <li><a href="">Vernier</a></li>
+        <li><a href="https://tracker.physlets.org/trackerJS">trackerJS</a></li>
+        <li><a href="">Sony motion shot</a></li>
+      </ul>
+        
+      
+    </div>
+  </div>
+
+  <div id="settingsModal" class="modal">
+    <div class="modal-content"> <span class="close">&times;</span>
+      <h2>Settings</h2>
+      <table>
+        <tr><th colspan="3">Analysis</th></tr>
+        <tr>
+          <td>Draw all points:</td>
+          <td><input id="drawAllPoints" type="checkbox"></input></td>
+          <td>Show all the positions that have been marked.</td>
+        </tr>
+        <tr>
+          <td>Skip frames:</td>
+          <td><input id="framesToSkip" type="number" min="-100" step="1" max="100"></input></td>
+          <td>Number of frames to skip during manual analysis.</td>
+        </tr>
+        <tr>
+          <td>Allow rotations:</td>
+          <td><input id="allowRotations" type="checkbox"></input></td>
+          <td>Only for automatic analysis: allow for rotations and resizing of the object.</td>
+        </tr>
+      </table>
+      <br/>
+      <table>
+        <tr><th colspan="3">Derived data</th></tr>
+        <tr>
+          <td>Display velocity:</td>
+          <td><input type="checkbox" id="showVelocity"></td>
+          <td>Show or hide the velocity data.</td>
+        </tr>
+        <tr>
+          <td>Display acceleration:</td>
+          <td><input type="checkbox" id="showAcceleration"></td>
+          <td>Show or hide the acceleration data.</td>
+        </tr>
+        <tr>
+          <td>Integration time:</td>
+          <td><input id="integrationTimeInput" type="number" min="1" step="1" max="10"></input></td>
+          <td>Number of frames used to calculate velocity/acceleration. 
+            A larger integration time results in smoother velocity and acceleration graphs, 
+            but a decreased sensitivity to changes in the velocity/acceleration.</td>
+        </tr>
+      </table>
+      <br/>
+      <table>
+        <tr><th colspan="3">Export CSV files</th></tr>
+        <tr>
+          <td>Decimal separator:</td>
+          <td>
+            <select id="decimalSeparatorInput" name="decimalSep">
+              <option value=".">.</option>
+              <option value=",">,</option> 
+            </select>
+          </td>
+          <td>Numbers are written as 1<decimalSep></decimalSep>23</td>
+        </tr>
+        <tr>
+          <td>Delimiter:</td>
+          <td>
+            <select id="delimiterInput" name="delimiter">
+              <option value=",">,</option>
+              <option value="tab">tab</option>
+              <option value=";">;</option>
+              <option value=" ">space</option>
+            </select>
+          </td>
+          <td>Fields are separated as <pre>"Field1"<delimiter></delimiter>"Field2"</pre></td>
+        </tr>
+        <tr>
+          <td>Avoid empty cells:</td>
+          <td><input type="checkbox" id="avoidEmptyCells"></td>
+          <td>Adjust the velocity time stamps by at most half a frame. This avoids empty cells, 
+            but slightly reduces the accuracy of the velocity time stamp.</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div id="mediaInfoModal" class="modal">
+    <div class="modal-content"> <span class="close">&times;</span>
+      <h2>Video File Info</h2>
+      The following information is obtained from the 
+      <a href="https://mediainfo.js.org/">mediainfo.js</a> library. 
+      We only need the FrameRate number.
+      <div id="mediaInfoResult"></div>
+    </div>
+  </div>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://unpkg.com/mediainfo.js/dist/mediainfo.min.js" type="text/javascript"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.3.1/fabric.min.js"></script>
+  <script async src="https://docs.opencv.org/3.4.0/opencv.js" id="opencv"></script>  
+  <script src="scripts/motionticker.js"></script>
+  <noscript>Your browser does not support JavaScript!</noscript> 
+
+</body>
+</html>
