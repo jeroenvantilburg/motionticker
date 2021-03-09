@@ -87,10 +87,10 @@ SOFTWARE.
     }
   });
   
-  let allowRotations = false;
-  $('#allowRotations').prop('checked', allowRotations);
-  $('#allowRotations').on('change', function(e) {
-    allowRotations = $('#allowRotations').is(':checked');
+  let adaptive = false;
+  $('#adaptive').prop('checked', adaptive);
+  $('#adaptive').on('change', function(e) {
+    adaptive = $('#adaptive').is(':checked');
   });
   
   let integrationTime = 2;
@@ -1266,7 +1266,7 @@ SOFTWARE.
         cv.calcBackProject(hsvVec, [0], roiHist, dst, [0, 180], 1);
 
         let xPos, yPos, xSize, ySize, angle = 0;
-        if( allowRotations ) {
+        if( adaptive ) {
           // apply camshift to get the new location
           [trackBox, trackWindow] = cv.CamShift(dst, trackWindow, termCrit);
           xPos = trackBox.center.x;

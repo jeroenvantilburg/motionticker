@@ -2,8 +2,21 @@
 <html lang="en">
 <head>
   <title>Motion Ticker</title>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8">  
+  <meta name="description" content="Track moving objects in videos. Educational tool.">
+  <meta name="keywords" content="video, analysis, tracking, motion, schools, education, classroom, videometen">
+  <meta name="author" content="Jeroen van Tilburg">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta property="og:image" content="https://jeroenvantilburg.nl/motionticker/img/screenshot.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://jeroenvantilburg.nl/motionticker/" />
+  <link rel="apple-touch-icon-precomposed" sizes="57x57" href="img/favicon-apple-touch-114.png">
+  <link rel="apple-touch-icon-precomposed" sizes="114x114" href="img/favicon-apple-touch-114.png">
+  <link rel="apple-touch-icon-precomposed" sizes="72x72" href="img/favicon-apple-touch-144.png">
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="img/favicon-apple-touch-144.png">
+  <link rel="icon" type="image/vnd.microsoft.icon" sizes="32x32 48x48" href="img/favicon.ico">
+  <link rel="icon" sizes="128x128" href="img/favicon.icns">
+  <link rel="icon" href="img/favicon.png" type="image/x-icon">
   <link rel="stylesheet" type="text/css" href="style.css" media="screen,projection" />
   <link rel="stylesheet" 
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -53,8 +66,8 @@
       </div>
       <div class="page-content">
         <div class="container" style="position:relative">
-          <video id="video" autoplay playsinline muted style="display:block;border:1px solid #ccc"></video>
-          <canvas style="position:absolute;top:0;border:1px solid #ccc" id="canvasOutput"></canvas>
+          <video id="video" autoplay playsinline muted style="display:block;border:0px solid #ccc"></video>
+          <canvas style="position:absolute;top:0;border:0px solid #ccc" id="canvasOutput"></canvas>
         </div>    
       </div>
 		</div>
@@ -73,13 +86,13 @@
           <tr>
             <td>Scale:</td>
             <td><input id="scaleInput" type="text" style="width:60px"></input> px/m</td>
-            <td><button id="scale" disabled>Set scale</button></td>
+            <td><button id="scale" disabled>Scale wizard</button></td>
           </tr>
           <tr>
             <td>Origin (x,y): (</td>
             <td><input id="originXInput" type="text" style="width:40px"></input>,
                 <input id="originYInput" type="text" style="width:40px"></input>) px</td>
-            <td><button id="origin" disabled>Set origin</button></td>
+            <td><button id="origin" disabled>Origin wizard</button></td>
           </tr>
         </table>
         <!--canvas id="positionChart" class="chart" width="350" height="250"></canvas-->
@@ -96,8 +109,7 @@
     <div class="modal-content modal-small"> <span class="close">&times;</span>
       <center>
         <h3>Motion Ticker</h3>
-          <!--img src="favicon-apple-touch-114.png"/--><br clear="all"/><br/>
-          Version <version></version><br/>
+          <img src="img/favicon-apple-touch-114.png"/><br clear="all"/><br/>
           &copy; 2021 Jeroen van Tilburg, MIT licentie <br/>
           Feedback to <feedback></feedback> <br/> 
           Source code: <a href="https://github.com/jeroenvantilburg/motionticker">Github</a> <br/>
@@ -108,20 +120,88 @@
   <div id="helpModal" class="modal">
     <div class="modal-content"> <span class="close">&times;</span>
       <h2>Help</h2>
+
       <b>General</b><br/>
-      javascript-application for schools
-      Security/privacy:
-      no data leaves your computer. No cookies
+      Motion Ticker is a HTML5 javascript-application for analysing the motion of objects in videos.
+      It is primarily intended for use in the classroom to educate people about motion
+      and mechanics. The name is a tribute to the old-fashioned ticker taper timers that were used 
+      in the era before computers and smartphones were widespread.        
       <br/><br/>
-        
-      <b>Instructions</b><br/>
-      ...
-            The velocity is calculated from two positions. The corresponding time is the average of these points. 
-      The velocity fields have their own time stamps, which may not overlap with the time stamps from the positions. This may cause empty cells in the CSV file.
       
+      <b>Getting started</b><br/>
+      You can analyse the motion of an object in 5 simple steps:
+      <ol>
+        <li><b>Upload a new video.</b></li>
+        <li><b>Calibrate the scale of the video.</b> 
+          You can either set the right value in the input field or use the scale wizard.</li>
+        <li><b>Start the analysis.</b> You can choose between manual or automatic analysis:
+          <ul>
+            <li>Manual analysis: Click on the object in each frame.</li>
+            <li>Automatic analysis: First define the track window. Then the 
+            program will try to follow its motion by analysing each frame.</li>
+          </ul>
+        </li>
+        <li><b>Export the data to a csv file</b> such that you can analyse the data at any time in
+        a spreadsheet application.</li>
+      </ol>
+
+      <b>Setting up</b><br/>
+      Upload the video that you would like to analyse. The supported video formats are
+      MP4, WebM and Ogg.
+      After uploading your video, the frame rate is calculated using the mediainfo tool. In
+      the event that this calculation stalls, you can set the frame rate manually. In most cases
+      a frame rate of 30 or 60 frames per second (fps) is appropriate. The next step is to calibrate
+      the scale of the video in meters per pixel. It is advised to place a scale marker such as a ruler
+      in your video. The scale wizard will ask you to mark the end-points and give the size in meters
+      between them. Alternatively, you can set or change the scale manually in the input field.
+      Optionally, the origin of your coordinate system can be set in the input fields or using the 
+      origin wizard.
+      <br/><br/>
+
+      <b>Analysis</b><br/>
+      In the manual analysis the movement of the object is obtained by clicking in each frame on
+      the position on the object. For larger object one can click on a well-defined spot like an edge,
+      another distinctive feature. After each click the next frame (default) is shown. The number 
+      of frames to skip can be adjusted in the settings.
+      When the automatic box is ticked the object the program tries to track the object automatically.
+      First the track window, where the object is located, needs to be defined. Then the 
+      program will try to follow the motion of this object by analysing each frame. 
+      In the settings it is possible to allow for rotations and changes in the size of the object by
+      selecting the adaptive tracking algorithm. 
+      <br/><br/>
+
+      <b>Derived data: velocity and acceleration</b><br/>
+      The three graphs show the position of the object in meters, the velocity and the acceleration.
+      The acceleration graphs is turned off by default. This can be changed in the settings. Note that
+      changing their display also affects the exported CSV data.
+      
+      The velocity is calculated from two position data points. Likewise, the acceleration is
+      calculated from two velocity data points. The corresponding time is the average
+      of these data points. The integration time (settings) is the minimal number of frames between 
+      these points. The default integration time is set to 2 frames. Note that the number of frames 
+      between these points can be larger when frames are skipped during the analysis. Choosing a
+      larger integration time results in a smoother velocity/acceleration graph, but a reduced
+      sensitivity to (sudden) changes in the velocity or acceleration.
+      <br/><br/>
+
+      <b>CSV files</b><br/>
+      After analysis, save your data by exporting it to a CSV file. Then you can continue your
+      analysis at a later stage or use your data in a spreadsheet application. In the settings
+      you can change the decimal separator and the delimiter in the CSV file to facilitate the 
+      import in your spreadsheet application. Note that the velocity and accelerationfields have 
+      their own time stamps, which may not overlap with the time stamps from the positions. 
+      This may cause empty cells in the CSV file. This can be avoided to some extent by checking this
+      option in the settings.
+      <br/><br/>
+
+      <b>Security/privacy</b><br/>
+      No data leaves your computer by using this website. All analysis is done locally on your own
+      computer. This is a cookie-free website.
+      <br/><br/>
+
       <b>Compatibility</b><br/>
-      Motion Ticker does not work in Internet Explorer. Please consider moving to a modern browser like
-      Chrome, Edge, Firefox of Safari.
+      Motion Ticker does not work in Internet Explorer. In case you are still using IE, please 
+      consider moving to a modern browser like Chrome, Edge, Firefox of Safari.
       <br/><br/>
 
       <b>Embed code</b><br/>
@@ -134,7 +214,7 @@
       <b>Source code</b><br>
       The source code from this website is freely available on 
       <a href="https://github.com/jeroenvantilburg/motionticker">Github</a> under the 
-      <a href="https://nl.wikipedia.org/wiki/MIT-licentie">MIT license</a>. The souce code
+      <a href="https://en.wikipedia.org/wiki/MIT_License">MIT license</a>. The source code
       may be freely copied and hosted on every web server. Please make sure to keep the code
       up-to-date since new updates and bug fixes come out regularly.
       Suggestions for improvements are welcome.
@@ -145,18 +225,35 @@
       questions, improvements, bug reports, suggestions, comments and compliments 
       to <feedback></feedback>. 
       <br/><br> 
+      
+      <b>Acknowledgments</b><br/>
+      Motion ticker depends on the following beautiful javascript libraries:
+      <ul>
+        <li><a href="https://jquery.com">jQuery</a>: DOM manipulation</li>
+        <li><a href="https://mediainfo.js.org/">Mediainfo.js</a>: extract meta data from video 
+          files.</li>
+        <li><a href="https://www.chartjs.org">Chart.js</a>: charting library</li>
+        <li><a href="https://www.papaparse.com">PapaParse</a>: CSV parser</li>
+        <li><a href="http://fabricjs.com">Fabric</a>: HTML5 canvas library</li>
+        <li><a href="">OpenCV</a>: computer vision and machine learning software library.</li>
+      </ul>
 
       <b>Other applications</b><br/>
       There are a number of other, third-party applications that can be used to analyse videos. Select
       the applications that suits your needs.
       <ul>
-        <li><a href="https://cma.nl">Coach</a></li>
-        <li><a href="">Vernier</a></li>
-        <li><a href="https://tracker.physlets.org/trackerJS">trackerJS</a></li>
-        <li><a href="">Sony motion shot</a></li>
+        <li><a href="https://cma-science.nl">Coach7</a> (paid) is a software package for STEM Education.
+        It includes a tool for data video activities.</li>
+        <li><a href="https://www.vernier.com/product/video-analysis/">Vernier Video Analysis</a> (paid)
+        brings video analysis to your students in a dedicated and streamlined application.</li>
+        <li><a href="https://physlets.org/tracker/">Tracker</a> (free) is a video analysis and 
+        modeling tool from Open Source Physics. There is also a 
+        <a href="https://tracker.physlets.org/trackerJS">javascript version</a> that runs on most 
+          computers.</li>
+        <li><a href="http://x-application.sony.net/motionshot/en/">Sony motion shot</a> (free) is an app
+          for Android and iOS that automatically renders the movement in a video into a single still 
+          image.</li>
       </ul>
-        
-      
     </div>
   </div>
 
@@ -176,9 +273,9 @@
           <td>Number of frames to skip during manual analysis.</td>
         </tr>
         <tr>
-          <td>Allow rotations:</td>
-          <td><input id="allowRotations" type="checkbox"></input></td>
-          <td>Only for automatic analysis: allow for rotations and resizing of the object.</td>
+          <td>Adaptive tracking:</td>
+          <td><input id="adaptive" type="checkbox"></input></td>
+          <td>Only for the automatic analysis: allow for rotations and resizing of the object.</td>
         </tr>
       </table>
       <br/>
