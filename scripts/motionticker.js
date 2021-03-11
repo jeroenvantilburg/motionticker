@@ -43,11 +43,16 @@ SOFTWARE.
   let markerPoint = new fabric.Circle({ radius: 3, stroke: 'rgba(200,0,0)', strokeWidth: 1, 
                                         fill: 'rgba(0,0,0,0)' });
   function highlightMarker( markerP ) { markerP.set({stroke: 'red', strokeWidth: 2}); }
+  function unHighlightMarker( markerP ) { markerP.set({stroke: 'rgba(200,0,0)', strokeWidth: 1}); }
 
+  
+  let xAxis = new fabric.Line( [0,0,100,0],  {strokeWidth: 2, stroke: 'blue' });    
+  let yAxis = new fabric.Line( [0,0,0,100], {strokeWidth: 2, stroke: 'blue' });    
+  
   // Global video parameters
   let width = 0;
   let height = 0;
-  let frameNumber = 0;
+  let currentFrame = 0;
   let t0 = 0.0;
   let FPS;
   let pixelsPerMeter;
@@ -55,6 +60,9 @@ SOFTWARE.
   let scale1, scale2;   // in pixels
   
   let box1, box2;
+  
+  
+  
 
   // The raw data (all derived data is calculated on the fly)
   let rawData = [];
@@ -73,7 +81,13 @@ SOFTWARE.
   $('#drawAllPoints').prop('checked',drawAllPoints);
   $('#drawAllPoints').on('change', function(e) {
     drawAllPoints = $('#drawAllPoints').is(':checked');
-    gotoFrame( frameNumber );
+    rawData.forEach(function (item) {
+      if( drawAllPoints ) {
+        canvas.add( item.marker );
+      } else if ( item.t !== currentFrame ) {
+        canvas.remove( item.marker );
+      }
+    });
   });
 
   let framesToSkip = 1;
@@ -414,6 +428,7 @@ SOFTWARE.
             isNumeric( results.data[0][scaleStr] ) ) {
 
           rawData = []; // Clear old data
+          canvas.clear();
 
           // Update the header info
           let meta = results.data[0];
@@ -614,7 +629,10 @@ SOFTWARE.
   // Update the origin when user gives input or when calculated
   $("#originXInput").change( function() {
     if( isNumeric(this.value) ) {
-      originX = toNumber( this.value ) ;
+      originX = toNumber( this.value );
+      
+      yAxis.set({x1: originX, y1: 0, x2: originX, y2: height} );
+      
       // Update plots
       updatePlots();
     } else {
@@ -624,6 +642,10 @@ SOFTWARE.
   $("#originYInput").change( function() {
     if( isNumeric(this.value) ) {
       originY = toNumber( this.value ) ;
+      
+      xAxis.set({x1: 0, y1: originY, x2: width, y2: originY} );
+
+
       // Update plots
       updatePlots();
     } else {
@@ -692,6 +714,8 @@ SOFTWARE.
 
   function disableAnalysis() {    
     startAndStopManual.innerText = startText;
+    startAndStopManual.classList.add("button-on");
+    startAndStopManual.classList.remove("button-off");
     $('#statusMsg').html("");
     //startAndStopManual.style.backgroundColor = "#c3d6be";
     canvasClick = "";
@@ -815,13 +839,13 @@ SOFTWARE.
   //prevButton.addEventListener('click', evt => {
   $('#prev').click(function() {
     // Go to next frame
-    gotoFrame(frameNumber-1);
+    gotoFrame(currentFrame-1);
   });
 
   //nextButton.addEventListener('click', evt => {
   $('#next').click(function() {
     // Go to next frame
-    gotoFrame(frameNumber+1);
+    gotoFrame(currentFrame+1);
   });
 
   
@@ -834,7 +858,7 @@ SOFTWARE.
       let that = this;
       playIntervalID = window.setInterval( function() {
         // Go to next frame until the end (when gotoFrame returns false)
-        if( gotoFrame(frameNumber+1) == false ) {
+        if( gotoFrame(currentFrame+1) == false ) {
           window.clearInterval( playIntervalID );
           playing = false;
           $(that).find('.fa-play,.fa-pause').toggleClass('fa-pause').toggleClass('fa-play');
@@ -882,17 +906,20 @@ SOFTWARE.
     // set statusMsg
     $('#statusMsg').html( "Click on the (new) origin..." );
         
-    drawAxes();
+    //drawAxes();
+    canvas.add( xAxis );
+    canvas.add( yAxis );
+
   });
   
   // Draw the axis    
-  function drawAxes() {
-    let xAxis = new fabric.Line([0,originY,width,originY],  {strokeWidth: 2, stroke: 'blue' });    
-    let yAxis = new fabric.Line( [originX,0,originX, height], {strokeWidth: 2, stroke: 'blue' });    
+  /*function drawAxes() {
+    //let xAxis = new fabric.Line([0,originY,width,originY],  {strokeWidth: 2, stroke: 'blue' });    
+    //let yAxis = new fabric.Line( [originX,0,originX, height], {strokeWidth: 2, stroke: 'blue' });    
     canvas.add( xAxis );
     canvas.add( yAxis );
-    canvas.renderAll();    
-  }
+    //canvas.renderAll();    
+  }*/
   
   // set origin from mouse position
   function setOrigin(evt) {
@@ -905,11 +932,17 @@ SOFTWARE.
     // Reset statusMsg and canvas click event
     canvasClick = "";
     
-    canvas.clear();
-    drawAxes();
+    //canvas.clear();
+    //drawAxes();
+    xAxis.setCoords();
+    yAxis.setCoords();
+    canvas.renderAll();
+
     setTimeout( function() {     
       $('#statusMsg').html( "" );
-      gotoFrame( frameNumber); 
+      //gotoFrame( currentFrame ); 
+      canvas.remove( xAxis );
+      canvas.remove( yAxis );
     }, 500); 
   }
   
@@ -1006,27 +1039,40 @@ SOFTWARE.
     let posPx = getMousePos( evt );
 
     // Add raw data
-    let rawDataPoint = {t: frameNumber, x: posPx.x, y: posPx.y};
+    let rawDataPoint = {t: currentFrame, x: posPx.x, y: posPx.y};
     addRawData( rawDataPoint );
     
     // Update plots
     updatePlots();
     
     // Draw a temporary marker, visible until we go to the next frame
-    let markerP = fabric.util.object.clone( markerPoint ) ;
+    /*let markerP = fabric.util.object.clone( markerPoint ) ;
     markerP.set({left: posPx.x, top: posPx.y});
     highlightMarker( markerP );
     canvas.add(markerP );
-
+    */
     // Go to next frame with a small delay
-    setTimeout(function() { gotoFrame(frameNumber+framesToSkip); }, 200);
+    setTimeout(function() { gotoFrame(currentFrame+framesToSkip); }, 200);
   }
 
   function addRawData( rawDataPoint ) {
+    
+    // Add a marker to the rawDataPoint
+    let markerP = fabric.util.object.clone( markerPoint ) ;
+    markerP.set({left: rawDataPoint.x, top: rawDataPoint.y});    
+    if( rawDataPoint.t === currentFrame ) {
+      highlightMarker( markerP );
+      canvas.add( markerP );    
+    } else if ( drawAllPoints ) { 
+      canvas.add( markerP );    
+    }
+    rawDataPoint["marker"] = markerP;
+    
     let thisIndex = rawData.findIndex(entry => entry.t >= rawDataPoint.t );
     if( thisIndex < 0 ) { // insert at the end 
       rawData.push( rawDataPoint );
     } else if ( rawData[thisIndex].t === rawDataPoint.t ) { // update old point
+      canvas.remove( rawData[thisIndex].marker );
       rawData[thisIndex] = rawDataPoint;
     } else { // insert new point at index
       rawData.splice(thisIndex, 0, rawDataPoint );
@@ -1118,7 +1164,7 @@ SOFTWARE.
     let newTime = (targetFrame + 0.5)/FPS;
     
     // Redraw the data markers
-    canvas.clear();
+    /*canvas.clear();
     rawData.forEach( function(item) {
       let markerP = fabric.util.object.clone( markerPoint ) ;
       markerP.set({left: item.x, top: item.y});
@@ -1128,21 +1174,33 @@ SOFTWARE.
       } else if ( drawAllPoints ) { 
         canvas.add( markerP );    
       }    
-    });
+    });*/
     
     if( newTime < t0 ) {
       return false;
     } else if( newTime > video.duration ) {
       return false;
     } else {
-      frameNumber = targetFrame;
+      // Highlight the new marker
+      let currentDataPoint = rawData.find(entry => entry.t === currentFrame );
+      if( currentDataPoint ) {
+        unHighlightMarker( currentDataPoint.marker );
+        if ( !drawAllPoints ) canvas.remove( currentDataPoint.marker );
+      }
+      //console.log( currentDataPoint );
+      let nextDataPoint = rawData.find(entry => entry.t === targetFrame );
+      if( nextDataPoint ) highlightMarker( nextDataPoint.marker );
+      //console.log( nextDataPoint );
+      canvas.requestRenderAll();
+    
+      currentFrame = targetFrame;
       video.currentTime = newTime;
       video.addEventListener("seeked", function(e) {
         e.target.removeEventListener(e.type, arguments.callee); // remove the handler or else it will draw another frame on the same canvas, when the next seek happens
         //canvasContext.drawImage(video,0,0, width, height );
         //drawVideo();
-        $('#frameNumber').html( frameNumber + " / " + $("#slider").attr("max") );
-        $("#slider").val( frameNumber );
+        $('#frameNumber').html( currentFrame + " / " + $("#slider").attr("max") );
+        $("#slider").val( currentFrame );
       });
       return true;
     }
@@ -1218,6 +1276,13 @@ SOFTWARE.
 
     console.log("TrackWindow");
     console.log(trackWindow);
+    
+    // Draw it on image
+    let rect = new fabric.Rect({ left: 0.5*(box1.x+box2.x), top: 0.5*(box1.y+box2.y), 
+                                 width: Math.abs(box2.x-box1.x), 
+                                 height: Math.abs(box2.y-box1.y), angle: 0,
+                                 fill: 'rgba(0,0,0,0)', stroke: 'red', strokeWidth: 2 });  
+    canvas.add(rect);
 
     // set up the ROI for tracking
     let roi = frame.roi(trackWindow);
@@ -1255,7 +1320,7 @@ SOFTWARE.
         if (!analysisStarted) {    
           // clean and stop.
           frame.delete(); dst.delete(); hsvVec.delete(); roiHist.delete(); hsv.delete();
-          //canvas.remove(rect);
+          canvas.remove(rect);
           updatePlots();
           return;
         }
@@ -1285,41 +1350,35 @@ SOFTWARE.
         }
 
         // Draw it on image
-        let rect = new fabric.Rect({ left: xPos, top: yPos, width: xSize, height: ySize, angle: angle,
-                                     fill: 'rgba(0,0,0,0)', stroke: 'red', strokeWidth: 2 });  
-        canvas.add(rect);
+        //let rect = new fabric.Rect({ left: xPos, top: yPos, width: xSize, height: ySize, angle: angle,
+        //                             fill: 'rgba(0,0,0,0)', stroke: 'red', strokeWidth: 2 });  
+        //canvas.add(rect);
+        rect.set({ left: xPos, top: yPos, width: xSize, height: ySize, angle: angle});
+        rect.setCoords();
   
-        let rawDataPoint = {t: frameNumber, x: xPos, y: yPos};
+        let rawDataPoint = {t: currentFrame, x: xPos, y: yPos};
         addRawData( rawDataPoint );
     
         // Update plots
         //updatePlots();
         
         /* This does not work for points in between
-        let time = getTime( frameNumber );
+        let time = getTime( currentFrame );
         let pos = getXYposition( rawDataPoint );
         positionChart.data.datasets[0].data.push( {x: time, y: pos.x} );
         positionChart.data.datasets[1].data.push( {x: time, y: pos.y} );
         positionChart.update();  
         */
 
-        //console.log(xPos + ", " + yPos + ", " + trackWindow.width + ", "+ trackWindow.height);
-      
-        let markerP = fabric.util.object.clone( markerPoint ) ;
-        markerP.set({left: xPos, top: yPos});
-        highlightMarker( markerP );
-        canvas.add( markerP );
-        canvas.requestRenderAll();
-
         setTimeout( function() {
-          if( gotoFrame(frameNumber+framesToSkip) ) {
+          if( gotoFrame(currentFrame+framesToSkip) ) {
             video.addEventListener("seeked", function(e) {
               e.target.removeEventListener(e.type, arguments.callee); 
               processVideo();
             });
           } else {
             frame.delete(); dst.delete(); hsvVec.delete(); roiHist.delete(); hsv.delete();
-            //canvas.remove(rect);
+            canvas.remove(rect);
             updatePlots();
             startAndStopManual.click();
           }
