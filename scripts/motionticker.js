@@ -1026,9 +1026,9 @@ SOFTWARE.
     let thisIndex = rawData.findIndex(entry => entry.t >= rawDataPoint.t );
     if( thisIndex < 0 ) { // insert at the end 
       rawData.push( rawDataPoint );
-    } else if ( rawData[thisIndex].t === rawDataPoint.t ) { // update
+    } else if ( rawData[thisIndex].t === rawDataPoint.t ) { // update old point
       rawData[thisIndex] = rawDataPoint;
-    } else { // insert point at index
+    } else { // insert new point at index
       rawData.splice(thisIndex, 0, rawDataPoint );
     }
   }
@@ -1256,6 +1256,7 @@ SOFTWARE.
           // clean and stop.
           frame.delete(); dst.delete(); hsvVec.delete(); roiHist.delete(); hsv.delete();
           //canvas.remove(rect);
+          updatePlots();
           return;
         }
 
@@ -1292,7 +1293,15 @@ SOFTWARE.
         addRawData( rawDataPoint );
     
         // Update plots
-        updatePlots();
+        //updatePlots();
+        
+        /* This does not work for points in between
+        let time = getTime( frameNumber );
+        let pos = getXYposition( rawDataPoint );
+        positionChart.data.datasets[0].data.push( {x: time, y: pos.x} );
+        positionChart.data.datasets[1].data.push( {x: time, y: pos.y} );
+        positionChart.update();  
+        */
 
         //console.log(xPos + ", " + yPos + ", " + trackWindow.width + ", "+ trackWindow.height);
       
@@ -1303,14 +1312,18 @@ SOFTWARE.
         canvas.requestRenderAll();
 
         setTimeout( function() {
-          if( gotoFrame(frameNumber+framesToSkip) === false ) {
+          if( gotoFrame(frameNumber+framesToSkip) ) {
+            video.addEventListener("seeked", function(e) {
+              e.target.removeEventListener(e.type, arguments.callee); 
+              processVideo();
+            });
+          } else {
+            frame.delete(); dst.delete(); hsvVec.delete(); roiHist.delete(); hsv.delete();
+            //canvas.remove(rect);
+            updatePlots();
             startAndStopManual.click();
           }
-          video.addEventListener("seeked", function(e) {
-            e.target.removeEventListener(e.type, arguments.callee); 
-            processVideo();
-          });
-        }, 200 );
+        }, 50 );
       } catch (err) {
         alert("An error occuring during the automatic analysis: "+err);
       }
