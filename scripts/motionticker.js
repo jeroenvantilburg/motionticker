@@ -1248,7 +1248,8 @@ SOFTWARE.
     // Reset statusMsg and canvas click event
     canvasClick = "";
     $('#statusMsg').html( "Processing..." );
-    onVideoStarted();
+    //onVideoStarted();
+    templateMatching();
   }
 
   // Set the box
@@ -1257,7 +1258,101 @@ SOFTWARE.
     // set statusMsg
     $('#statusMsg').html( "Click on the first point" );
   }
+
+  
+  // Automatic analysis
+  function templateMatching() {
+        
+    // Somehow this line is needed to set the right dimensions
+    setVideoZoom(1.0);
+  
+    let cap = new cv.VideoCapture(video);
+  
+    // take first frame of the video
+    let frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+    cap.read(frame);
+
+    // initial location of window
+    let trackWindow = new cv.Rect(box1.x, box1.y, box2.x-box1.x, box2.y-box1.y);
+
+    // Draw it on image
+    let rect = new fabric.Rect({ left: 0.5*(box1.x+box2.x), top: 0.5*(box1.y+box2.y), 
+                                 width: Math.abs(box2.x-box1.x), 
+                                 height: Math.abs(box2.y-box1.y), angle: 0,
+                                 fill: 'rgba(0,0,0,0)', stroke: 'red', strokeWidth: 2 });  
+    canvas.add(rect);
+
+    // set up the ROI for tracking
+    let roi = frame.roi(trackWindow);
+    let hsvRoi = new cv.Mat();
+    cv.cvtColor(roi, hsvRoi, cv.COLOR_RGBA2RGB);
+    cv.cvtColor(hsvRoi, hsvRoi, cv.COLOR_RGB2HSV);
+    let mask = new cv.Mat();
+
+    let hsv = new cv.Mat(video.height, video.width, cv.CV_8UC3);
+    let dst = new cv.Mat();
+
+    function processVideo() {
+      try {  
+        if (!analysisStarted) {    
+          // clean and stop.
+          frame.delete(); dst.delete(); hsv.delete(); roi.delete(); hsvRoi.delete(); mask.delete();
+          canvas.remove(rect);
+          updatePlots();
+          return;
+        }
+
+        // start processing.
+        cap.read(frame);
+        cv.cvtColor(frame, hsv, cv.COLOR_RGBA2RGB);
+        cv.cvtColor(hsv, hsv, cv.COLOR_RGB2HSV);
+
+        
+        cv.matchTemplate(hsv, hsvRoi, dst, cv.TM_CCOEFF, mask);
+        let result = cv.minMaxLoc(dst, mask);
+        let maxPoint = result.maxLoc;
+
+        // Adaptive
+        if( adaptive ) {
+          let trackWindow2 = new cv.Rect(maxPoint.x, maxPoint.y, hsvRoi.cols, hsvRoi.rows);
+          roi = frame.roi(trackWindow2);
+          cv.cvtColor(roi, hsvRoi, cv.COLOR_RGBA2RGB);
+          cv.cvtColor(hsvRoi, hsvRoi, cv.COLOR_RGB2HSV);
+        }
+        let xPos  = maxPoint.x + 0.5*hsvRoi.cols;
+        let yPos  = maxPoint.y + 0.5*hsvRoi.rows;
+
+        // Draw it on image
+        rect.set({ left: xPos, top: yPos });
+        rect.setCoords();
+  
+        let rawDataPoint = {t: currentFrame, x: xPos, y: yPos};
+        addRawData( rawDataPoint );
     
+        setTimeout( function() {
+          if( gotoFrame(currentFrame+framesToSkip) ) {
+            video.addEventListener("seeked", function(e) {
+              e.target.removeEventListener(e.type, arguments.callee); 
+              processVideo();
+            });
+          } else {
+            frame.delete(); dst.delete(); hsv.delete(); roi.delete(); hsvRoi.delete(); mask.delete();
+            canvas.remove(rect);
+            updatePlots();
+            startAndStopManual.click();
+          }
+        }, 50 );
+      } catch (err) {
+        alert("An error occuring during the automatic analysis: "+err);
+      }
+    };
+
+    // schedule the first one.
+    setTimeout(processVideo, 0);
+  }
+
+
+  
   // Automatic analysis
   function onVideoStarted() {
         
@@ -1290,9 +1385,10 @@ SOFTWARE.
     cv.cvtColor(roi, hsvRoi, cv.COLOR_RGBA2RGB);
     cv.cvtColor(hsvRoi, hsvRoi, cv.COLOR_RGB2HSV);
     let mask = new cv.Mat();
-    //let lowScalar = new cv.Scalar(30, 30, 0);
     let lowScalar = new cv.Scalar(30, 30, 0);
     let highScalar = new cv.Scalar(180, 180, 180);
+    //let lowScalar = new cv.Scalar(0, 30, 30);
+    //let highScalar = new cv.Scalar(180, 255, 255);
     let low = new cv.Mat(hsvRoi.rows, hsvRoi.cols, hsvRoi.type(), lowScalar);
     let high = new cv.Mat(hsvRoi.rows, hsvRoi.cols, hsvRoi.type(), highScalar);
     cv.inRange(hsvRoi, low, high, mask);
