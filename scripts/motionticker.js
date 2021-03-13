@@ -50,19 +50,15 @@ SOFTWARE.
   let yAxis = new fabric.Line( [0,0,0,100], {strokeWidth: 2, stroke: 'blue' });    
   
   // Global video parameters
-  let width = 0;
-  let height = 0;
+  //let width = 0;
+  //let height = 0;
   let currentFrame = 0;
   let t0 = 0.0;
   let FPS;
   let pixelsPerMeter;
   let originX, originY; // in pixels
   let scale1, scale2;   // in pixels
-  
-  let box1, box2;
-  
-  
-  
+  let box1, box2;       // in pixels
 
   // The raw data (all derived data is calculated on the fly)
   let rawData = [];
@@ -182,61 +178,32 @@ SOFTWARE.
   });
   
   $("#zoomOut").click( () => {
-    console.log("zoom: " + canvas.width / width );
+    //console.log("zoom: " + canvas.width / video.videoWidth );
     if( canvas.width > 200 ) { // minimum 200 px should be small enough
-      //drawVideo(0.5*canvas.width, 0.5*canvas.height);
       setVideoZoom( 0.5*canvas.width / video.videoWidth );
     }
 
   });
 
   $("#zoomIn").click( () => {
-    console.log("zoom: " + canvas.width / width );
+    //console.log("zoom: " + canvas.width / video.videoWidth );
     if( canvas.width < 8 * width ) { // Maximum zoom x8
-      //drawVideo(2*canvas.width, 2*canvas.height);
       setVideoZoom( 2*canvas.width / video.videoWidth )
     }
 
   });
 
   function setVideoZoom( scaleRatio ) {
-    console.log("scale ratio = " + scaleRatio );
+    //console.log("scale ratio = " + scaleRatio );
     canvas.setDimensions({ width: video.videoWidth * scaleRatio, 
                            height: video.videoHeight * scaleRatio })
     canvas.setZoom( scaleRatio );
     canvas.renderAll();
 
     video.width = video.videoWidth * scaleRatio ;
-    video.height = video.videoHeight * scaleRatio; // TODO: is this needed?
-    
+    video.height = video.videoHeight * scaleRatio;
   }
   
-      
-  // TODO: remove this obsolete function  
-  function drawVideo(canvasWidth, canvasHeight) {
-    // TODO: use canvas.setDimensions({ width: canvas.getWidth() * scaleRatio, height: canvas.getHeight() * scaleRatio })
-    
-    
-    let scaleRatio = canvasWidth / video.videoWidth;
-    if( canvasWidth ) {
-      //canvasOutput.width = canvasWidth;
-      canvas.setWidth(canvasWidth);
-      //console.log("scaleRatio = "+ scaleRatio);
-      canvas.setZoom(scaleRatio);
-    }
-    if( canvasHeight ) {
-      //canvasOutput.height = canvasHeight;
-      canvas.setHeight(canvasHeight);
-    }
-    canvas.renderAll();
-
-    //canvasContext.drawImage(video,0,0, canvasOutput.width, canvasOutput.height );    
-    if( canvasWidth ) video.width = canvasWidth;
-    //if( canvasHeight ) video.height = canvasHeight;
-
-  }
-  
-
   /* ============= CSV SECTION =================
        Import and export a csv file
      =========================================== */  
@@ -547,13 +514,8 @@ SOFTWARE.
     // Pause the video (needed because of autoplay)
     video.pause();
 
-    // Get the dimensions of the video and prepare the canvas
-    width = video.videoWidth;
-    height = video.videoHeight;
+    // Set the dimensions of the video and prepare the canvas
     setVideoZoom(1.0);
-    //canvas.setDimensions({ width: video.videoWidth, height: video.videoHeight });
-    //video.width = video.videoWidth;
-    //drawVideo(width, height);
     
     // Set initial origin to left bottom corner
     updateOrigin(0, video.videoHeight);
@@ -631,7 +593,8 @@ SOFTWARE.
     if( isNumeric(this.value) ) {
       originX = toNumber( this.value );
       
-      yAxis.set({x1: originX, y1: 0, x2: originX, y2: height} );
+      // Update the y-axis on the canvas
+      yAxis.set({x1: originX, y1: 0, x2: originX, y2: canvas.height} );
       
       // Update plots
       updatePlots();
@@ -643,8 +606,8 @@ SOFTWARE.
     if( isNumeric(this.value) ) {
       originY = toNumber( this.value ) ;
       
-      xAxis.set({x1: 0, y1: originY, x2: width, y2: originY} );
-
+      // Update the x-axis on the canvas
+      xAxis.set({x1: 0, y1: originY, x2: canvas.width, y2: originY} );
 
       // Update plots
       updatePlots();
@@ -911,16 +874,7 @@ SOFTWARE.
     canvas.add( yAxis );
 
   });
-  
-  // Draw the axis    
-  /*function drawAxes() {
-    //let xAxis = new fabric.Line([0,originY,width,originY],  {strokeWidth: 2, stroke: 'blue' });    
-    //let yAxis = new fabric.Line( [originX,0,originX, height], {strokeWidth: 2, stroke: 'blue' });    
-    canvas.add( xAxis );
-    canvas.add( yAxis );
-    //canvas.renderAll();    
-  }*/
-  
+    
   // set origin from mouse position
   function setOrigin(evt) {
     // Get mouse position in pixels
@@ -932,15 +886,12 @@ SOFTWARE.
     // Reset statusMsg and canvas click event
     canvasClick = "";
     
-    //canvas.clear();
-    //drawAxes();
     xAxis.setCoords();
     yAxis.setCoords();
     canvas.renderAll();
 
     setTimeout( function() {     
       $('#statusMsg').html( "" );
-      //gotoFrame( currentFrame ); 
       canvas.remove( xAxis );
       canvas.remove( yAxis );
     }, 500); 
@@ -1112,6 +1063,16 @@ SOFTWARE.
     });
     velocityChart.data.datasets[0].data = xVelocities;
     velocityChart.data.datasets[1].data = yVelocities;
+    
+    //console.log( positionChart.scales["x-axis-0"].max );
+    //velocityChart.options.scales.yAxes[0].scaleLabel.labelString
+    
+    // Set the time axis to be the same as the position chart
+    velocityChart.options.scales.xAxes[0].ticks.suggestedMin = 
+      positionChart.scales["x-axis-0"].min;
+    velocityChart.options.scales.xAxes[0].ticks.suggestedMax = 
+      positionChart.scales["x-axis-0"].max;
+    
     velocityChart.update();  
   }
 
@@ -1146,6 +1107,14 @@ SOFTWARE.
     });
     accelerationChart.data.datasets[0].data = xAcceleration;
     accelerationChart.data.datasets[1].data = yAcceleration;
+    
+    // Set the time axis to be the same as the position chart
+    accelerationChart.options.scales.xAxes[0].ticks.suggestedMin =
+      positionChart.scales["x-axis-0"].min;
+    accelerationChart.options.scales.xAxes[0].ticks.suggestedMax = 
+      positionChart.scales["x-axis-0"].max;
+
+
     accelerationChart.update();  
   }
 
@@ -1198,7 +1167,6 @@ SOFTWARE.
       video.addEventListener("seeked", function(e) {
         e.target.removeEventListener(e.type, arguments.callee); // remove the handler or else it will draw another frame on the same canvas, when the next seek happens
         //canvasContext.drawImage(video,0,0, width, height );
-        //drawVideo();
         $('#frameNumber').html( currentFrame + " / " + $("#slider").attr("max") );
         $("#slider").val( currentFrame );
       });
@@ -1208,8 +1176,8 @@ SOFTWARE.
 
   function getMousePos( evt ) {        
     let rect = canvas.lowerCanvasEl.getBoundingClientRect();
-    let scaleX = canvas.width / width;    // relationship bitmap vs. element for X
-    let scaleY = canvas.height / height;  // relationship bitmap vs. element for Y
+    let scaleX = canvas.width / video.videoWidth;    // relationship bitmap vs. element for X
+    let scaleY = canvas.height / video.videoHeight;  // relationship bitmap vs. element for Y
     
     return {
       x: (evt.clientX - rect.left)/scaleX,
@@ -1493,7 +1461,7 @@ SOFTWARE.
   // Plotting stuff
   let options= { scales: { xAxes: [{ scaleLabel:{ labelString: 'time (s)', 
                                                   display: true},
-                                    type: 'linear', position: 'bottom' }] ,
+                                    type: 'linear', position: 'bottom'}],
                            yAxes: [{ scaleLabel:{ labelString: 'Position (m)', 
                                                 display: true} }]
                          }};
