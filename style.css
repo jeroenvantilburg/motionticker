@@ -31,6 +31,12 @@ pre {
   border:1px solid #ccc;
 }
 
+.container video, .container canvas {
+  position:absolute;
+  top:  0px;
+  border: 0px solid #ccc;
+}
+
 #slider {
   vertical-align: middle;
 }

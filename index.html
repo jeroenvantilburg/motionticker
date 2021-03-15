@@ -62,8 +62,8 @@
       </div>
       <div class="page-content">
         <div class="container" style="position:relative">
-          <video id="video" autoplay playsinline muted style="display:block;border:0px solid #ccc"></video>
-          <canvas style="position:absolute;top:0;border:0px solid #ccc" id="canvasOutput"></canvas>
+          <video id="video" autoplay playsinline muted style="display:block;"></video>
+          <canvas id="canvasOutput"></canvas>
         </div>    
       </div>
 		</div>
@@ -88,11 +88,9 @@
             <td>Origin (x,y): (</td>
             <td><input id="originXInput" type="text" style="width:40px"></input>,
                 <input id="originYInput" type="text" style="width:40px"></input>) px</td>
-            <td><button id="origin" disabled>Origin wizard</button></td>
+            <td><button id="origin" disabled hidden>Origin wizard</button></td>
           </tr>
         </table>
-        <!--canvas id="positionChart" class="chart" width="350" height="250"></canvas-->
-
         <canvas id="positionChart" class="chart" width="350" height="250"></canvas>
         <canvas id="velocityChart" class="chart" width="350" height="250"></canvas>
         <canvas id="accelerationChart" class="chart" width="350" height="250" style="display: none"></canvas>
@@ -347,6 +345,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.3.1/fabric.min.js"></script>
+  <script src="scripts/fabric-patch-touch.js"></script>
   <script async src="https://docs.opencv.org/3.4.13/opencv.js" id="opencv"></script>  
   <script src="scripts/motionticker.js"></script>
   <noscript>Your browser does not support JavaScript!</noscript> 

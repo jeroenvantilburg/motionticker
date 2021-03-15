@@ -36,7 +36,10 @@ SOFTWARE.
   let stopText = "Stop analysis";
 
   // Initialize canvas using Fabric.js
-  var canvas = this.__canvas = new fabric.StaticCanvas('canvasOutput');
+  var canvas = this.__canvas = new fabric.Canvas('canvasOutput', 
+                                                 { selection: false, 
+                                                   uniformScaling: false,
+                                                   allowTouchScrolling: true,});
   fabric.Object.prototype.originX = fabric.Object.prototype.originY = 'center';
   
   // Define marker style
@@ -45,9 +48,76 @@ SOFTWARE.
   function highlightMarker( markerP ) { markerP.set({stroke: 'red', strokeWidth: 2}); }
   function unHighlightMarker( markerP ) { markerP.set({stroke: 'rgba(200,0,0)', strokeWidth: 1}); }
 
+  // Define axes for canvas with dummy coordinates
+  let xAxis = new fabric.Line( [0,0,100,0], {strokeWidth: 2, stroke: 'blue',
+                                             hasControls: false, hasBorders: false, 
+                                             lockMovementX: true, padding: 10
+                                            });    
+  let yAxis = new fabric.Line( [0,0,0,100], {strokeWidth: 2, stroke: 'blue',
+                                             hasControls: false, hasBorders: false, 
+                                             lockMovementY: true, padding: 10 });    
+  let axesOrigin = new fabric.Circle({ radius: 5, /*stroke: 'blue', strokeWidth: 2,*/
+                                       hasControls: false, hasBorders: false, padding: 10,
+                                       fill: 'blue' });
+  axesOrigin.on("moving", () => {
+    //xAxis.set({y1: axesOrigin.top, y2: axesOrigin.top} );
+    //yAxis.set({x1: axesOrigin.left, x2: axesOrigin.left} );    
+    xAxis.set({y1: axesOrigin.top, y2: axesOrigin.top} );
+    yAxis.set({x1: axesOrigin.left, x2: axesOrigin.left} );  
+    xAxis.setCoords();
+    yAxis.setCoords();
+  });
+  axesOrigin.on("moved", () => {
+    $("#originXInput").val( axesOrigin.left );
+    $("#originYInput").val( axesOrigin.top );
+    $("#originXInput").change();
+    $("#originYInput").change();
+    //canvas.requestRenderAll();
+
+  });
+  xAxis.on("moving", () => {
+    axesOrigin.set({top: xAxis.top, dirty: true});
+    axesOrigin.setCoords();
+    console.log(xAxis.top);
+    console.log(axesOrigin);
+
+  });
+  xAxis.on("moved", () => {
+    $("#originYInput").val( xAxis.top );
+    $("#originYInput").change();
+    canvas.bringToFront( axesOrigin );
+    //canvas.requestRenderAll();
+
+  });
+  yAxis.on("moving", () => {
+    axesOrigin.set({left: yAxis.left});
+    axesOrigin.setCoords();
+
+  });
+  yAxis.on("moved", () => {
+    $("#originXInput").val( yAxis.left );
+    $("#originXInput").change();
+    canvas.bringToFront( axesOrigin );
+    //canvas.requestRenderAll();
+  });
+
+
   
-  let xAxis = new fabric.Line( [0,0,100,0],  {strokeWidth: 2, stroke: 'blue' });    
-  let yAxis = new fabric.Line( [0,0,0,100], {strokeWidth: 2, stroke: 'blue' });    
+  // Define tracking box for automatic analysis
+  // TODO: Better initial values
+  let trackingBox = new fabric.Rect({left: 100, top: 100, height: 30, width: 30, 
+                                     fill: 'rgba(0,0,0,0)', stroke: 'red', strokeWidth: 2,
+                                     lockRotation: true, strokeUniform: true, noScaleCache: false,
+                                     /*hasRotatingPoint: false,*/
+                                     cornerSize: 8, cornerStyle: 'circle', 
+                                     cornerColor: 'rgba(35,118,200)',
+                                     hasBorders: false,
+                                     selectable: true, 
+                                     evented: true });
+  //trackingBox.hasRotatingPoint = false;
+  
+  trackingBox.setControlsVisibility({ mtr: false });
+  
   
   // Global video parameters
   //let width = 0;
@@ -71,6 +141,11 @@ SOFTWARE.
   $('#automaticAnalysis').prop('checked',automaticAnalysis);
   $('#automaticAnalysis').on('change', function(e) {
     automaticAnalysis = $('#automaticAnalysis').is(':checked');
+    if( automaticAnalysis ) {
+      canvas.add( trackingBox );
+    } else {
+      canvas.remove( trackingBox );      
+    }   
   });  
   
   let drawAllPoints = true;
@@ -187,7 +262,7 @@ SOFTWARE.
 
   $("#zoomIn").click( () => {
     //console.log("zoom: " + canvas.width / video.videoWidth );
-    if( canvas.width < 8 * width ) { // Maximum zoom x8
+    if( canvas.width < 8 * video.videoWidth ) { // Maximum zoom x8
       setVideoZoom( 2*canvas.width / video.videoWidth )
     }
 
@@ -518,7 +593,7 @@ SOFTWARE.
     setVideoZoom(1.0);
     
     // Set initial origin to left bottom corner
-    updateOrigin(0, video.videoHeight);
+    updateOrigin(0.1*video.videoWidth, 0.9*video.videoHeight);
 
     console.log("Resolution: " + video.videoWidth + " x " + video.videoHeight );
     console.log("Duration: " + video.duration );
@@ -530,6 +605,13 @@ SOFTWARE.
     // Highlight fields that need to be filled
     $("#scaleInput").css( "background", "pink");
     $("#fpsInput").css("background", "pink");
+    
+    // Put the video to the back
+    //video.style.zIndex = "-1";
+    if( automaticAnalysis ) canvas.add( trackingBox );
+    canvas.add( xAxis );
+    canvas.add( yAxis );
+    canvas.add( axesOrigin );
 
     // Get the frame rate
     getFPS();
@@ -595,6 +677,10 @@ SOFTWARE.
       
       // Update the y-axis on the canvas
       yAxis.set({x1: originX, y1: 0, x2: originX, y2: canvas.height} );
+      yAxis.setCoords();
+      axesOrigin.set({left: originX });
+      axesOrigin.setCoords();
+      canvas.requestRenderAll();
       
       // Update plots
       updatePlots();
@@ -608,6 +694,10 @@ SOFTWARE.
       
       // Update the x-axis on the canvas
       xAxis.set({x1: 0, y1: originY, x2: canvas.width, y2: originY} );
+      xAxis.setCoords();
+      axesOrigin.set({top: originY });
+      axesOrigin.setCoords();
+      canvas.requestRenderAll();
 
       // Update plots
       updatePlots();
@@ -840,6 +930,7 @@ SOFTWARE.
 
 
   let canvasClick = "";
+  
   $('#canvasOutput').click( (evt) => {
     if( canvasClick === "addRawDataPoint" ) {
       addRawDataPoint(evt);
@@ -856,6 +947,19 @@ SOFTWARE.
     } 
   });
 
+  canvas.on('mouse:up', (evt) => {
+    if( canvasClick === "addRawDataPoint" ) {
+      addRawDataPoint(evt);
+    } else if( canvasClick === "setScale1" ) {
+      setScale1(evt);
+    } else if( canvasClick === "setScale2" ) {
+      setScale2(evt);
+    }            
+  });
+            
+
+
+  
   // Set origin button
   $('#origin').click( evt => {
     if( canvasClick === "addRawDataPoint") {
@@ -921,7 +1025,8 @@ SOFTWARE.
   // Set the scale (1st point)
   function setScale1(evt) {
     // Get mouse position in pixels
-    let posPx = getMousePos( evt );
+    //let posPx = getMousePos( evt );
+    let posPx = canvas.getPointer( evt );
     
     // Set the scale (1st point)
     scale1 = {x: posPx.x, y: posPx.y};
@@ -934,7 +1039,9 @@ SOFTWARE.
   // Set the scale (2nd point)
   function setScale2(evt) {
     // Get mouse position in pixels
-    let posPx = getMousePos( evt );
+    //let posPx = getMousePos( evt );
+    let posPx = canvas.getPointer( evt );
+
     
     let distanceInMeter = toNumber( prompt("How long is this distance in meter?", "1.0") );
     
@@ -961,19 +1068,35 @@ SOFTWARE.
   let analysisStarted = false;
   startAndStopManual.addEventListener('click', evt => {
     if( analysisStarted === false ) {
+      
+      // Remove controls
+      canvas.remove(xAxis);
+      canvas.remove(yAxis);
+      canvas.remove( axesOrigin );
+
+      
       analysisStarted = true;
       startAndStopManual.innerText = stopText;
       if( automaticAnalysis ) {
+        // Put back controls
+        canvas.remove( trackingBox );
         canvasClick = "";
         //console.log("call onVideoStarted()")
         //console.log(video);
         //onVideoStarted();
-        setBox();
+        //setBox();
+        templateMatching();
       } else {
         $('#statusMsg').html( "Click on the object" );
         canvasClick = "addRawDataPoint";
       }
     } else {
+      // Put back controls
+      if( automaticAnalysis ) canvas.add( trackingBox );
+      canvas.add(xAxis);
+      canvas.add(yAxis);
+      canvas.add( axesOrigin );
+
       analysisStarted = false;
       startAndStopManual.innerText = startText;
       $('#statusMsg').html( "" );
@@ -987,7 +1110,8 @@ SOFTWARE.
   
   function addRawDataPoint(evt) {
     // Get mouse position in pixels
-    let posPx = getMousePos( evt );
+    //let posPx = getMousePos( evt );
+    let posPx = canvas.getPointer( evt );
 
     // Add raw data
     let rawDataPoint = {t: currentFrame, x: posPx.x, y: posPx.y};
@@ -1175,6 +1299,9 @@ SOFTWARE.
   }
 
   function getMousePos( evt ) {        
+
+    console.log(canvas);
+    
     let rect = canvas.lowerCanvasEl.getBoundingClientRect();
     let scaleX = canvas.width / video.videoWidth;    // relationship bitmap vs. element for X
     let scaleY = canvas.height / video.videoHeight;  // relationship bitmap vs. element for Y
@@ -1230,7 +1357,18 @@ SOFTWARE.
   
   // Automatic analysis
   function templateMatching() {
-        
+    
+    // TODO: temporary this can be improved
+    box1 = {x: trackingBox.left-0.5*trackingBox.width*trackingBox.scaleX, 
+            y: trackingBox.top-0.5*trackingBox.height*trackingBox.scaleY};
+    box2 = {x: trackingBox.left+0.5*trackingBox.width*trackingBox.scaleX, 
+            y: trackingBox.top+0.5*trackingBox.height*trackingBox.scaleY};
+    
+    console.log(box1);
+    console.log(box2);
+
+
+    
     // Somehow this line is needed to set the right dimensions
     setVideoZoom(1.0);
   
