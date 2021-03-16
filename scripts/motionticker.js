@@ -39,7 +39,8 @@ SOFTWARE.
   var canvas = this.__canvas = new fabric.Canvas('canvasOutput', 
                                                  { selection: false, 
                                                    uniformScaling: false,
-                                                   allowTouchScrolling: true,});
+                                                   allowTouchScrolling: true,
+                                                   preserveObjectStacking: true });
   fabric.Object.prototype.originX = fabric.Object.prototype.originY = 'center';
   
   // Define marker style
@@ -60,8 +61,6 @@ SOFTWARE.
                                        hasControls: false, hasBorders: false, padding: 10,
                                        fill: 'blue' });
   axesOrigin.on("moving", () => {
-    //xAxis.set({y1: axesOrigin.top, y2: axesOrigin.top} );
-    //yAxis.set({x1: axesOrigin.left, x2: axesOrigin.left} );    
     xAxis.set({y1: axesOrigin.top, y2: axesOrigin.top} );
     yAxis.set({x1: axesOrigin.left, x2: axesOrigin.left} );  
     xAxis.setCoords();
@@ -72,36 +71,65 @@ SOFTWARE.
     $("#originYInput").val( axesOrigin.top );
     $("#originXInput").change();
     $("#originYInput").change();
-    //canvas.requestRenderAll();
-
   });
   xAxis.on("moving", () => {
-    axesOrigin.set({top: xAxis.top, dirty: true});
-    axesOrigin.setCoords();
-    console.log(xAxis.top);
-    console.log(axesOrigin);
-
+    axesOrigin.set({top: xAxis.top});
+    //axesOrigin.setCoords();
   });
   xAxis.on("moved", () => {
     $("#originYInput").val( xAxis.top );
     $("#originYInput").change();
-    canvas.bringToFront( axesOrigin );
-    //canvas.requestRenderAll();
-
+    //canvas.bringToFront( axesOrigin );
   });
   yAxis.on("moving", () => {
     axesOrigin.set({left: yAxis.left});
-    axesOrigin.setCoords();
-
+    //axesOrigin.setCoords();
   });
   yAxis.on("moved", () => {
     $("#originXInput").val( yAxis.left );
     $("#originXInput").change();
-    canvas.bringToFront( axesOrigin );
-    //canvas.requestRenderAll();
+    //canvas.bringToFront( axesOrigin );
   });
 
+  // Define ruler for canvas
+  let scaleLine = new fabric.Line( [100,10,100,110], {strokeWidth: 2, stroke: 'darkgreen',
+                                                  hasControls: false, hasBorders: false, 
+                                                  padding: 10});    
+  let scaleCircle1 = new fabric.Circle({ left:100, top: 10, 
+                                         radius: 5, stroke: 'darkgreen', strokeWidth: 1,
+                                         hasControls: false, hasBorders: false, padding: 10,
+                                         fill: 'rgba(0,0,0,0)' });
+  let scaleCircle2 = new fabric.Circle({ left:100, top: 110,
+                                         radius: 5, stroke: 'darkgreen', strokeWidth: 1,
+                                         hasControls: false, hasBorders: false, padding: 10,
+                                         fill: 'rgba(0,0,0,0)' });
 
+  scaleCircle1.on("moving", () => {
+    scaleLine.set({x1: scaleCircle1.left, y1: scaleCircle1.top} );
+    scaleLine.setCoords();
+  });
+  scaleCircle1.on("moved", () => {
+    setScale();
+  });
+  scaleCircle2.on("moving", () => {
+    scaleLine.set({x2: scaleCircle2.left, y2: scaleCircle2.top} );
+    scaleLine.setCoords();
+  });
+  scaleCircle2.on("moved", () => {
+    setScale();
+  });
+  scaleLine.on("moving", () => {
+    let localPoints = scaleLine.calcLinePoints();
+    scaleLine.set({x1: localPoints.x1+scaleLine.left, y1: localPoints.y1+scaleLine.top,
+                   x2: localPoints.x2+scaleLine.left, y2: localPoints.y2+scaleLine.top});
+    scaleCircle1.set({left: scaleLine.x1, top: scaleLine.y1});
+    scaleCircle2.set({left: scaleLine.x2, top: scaleLine.y2});
+  });
+  scaleLine.on("moved", () => {
+    scaleLine.setCoords();
+    scaleCircle1.setCoords();
+    scaleCircle2.setCoords();
+  });
   
   // Define tracking box for automatic analysis
   // TODO: Better initial values
@@ -120,8 +148,6 @@ SOFTWARE.
   
   
   // Global video parameters
-  //let width = 0;
-  //let height = 0;
   let currentFrame = 0;
   let t0 = 0.0;
   let FPS;
@@ -129,6 +155,7 @@ SOFTWARE.
   let originX, originY; // in pixels
   let scale1, scale2;   // in pixels
   let box1, box2;       // in pixels
+  let distanceInMeter = 1.0;
 
   // The raw data (all derived data is calculated on the fly)
   let rawData = [];
@@ -606,12 +633,14 @@ SOFTWARE.
     $("#scaleInput").css( "background", "pink");
     $("#fpsInput").css("background", "pink");
     
-    // Put the video to the back
-    //video.style.zIndex = "-1";
+    // Put the graphics back
     if( automaticAnalysis ) canvas.add( trackingBox );
     canvas.add( xAxis );
     canvas.add( yAxis );
     canvas.add( axesOrigin );
+    canvas.add( scaleLine );
+    canvas.add( scaleCircle1 );
+    canvas.add( scaleCircle2 );
 
     // Get the frame rate
     getFPS();
@@ -931,7 +960,7 @@ SOFTWARE.
 
   let canvasClick = "";
   
-  $('#canvasOutput').click( (evt) => {
+/*  $('#canvasOutput').click( (evt) => {
     if( canvasClick === "addRawDataPoint" ) {
       addRawDataPoint(evt);
     } else if( canvasClick === "setOrigin" ) {
@@ -946,15 +975,17 @@ SOFTWARE.
       setBox2(evt);
     } 
   });
-
+*/
+  
   canvas.on('mouse:up', (evt) => {
     if( canvasClick === "addRawDataPoint" ) {
       addRawDataPoint(evt);
-    } else if( canvasClick === "setScale1" ) {
+    } 
+    /*else if( canvasClick === "setScale1" ) {
       setScale1(evt);
     } else if( canvasClick === "setScale2" ) {
       setScale2(evt);
-    }            
+    } */           
   });
             
 
@@ -980,7 +1011,7 @@ SOFTWARE.
   });
     
   // set origin from mouse position
-  function setOrigin(evt) {
+  /*function setOrigin(evt) {
     // Get mouse position in pixels
     let posPx = getMousePos( evt );
     
@@ -999,7 +1030,7 @@ SOFTWARE.
       canvas.remove( xAxis );
       canvas.remove( yAxis );
     }, 500); 
-  }
+  }*/
   
   // update origin
   function updateOrigin(x,y) {
@@ -1011,7 +1042,9 @@ SOFTWARE.
   
   // Set scale button
   $('#scale').click( evt => {
-    if( canvasClick === "addRawDataPoint") {
+    distanceInMeter = toNumber( prompt("How long is this distance in meter?", "1.0") );
+    setScale();
+    /*if( canvasClick === "addRawDataPoint") {
       startAndStopManual.innerText = startText;
       //startAndStopManual.style.backgroundColor = "#4CAF50";
       startAndStopManual.classList.add("button-on");
@@ -1020,10 +1053,23 @@ SOFTWARE.
     canvasClick = "setScale1";
     // set statusMsg
     $('#statusMsg').html( "Click on the first point" );
+    */
   });
   
+  // Set the scale 
+  function setScale() {
+
+    // Set the scale points
+    scale1 = {x: scaleCircle1.left, y: scaleCircle1.top};
+    scale2 = {x: scaleCircle2.left, y: scaleCircle2.top};
+
+    // Update scale
+    updateScale( Math.sqrt((scale2.x-scale1.x)**2 + (scale2.y-scale1.y)**2) / distanceInMeter );
+
+  }
+  
   // Set the scale (1st point)
-  function setScale1(evt) {
+  /*function setScale1(evt) {
     // Get mouse position in pixels
     //let posPx = getMousePos( evt );
     let posPx = canvas.getPointer( evt );
@@ -1055,7 +1101,7 @@ SOFTWARE.
     canvasClick = "";
     $('#statusMsg').html( "" );
     
-  }
+  }*/
   
   // update scale
   function updateScale(scale) {
@@ -1073,7 +1119,9 @@ SOFTWARE.
       canvas.remove(xAxis);
       canvas.remove(yAxis);
       canvas.remove( axesOrigin );
-
+      canvas.remove( scaleLine );
+      canvas.remove( scaleCircle1 );
+      canvas.remove( scaleCircle2 );
       
       analysisStarted = true;
       startAndStopManual.innerText = stopText;
@@ -1096,6 +1144,9 @@ SOFTWARE.
       canvas.add(xAxis);
       canvas.add(yAxis);
       canvas.add( axesOrigin );
+      canvas.add( scaleLine );
+      canvas.add( scaleCircle1 );
+      canvas.add( scaleCircle2 );
 
       analysisStarted = false;
       startAndStopManual.innerText = startText;
