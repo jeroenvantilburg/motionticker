@@ -74,21 +74,17 @@ SOFTWARE.
   });
   xAxis.on("moving", () => {
     axesOrigin.set({top: xAxis.top});
-    //axesOrigin.setCoords();
   });
   xAxis.on("moved", () => {
     $("#originYInput").val( xAxis.top );
     $("#originYInput").change();
-    //canvas.bringToFront( axesOrigin );
   });
   yAxis.on("moving", () => {
     axesOrigin.set({left: yAxis.left});
-    //axesOrigin.setCoords();
   });
   yAxis.on("moved", () => {
     $("#originXInput").val( yAxis.left );
     $("#originXInput").change();
-    //canvas.bringToFront( axesOrigin );
   });
 
   // Define ruler for canvas
@@ -133,29 +129,23 @@ SOFTWARE.
   
   // Define tracking box for automatic analysis
   // TODO: Better initial values
-  let trackingBox = new fabric.Rect({left: 100, top: 100, height: 30, width: 30, 
+  let trackingBox = new fabric.Rect({left: -100, top: -100, height: 30, width: 30, 
                                      fill: 'rgba(0,0,0,0)', stroke: 'red', strokeWidth: 2,
                                      lockRotation: true, strokeUniform: true, noScaleCache: false,
-                                     /*hasRotatingPoint: false,*/
                                      cornerSize: 8, cornerStyle: 'circle', 
                                      cornerColor: 'rgba(35,118,200)',
                                      hasBorders: false,
                                      selectable: true, 
-                                     evented: true });
-  //trackingBox.hasRotatingPoint = false;
-  
-  trackingBox.setControlsVisibility({ mtr: false });
-  
+                                     evented: true });  
+  trackingBox.setControlsVisibility({ mtr: false }); // Hide rotating point
   
   // Global video parameters
   let currentFrame = 0;
   let t0 = 0.0;
   let FPS;
   let pixelsPerMeter;
-  let originX, originY; // in pixels
-  let scale1, scale2;   // in pixels
-  let box1, box2;       // in pixels
   let distanceInMeter = 1.0;
+  let originX, originY; // in pixels
 
   // The raw data (all derived data is calculated on the fly)
   let rawData = [];
@@ -272,8 +262,15 @@ SOFTWARE.
   
   $("#deleteData").click( () => { 
     if( dataCanBeRemoved () ) {
+
+      // Remove the marker from the canvas
+      rawData.forEach(function (item) {
+        canvas.remove( item.marker );
+      });
+      
+      // Clear the raw data
       rawData = [];
-      canvas.clear();
+
       // Update plots
       updatePlots();
     }
@@ -348,6 +345,14 @@ SOFTWARE.
   let origXStr = "x origin [px]";
   let origYStr = "y origin [px]";
   let scaleStr = "Scale [px/m]";
+  let scaleX1Str = "Scale Point1 x [px]";
+  let scaleY1Str = "Scale Point1 y [px]";
+  let scaleX2Str = "Scale Point2 x [px]";
+  let scaleY2Str = "Scale Point2 y [px]";
+  let boxXStr  = "Tracking Box x [px]";
+  let boxYStr  = "Tracking Box y [px]";
+  let boxWStr  = "Tracking Box width [px]";
+  let boxHStr  = "Tracking Box height [px]";
   
   // Event listener for export button
   $("#csvExport").click( () => {
@@ -360,7 +365,12 @@ SOFTWARE.
     csvData.push({[timeStr]: "", [posXStr]: "", [posYStr]: "", 
                   [velXStr]: "", [velYStr]: "", [accXStr]: "", [accYStr]: "",
                   [fpsStr]: toCSV(FPS), [origXStr]: toCSV(originX), [origYStr]: toCSV(originY), 
-                  [scaleStr]: toCSV(pixelsPerMeter)}  );
+                  [scaleStr]: toCSV(pixelsPerMeter),
+                  [scaleX1Str]: toCSV( scaleCircle1.left ), [scaleY1Str]: toCSV( scaleCircle1.top ),
+                  [scaleX2Str]: toCSV( scaleCircle2.left ), [scaleY2Str]: toCSV( scaleCircle2.top ),
+                  [boxXStr]: toCSV( trackingBox.left ), [boxYStr]: toCSV( trackingBox.top ),
+                  [boxWStr]: toCSV( trackingBox.width ), [boxHStr]: toCSV( trackingBox.height )
+                 }  );
 
     // Remove velocity and/or acceleration depending on user setting
     if( showVelocity == false ) {
@@ -489,21 +499,38 @@ SOFTWARE.
       header: true,
       complete: function(results) {
         
-        // check header integrety
+        // check header integrity
         if( results.data.length > 0 &&
             isNumeric( results.data[0][fpsStr]   ) &&
-            isNumeric( results.data[0][origXStr] )  &&
-            isNumeric( results.data[0][origYStr] ) &&
-            isNumeric( results.data[0][scaleStr] ) ) {
+            isNumeric( results.data[0][origXStr] ) && isNumeric( results.data[0][origYStr] ) &&
+            isNumeric( results.data[0][scaleStr] ) 
+          ) {
 
+          // Remove the marker from the canvas
+          rawData.forEach(function (item) {
+            canvas.remove( item.marker );
+          });
           rawData = []; // Clear old data
-          canvas.clear();
 
           // Update the header info
           let meta = results.data[0];
           updateFPS( toNumber( meta[fpsStr] ) );
           updateOrigin( toNumber( meta[origXStr] ), toNumber( meta[origYStr] ) );
-          updateScale( toNumber( meta[scaleStr] ) );
+          updateScale( toNumber( meta[scaleStr] )  );            
+
+          // Update the ruler
+          if( isNumeric( meta[scaleX1Str] ) && isNumeric( meta[scaleY1Str] ) &&
+              isNumeric( meta[scaleX2Str] ) && isNumeric( meta[scaleY2Str] ) ) {
+            updateRuler( toNumber( meta[scaleX1Str] ), toNumber( meta[scaleY1Str] ),
+                         toNumber( meta[scaleX2Str] ), toNumber( meta[scaleY2Str] ) );
+          }
+          
+          // Update the tracking box
+          if( isNumeric( meta[boxXStr] ) && isNumeric( meta[boxYStr] ) &&
+              isNumeric( meta[boxWStr] ) && isNumeric( meta[boxHStr] ) ) {
+            trackingBox.set({ left: toNumber( meta[boxXStr] ), top: toNumber( meta[boxYStr] ),
+                              width:toNumber( meta[boxWStr]),height:toNumber( meta[boxHStr]) });
+          }
 
           // Add raw data
           for(let i=1; i<results.data.length; ++i ){
@@ -609,7 +636,6 @@ SOFTWARE.
     video.load();
   });
   
-
   // Add event listener when the video is loaded
   video.addEventListener('loadedmetadata', () => {
 
@@ -619,8 +645,13 @@ SOFTWARE.
     // Set the dimensions of the video and prepare the canvas
     setVideoZoom(1.0);
     
-    // Set initial origin to left bottom corner
+    // Set initial position for the origin, scale and trackingBox (relative to video dimensions)
     updateOrigin(0.1*video.videoWidth, 0.9*video.videoHeight);
+
+    // TODO: This should get a better name
+    updateRuler( 0.2*video.videoWidth, 0.3*video.videoHeight,
+                 0.2*video.videoWidth, 0.7*video.videoHeight );
+    trackingBox.set({left: 0.5*video.videoWidth, top: 0.3*video.videoHeight });
 
     console.log("Resolution: " + video.videoWidth + " x " + video.videoHeight );
     console.log("Duration: " + video.duration );
@@ -783,7 +814,6 @@ SOFTWARE.
   function enableAnalysis() {
     startAndStopManual.removeAttribute('disabled');
     startAndStopManual.innerText = startText;
-    //startAndStopManual.style.backgroundColor = "#4CAF50";
     startAndStopManual.classList.add("button-on");
     startAndStopManual.classList.remove("button-off");
 
@@ -799,11 +829,8 @@ SOFTWARE.
     startAndStopManual.classList.add("button-on");
     startAndStopManual.classList.remove("button-off");
     $('#statusMsg').html("");
-    //startAndStopManual.style.backgroundColor = "#c3d6be";
     canvasClick = "";
     startAndStopManual.setAttribute('disabled', '');
-    //startAndStopAuto.setAttribute('disabled', '');
-
   }
 
   // load all code after the document
@@ -918,13 +945,11 @@ SOFTWARE.
   }
   
   
-  //prevButton.addEventListener('click', evt => {
   $('#prev').click(function() {
     // Go to next frame
     gotoFrame(currentFrame-1);
   });
 
-  //nextButton.addEventListener('click', evt => {
   $('#next').click(function() {
     // Go to next frame
     gotoFrame(currentFrame+1);
@@ -959,79 +984,13 @@ SOFTWARE.
 
 
   let canvasClick = "";
-  
-/*  $('#canvasOutput').click( (evt) => {
-    if( canvasClick === "addRawDataPoint" ) {
-      addRawDataPoint(evt);
-    } else if( canvasClick === "setOrigin" ) {
-      setOrigin(evt);
-    } else if( canvasClick === "setScale1" ) {
-      setScale1(evt);
-    } else if( canvasClick === "setScale2" ) {
-      setScale2(evt);
-    } else if( canvasClick === "setBox1" ) {
-      setBox1(evt);
-    } else if( canvasClick === "setBox2" ) {
-      setBox2(evt);
-    } 
-  });
-*/
-  
+    
   canvas.on('mouse:up', (evt) => {
     if( canvasClick === "addRawDataPoint" ) {
       addRawDataPoint(evt);
     } 
-    /*else if( canvasClick === "setScale1" ) {
-      setScale1(evt);
-    } else if( canvasClick === "setScale2" ) {
-      setScale2(evt);
-    } */           
   });
-            
-
-
-  
-  // Set origin button
-  $('#origin').click( evt => {
-    if( canvasClick === "addRawDataPoint") {
-      startAndStopManual.innerText = startText;
-      //startAndStopManual.style.backgroundColor = "#4CAF50";
-      startAndStopManual.classList.remove("button-off");
-      startAndStopManual.classList.add("button-on");
-    }
-    canvasClick = "setOrigin";
-     
-    // set statusMsg
-    $('#statusMsg').html( "Click on the (new) origin..." );
         
-    //drawAxes();
-    canvas.add( xAxis );
-    canvas.add( yAxis );
-
-  });
-    
-  // set origin from mouse position
-  /*function setOrigin(evt) {
-    // Get mouse position in pixels
-    let posPx = getMousePos( evt );
-    
-    // Update origin
-    updateOrigin( posPx.x, posPx.y);
-    
-    // Reset statusMsg and canvas click event
-    canvasClick = "";
-    
-    xAxis.setCoords();
-    yAxis.setCoords();
-    canvas.renderAll();
-
-    setTimeout( function() {     
-      $('#statusMsg').html( "" );
-      canvas.remove( xAxis );
-      canvas.remove( yAxis );
-    }, 500); 
-  }*/
-  
   // update origin
   function updateOrigin(x,y) {
     $("#originXInput").val( x );
@@ -1040,69 +999,30 @@ SOFTWARE.
     $("#originYInput").change();
   }
   
+  function updateRuler( scaleX1, scaleY1, scaleX2, scaleY2 /*, scale = 100*/ ) {
+    scaleLine.set({x1: scaleX1, y1: scaleY1, x2: scaleX2, y2: scaleY2});
+    scaleCircle1.set({left: scaleLine.x1, top: scaleLine.y1});
+    scaleCircle2.set({left: scaleLine.x2, top: scaleLine.y2});
+    scaleLine.setCoords();
+    //updateScale(scale);
+  }
+
   // Set scale button
   $('#scale').click( evt => {
-    distanceInMeter = toNumber( prompt("How long is this distance in meter?", "1.0") );
+    distanceInMeter = toNumber( prompt("How long is the green ruler in meter?", distanceInMeter) );
     setScale();
-    /*if( canvasClick === "addRawDataPoint") {
-      startAndStopManual.innerText = startText;
-      //startAndStopManual.style.backgroundColor = "#4CAF50";
-      startAndStopManual.classList.add("button-on");
-      startAndStopManual.classList.remove("button-off");
-    } 
-    canvasClick = "setScale1";
-    // set statusMsg
-    $('#statusMsg').html( "Click on the first point" );
-    */
   });
   
   // Set the scale 
   function setScale() {
-
-    // Set the scale points
-    scale1 = {x: scaleCircle1.left, y: scaleCircle1.top};
-    scale2 = {x: scaleCircle2.left, y: scaleCircle2.top};
+    // Get the scale points
+    let scale1 = {x: scaleCircle1.left, y: scaleCircle1.top};
+    let scale2 = {x: scaleCircle2.left, y: scaleCircle2.top};
 
     // Update scale
     updateScale( Math.sqrt((scale2.x-scale1.x)**2 + (scale2.y-scale1.y)**2) / distanceInMeter );
-
   }
-  
-  // Set the scale (1st point)
-  /*function setScale1(evt) {
-    // Get mouse position in pixels
-    //let posPx = getMousePos( evt );
-    let posPx = canvas.getPointer( evt );
     
-    // Set the scale (1st point)
-    scale1 = {x: posPx.x, y: posPx.y};
-    
-    // Reset statusMsg and canvas click event
-    canvasClick = "setScale2";
-    $('#statusMsg').html( "Click on the second point" );    
-  }
-
-  // Set the scale (2nd point)
-  function setScale2(evt) {
-    // Get mouse position in pixels
-    //let posPx = getMousePos( evt );
-    let posPx = canvas.getPointer( evt );
-
-    
-    let distanceInMeter = toNumber( prompt("How long is this distance in meter?", "1.0") );
-    
-    // Update scale
-    scale2 = {x: posPx.x, y: posPx.y};
-    
-    // Update scale
-    updateScale( Math.sqrt((scale2.x-scale1.x)**2 + (scale2.y-scale1.y)**2) / distanceInMeter );
-    
-    // Reset statusMsg and canvas click event
-    canvasClick = "";
-    $('#statusMsg').html( "" );
-    
-  }*/
-  
   // update scale
   function updateScale(scale) {
     $("#scaleInput").val( scale );
@@ -1161,7 +1081,6 @@ SOFTWARE.
   
   function addRawDataPoint(evt) {
     // Get mouse position in pixels
-    //let posPx = getMousePos( evt );
     let posPx = canvas.getPointer( evt );
 
     // Add raw data
@@ -1171,12 +1090,6 @@ SOFTWARE.
     // Update plots
     updatePlots();
     
-    // Draw a temporary marker, visible until we go to the next frame
-    /*let markerP = fabric.util.object.clone( markerPoint ) ;
-    markerP.set({left: posPx.x, top: posPx.y});
-    highlightMarker( markerP );
-    canvas.add(markerP );
-    */
     // Go to next frame with a small delay
     setTimeout(function() { gotoFrame(currentFrame+framesToSkip); }, 200);
   }
@@ -1306,20 +1219,7 @@ SOFTWARE.
 
   function gotoFrame(targetFrame) {
     let newTime = (targetFrame + 0.5)/FPS;
-    
-    // Redraw the data markers
-    /*canvas.clear();
-    rawData.forEach( function(item) {
-      let markerP = fabric.util.object.clone( markerPoint ) ;
-      markerP.set({left: item.x, top: item.y});
-      if( item.t === targetFrame ) {
-         highlightMarker( markerP );
-         canvas.add(markerP );
-      } else if ( drawAllPoints ) { 
-        canvas.add( markerP );    
-      }    
-    });*/
-    
+        
     if( newTime < t0 ) {
       return false;
     } else if( newTime > video.duration ) {
@@ -1369,56 +1269,26 @@ SOFTWARE.
       y: (originY-posPx.y)/pixelsPerMeter 
     };
   }  
-  
-  // Set the box (1st point)
-  function setBox1(evt) {
-    // Get mouse position in pixels
-    let posPx = getMousePos( evt );
     
-    // Set the box (1st point)
-    box1 = {x: posPx.x, y: posPx.y};
-    
-    // Reset statusMsg and canvas click event
-    canvasClick = "setBox2";
-    $('#statusMsg').html( "Click on the second point" );    
-  }
-
-  // Set the box (2nd point)
-  function setBox2(evt) {
-    // Get mouse position in pixels
-    let posPx = getMousePos( evt );
-        
-    // Update box (2nd point)
-    box2 = {x: posPx.x, y: posPx.y};
-        
-    // Reset statusMsg and canvas click event
-    canvasClick = "";
-    $('#statusMsg').html( "Processing..." );
-    //onVideoStarted();
-    templateMatching();
-  }
-
-  // Set the box
-  function setBox() {
-    canvasClick = "setBox1";
-    // set statusMsg
-    $('#statusMsg').html( "Click on the first point" );
-  }
-
-  
   // Automatic analysis
   function templateMatching() {
     
+    $('#statusMsg').html( "Processing..." );
+    
     // TODO: temporary this can be improved
-    box1 = {x: trackingBox.left-0.5*trackingBox.width*trackingBox.scaleX, 
-            y: trackingBox.top-0.5*trackingBox.height*trackingBox.scaleY};
-    box2 = {x: trackingBox.left+0.5*trackingBox.width*trackingBox.scaleX, 
-            y: trackingBox.top+0.5*trackingBox.height*trackingBox.scaleY};
+    /*let box1 = {x: trackingBox.left-0.5*trackingBox.width*trackingBox.scaleX, 
+                y: trackingBox.top-0.5*trackingBox.height*trackingBox.scaleY};
+    let box2 = {x: trackingBox.left+0.5*trackingBox.width*trackingBox.scaleX, 
+                y: trackingBox.top+0.5*trackingBox.height*trackingBox.scaleY};
     
     console.log(box1);
     console.log(box2);
+    */
 
-
+    let boxWidth  = Math.abs( trackingBox.width*trackingBox.scaleX );
+    let boxHeight = Math.abs( trackingBox.height*trackingBox.scaleY );
+    let boxX1     = trackingBox.left - 0.5*boxWidth;
+    let boxY1     = trackingBox.top  - 0.5*boxHeight;
     
     // Somehow this line is needed to set the right dimensions
     setVideoZoom(1.0);
@@ -1430,12 +1300,12 @@ SOFTWARE.
     cap.read(frame);
 
     // initial location of window
-    let trackWindow = new cv.Rect(box1.x, box1.y, box2.x-box1.x, box2.y-box1.y);
+    let trackWindow = new cv.Rect(boxX1, boxY1, boxWidth, boxHeight );
 
     // Draw it on image
-    let rect = new fabric.Rect({ left: 0.5*(box1.x+box2.x), top: 0.5*(box1.y+box2.y), 
-                                 width: Math.abs(box2.x-box1.x), 
-                                 height: Math.abs(box2.y-box1.y), angle: 0,
+    let rect = new fabric.Rect({ left: trackingBox.left, top: trackingBox.top, 
+                                 width: boxWidth, 
+                                 height: boxHeight, angle: 0,
                                  fill: 'rgba(0,0,0,0)', stroke: 'red', strokeWidth: 2 });  
     canvas.add(rect);
 
@@ -1494,6 +1364,7 @@ SOFTWARE.
             });
           } else {
             frame.delete(); dst.delete(); hsv.delete(); roi.delete(); hsvRoi.delete(); mask.delete();
+            $('#statusMsg').html( "" );
             canvas.remove(rect);
             updatePlots();
             startAndStopManual.click();
