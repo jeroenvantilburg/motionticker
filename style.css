@@ -23,6 +23,11 @@ pre {
   font-family: "Courier New",Courier,Arial,Verdana;
 }
 
+input {
+  text-align: right;
+  background-color: rgba(255,255,255,0.2);
+}
+
 .center {
   text-align: center;
 }
@@ -41,6 +46,13 @@ pre {
   vertical-align: middle;
 }
 
+#distanceInput {
+  position: absolute;
+  width: 50px;
+  height: 19px;
+  font-size: 16px;
+  background-color: rgba(255,255,255,0.0);
+}
 /* General page layout:
    -------------------------------------
      header            

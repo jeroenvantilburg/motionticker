@@ -99,10 +99,48 @@ SOFTWARE.
                                          radius: 5, stroke: 'darkgreen', strokeWidth: 1,
                                          hasControls: false, hasBorders: false, padding: 10,
                                          fill: 'rgba(0,0,0,0)' });
+  let scaleRect = new fabric.Rect({left: 0, top: 0, height: 20, width: 70, 
+                                   strokeWidth: 1, stroke: 'darkgreen',
+                                   fill: 'rgba(10,100,10,0.5)' });
+  let scaleTxt = new fabric.Text('m', {left: 25, top: 0, /*originX: 'left', originY: 'bottom',*/ 
+                                   fontSize: 16, fontFamily: "Verdana" });
+  let scaleBox = new fabric.Group( [ scaleRect, scaleTxt], 
+                                   {left: 110, top: 50, selectable: false, evented: false}  );
 
+
+  // TODO: maybe put this in index.html
+  /*let input = document.createElement("input"); input.type = "text"; 
+  input.id = "bla"; 
+  //input.name = "bla";
+  input.value = "1.0"; 
+  input.style = "position:absolute;width:50px;height:19px;font-size:16px;background-color:rgba(255,255,255,0.0);";
+  //input.style.left = (x1).toString()+"px";
+  //input.style.top = (y1).toString()+"px";
+  input.className = "css-class-name"; // set the CSS class
+  body = document.getElementById("canvasContainer");
+  body.appendChild(input); // put it into the DOM  
+  */
+  //let distanceInput = document.getElementById('distanceInput');
+  
+  function setScaleBox() {    
+    let length = Math.sqrt((scaleLine.x1-scaleLine.x2)**2 + (scaleLine.y1-scaleLine.y2)**2 );
+    let xPos = scaleLine.left + (0.5*scaleBox.width+10)*(scaleLine.y2-scaleLine.y1)/length;
+    let yPos = scaleLine.top + (0.5*scaleBox.height+10)*(scaleLine.x1-scaleLine.x2)/length;
+    scaleBox.set({left: xPos, top: yPos });
+    
+    $("#distanceInput").css({ left: xPos - 0.5*scaleBox.width + 2,
+                        top: yPos - 0.5*parseFloat($("#distanceInput").css("height").slice(0,-2)) });
+    
+    //distanceInput.style.left = xPos - 0.5*scaleBox.width + 2 + 'px';
+    //distanceInput.style.top = yPos-0.5*parseFloat($("#distanceInput").css("height").slice(0,-2))+'px';
+
+
+  }
+  
   scaleCircle1.on("moving", () => {
     scaleLine.set({x1: scaleCircle1.left, y1: scaleCircle1.top} );
     scaleLine.setCoords();
+    setScaleBox();
   });
   scaleCircle1.on("moved", () => {
     setScale();
@@ -110,6 +148,7 @@ SOFTWARE.
   scaleCircle2.on("moving", () => {
     scaleLine.set({x2: scaleCircle2.left, y2: scaleCircle2.top} );
     scaleLine.setCoords();
+    setScaleBox();
   });
   scaleCircle2.on("moved", () => {
     setScale();
@@ -120,6 +159,7 @@ SOFTWARE.
                    x2: localPoints.x2+scaleLine.left, y2: localPoints.y2+scaleLine.top});
     scaleCircle1.set({left: scaleLine.x1, top: scaleLine.y1});
     scaleCircle2.set({left: scaleLine.x2, top: scaleLine.y2});
+    setScaleBox();
   });
   scaleLine.on("moved", () => {
     scaleLine.setCoords();
@@ -127,16 +167,15 @@ SOFTWARE.
     scaleCircle2.setCoords();
   });
   
+  
+  
   // Define tracking box for automatic analysis
-  // TODO: Better initial values
-  let trackingBox = new fabric.Rect({left: -100, top: -100, height: 30, width: 30, 
+  let trackingBox = new fabric.Rect({left: -100, top: -100, height: 50, width: 50, 
                                      fill: 'rgba(0,0,0,0)', stroke: 'red', strokeWidth: 2,
                                      lockRotation: true, strokeUniform: true, noScaleCache: false,
                                      cornerSize: 8, cornerStyle: 'circle', 
                                      cornerColor: 'rgba(35,118,200)',
-                                     hasBorders: false,
-                                     selectable: true, 
-                                     evented: true });  
+                                     hasBorders: false, selectable: true, evented: true });  
   trackingBox.setControlsVisibility({ mtr: false }); // Hide rotating point
   
   // Global video parameters
@@ -144,7 +183,7 @@ SOFTWARE.
   let t0 = 0.0;
   let FPS;
   let pixelsPerMeter;
-  let distanceInMeter = 1.0;
+  let distanceInMeter;
   let originX, originY; // in pixels
 
   // The raw data (all derived data is calculated on the fly)
@@ -665,6 +704,14 @@ SOFTWARE.
     $("#fpsInput").css("background", "pink");
     
     // Put the graphics back
+    showCalibrationControls();
+
+    // Get the frame rate
+    getFPS();
+
+  });
+  
+  function showCalibrationControls() {
     if( automaticAnalysis ) canvas.add( trackingBox );
     canvas.add( xAxis );
     canvas.add( yAxis );
@@ -672,18 +719,30 @@ SOFTWARE.
     canvas.add( scaleLine );
     canvas.add( scaleCircle1 );
     canvas.add( scaleCircle2 );
+    canvas.add( scaleBox );
+    $("#distanceInput").show();
+    //distanceInput.style.display="block";    
+  }
 
-    // Get the frame rate
-    getFPS();
-
-  });
-  
+  function hideCalibrationControls() {
+    canvas.remove(xAxis);
+    canvas.remove(yAxis);
+    canvas.remove( axesOrigin );
+    canvas.remove( scaleLine );
+    canvas.remove( scaleCircle1 );
+    canvas.remove( scaleCircle2 );
+    canvas.remove( scaleBox );
+    $("#distanceInput").hide();
+    //distanceInput.style.display="none";
+  }
     
   function blurOnEnter(e){ if(e.keyCode===13){ e.target.blur();} }
   $("#fpsInput").keydown(blurOnEnter);
   $("#originXInput").keydown(blurOnEnter);
   $("#originYInput").keydown(blurOnEnter);
   $("#scaleInput").keydown(blurOnEnter);
+  $("#distanceInput").keydown(blurOnEnter);
+
 
 
   function dataCanBeRemoved() {
@@ -766,13 +825,31 @@ SOFTWARE.
     }
   });
   
-  // Update the origin when user gives input or when calculated
+  
+  // Update the scale when user gives input
+  $("#distanceInput").change( function() {
+    if( isNumeric(this.value) && toNumber(this.value) > 0 ) {
+      distanceInMeter = this.value;
+      setScale();
+    } else {
+      this.value = distanceInMeter || "?";
+    }
+
+  });
+  
+  // Update the scale when user gives input or when calculated
   $("#scaleInput").change( function() {
     if( isNumeric(this.value) && toNumber(this.value) > 0 ) {
       pixelsPerMeter = toNumber( this.value );   
       this.style.background = '';
       // Enable video analysis
-      tryToEnable() ;      
+      tryToEnable() ;
+      // Set the distanceInMeter
+      let scale1 = {x: scaleCircle1.left, y: scaleCircle1.top};
+      let scale2 = {x: scaleCircle2.left, y: scaleCircle2.top};
+      let dist = Math.sqrt((scale2.x-scale1.x)**2 + (scale2.y-scale1.y)**2);
+      $("#distanceInput").val( dist / pixelsPerMeter );
+      distanceInMeter = dist / pixelsPerMeter;
       // Update plots
       updatePlots();
     } else {
@@ -1004,23 +1081,28 @@ SOFTWARE.
     scaleCircle1.set({left: scaleLine.x1, top: scaleLine.y1});
     scaleCircle2.set({left: scaleLine.x2, top: scaleLine.y2});
     scaleLine.setCoords();
+    setScaleBox();
     //updateScale(scale);
   }
 
   // Set scale button
-  $('#scale').click( evt => {
+  /*$('#scale').click( evt => {
     distanceInMeter = toNumber( prompt("How long is the green ruler in meter?", distanceInMeter) );
     setScale();
-  });
+  });*/
   
   // Set the scale 
   function setScale() {
-    // Get the scale points
-    let scale1 = {x: scaleCircle1.left, y: scaleCircle1.top};
-    let scale2 = {x: scaleCircle2.left, y: scaleCircle2.top};
+    
+    // Check if distanceInMeter is set
+    if( distanceInMeter ) {
+      // Get the scale points
+      let scale1 = {x: scaleCircle1.left, y: scaleCircle1.top};
+      let scale2 = {x: scaleCircle2.left, y: scaleCircle2.top};
 
-    // Update scale
-    updateScale( Math.sqrt((scale2.x-scale1.x)**2 + (scale2.y-scale1.y)**2) / distanceInMeter );
+      // Update scale
+      updateScale( Math.sqrt((scale2.x-scale1.x)**2 + (scale2.y-scale1.y)**2) / distanceInMeter );
+    }
   }
     
   // update scale
@@ -1035,13 +1117,11 @@ SOFTWARE.
   startAndStopManual.addEventListener('click', evt => {
     if( analysisStarted === false ) {
       
-      // Remove controls
-      canvas.remove(xAxis);
-      canvas.remove(yAxis);
-      canvas.remove( axesOrigin );
-      canvas.remove( scaleLine );
-      canvas.remove( scaleCircle1 );
-      canvas.remove( scaleCircle2 );
+      // Hide calibration controls (origin, scale, trackingbox)
+      hideCalibrationControls();
+
+
+
       
       analysisStarted = true;
       startAndStopManual.innerText = stopText;
@@ -1059,14 +1139,8 @@ SOFTWARE.
         canvasClick = "addRawDataPoint";
       }
     } else {
-      // Put back controls
-      if( automaticAnalysis ) canvas.add( trackingBox );
-      canvas.add(xAxis);
-      canvas.add(yAxis);
-      canvas.add( axesOrigin );
-      canvas.add( scaleLine );
-      canvas.add( scaleCircle1 );
-      canvas.add( scaleCircle2 );
+      // Put back calibration controls
+      showCalibrationControls();
 
       analysisStarted = false;
       startAndStopManual.innerText = startText;
