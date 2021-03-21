@@ -5,6 +5,6 @@ Motion Ticker is a HTML5 javascript-application for analysing the motion of obje
 
 [![Webapp screenshot](/img/screenshot.png)](https://jeroenvantilburg.nl/motionticker)
 
-[Probeer de webapp!](https://jeroenvantilburg.nl/motionticker)
+[Try the webapp!](https://jeroenvantilburg.nl/motionticker)
 
 This code is still in progress. Please provide feedback for improvements or in case of bugs.
