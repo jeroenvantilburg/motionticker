@@ -106,21 +106,6 @@ SOFTWARE.
                                    fontSize: 16, fontFamily: "Verdana" });
   let scaleBox = new fabric.Group( [ scaleRect, scaleTxt], 
                                    {left: 110, top: 50, selectable: false, evented: false}  );
-
-
-  // TODO: maybe put this in index.html
-  /*let input = document.createElement("input"); input.type = "text"; 
-  input.id = "bla"; 
-  //input.name = "bla";
-  input.value = "1.0"; 
-  input.style = "position:absolute;width:50px;height:19px;font-size:16px;background-color:rgba(255,255,255,0.0);";
-  //input.style.left = (x1).toString()+"px";
-  //input.style.top = (y1).toString()+"px";
-  input.className = "css-class-name"; // set the CSS class
-  body = document.getElementById("canvasContainer");
-  body.appendChild(input); // put it into the DOM  
-  */
-  //let distanceInput = document.getElementById('distanceInput');
   
   function setScaleBox() {    
     let length = Math.sqrt((scaleLine.x1-scaleLine.x2)**2 + (scaleLine.y1-scaleLine.y2)**2 );
@@ -128,13 +113,11 @@ SOFTWARE.
     let yPos = scaleLine.top + (0.5*scaleBox.height+10)*(scaleLine.x1-scaleLine.x2)/length;
     scaleBox.set({left: xPos, top: yPos });
     
-    $("#distanceInput").css({ left: xPos - 0.5*scaleBox.width + 2,
-                        top: yPos - 0.5*parseFloat($("#distanceInput").css("height").slice(0,-2)) });
-    
-    //distanceInput.style.left = xPos - 0.5*scaleBox.width + 2 + 'px';
-    //distanceInput.style.top = yPos-0.5*parseFloat($("#distanceInput").css("height").slice(0,-2))+'px';
-
-
+    let zoomLevel = canvas.width / video.videoWidth;                               
+    $("#distanceInput").css({ transform: "scale("+ zoomLevel +")" });
+    let distHeight = parseFloat($("#distanceInput").css("height").slice(0,-2));
+    $("#distanceInput").css({ left: zoomLevel*(xPos-6) + 8 - 0.5*scaleBox.width,
+                               top: zoomLevel*yPos - 0.5*distHeight });
   }
   
   scaleCircle1.on("moving", () => {
@@ -337,6 +320,8 @@ SOFTWARE.
                            height: video.videoHeight * scaleRatio })
     canvas.setZoom( scaleRatio );
     canvas.renderAll();
+    
+    setScaleBox();
 
     video.width = video.videoWidth * scaleRatio ;
     video.height = video.videoHeight * scaleRatio;
@@ -829,7 +814,7 @@ SOFTWARE.
   // Update the scale when user gives input
   $("#distanceInput").change( function() {
     if( isNumeric(this.value) && toNumber(this.value) > 0 ) {
-      distanceInMeter = this.value;
+      distanceInMeter = toNumber( this.value );
       setScale();
     } else {
       this.value = distanceInMeter || "?";
