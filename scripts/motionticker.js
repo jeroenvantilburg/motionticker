@@ -35,6 +35,30 @@ SOFTWARE.
   let startText = startAndStopManual.innerText;
   let stopText = "Stop analysis";
 
+  
+  $(".showSideBar").click( () => { 
+    $(".sidebar").width(360);
+    $(".showSideBar").hide();
+    $(".hideSideBar").show();
+  });
+
+  $(".hideSideBar").click( () => { 
+    $(".sidebar").width(0);
+    $(".showSideBar").show();
+    $(".hideSideBar").hide();
+  });
+
+  // Event listener for resizing the window
+  $(window).resize( () => {
+    if( window.innerWidth > 780 ) {
+      $(".sidebar").width(360);
+      $(".showSideBar").hide();
+      $(".hideSideBar").hide();      
+    } else {
+      $(".hideSideBar").click();
+    }
+  });  
+  
   // Initialize canvas using Fabric.js
   var canvas = this.__canvas = new fabric.Canvas('canvasOutput', 
                                                  { selection: false, 
