@@ -94,9 +94,15 @@
             <!--td><button id="origin" disabled hidden>Origin wizard</button></td-->
           </tr>
         </table>
-        <canvas id="positionChart" class="chart" width="350" height="250"></canvas>
-        <canvas id="velocityChart" class="chart" width="350" height="250"></canvas>
-        <canvas id="accelerationChart" class="chart" width="350" height="250" style="display: none"></canvas>
+        <div class="chart-container">
+          <canvas id="positionChart" class="chart"></canvas>
+        </div>
+        <div class="chart-container">
+          <canvas id="velocityChart" class="chart"></canvas>
+        </div>
+        <div class="chart-container">
+          <canvas id="accelerationChart" class="chart" style="display: none"></canvas>
+        </div>
       </div>
     </div>
   </div>

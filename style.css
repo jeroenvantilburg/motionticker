@@ -36,6 +36,11 @@ input {
   border:1px solid #ccc;
 }
 
+.chart-container {
+  width: 350px;
+  height: 250px;
+}
+
 .container video, .container canvas {
   position:absolute;
   top:  0px;
@@ -151,11 +156,6 @@ input {
   .showSideBar{display: block;}
 }
 
-@media screen and (min-width: 781px) { 
-  .sidebar{width: 360px;}
-  .showSideBar{display: none;}
-  .hideSideBar{display: none;}
-}
 
 /* Layout for the main button */
 .main-button {
@@ -269,6 +269,10 @@ input {
 /* Show the dropdown menu on hover */
 .dropdown:hover .dropdown-content {
   display: block;
+}
+
+.dropdown:click .dropdown-content {
+  display: none;
 }
 
 

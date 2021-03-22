@@ -35,9 +35,11 @@ SOFTWARE.
   let startText = startAndStopManual.innerText;
   let stopText = "Stop analysis";
 
+  let maxSideBarWidth = 360;
   
-  $(".showSideBar").click( () => { 
-    $(".sidebar").width(360);
+  $(".showSideBar").click( () => {     
+    let sideBarWidth = Math.min(maxSideBarWidth, window.innerWidth ); 
+    $(".sidebar").width( sideBarWidth );
     $(".showSideBar").hide();
     $(".hideSideBar").show();
   });
@@ -49,15 +51,23 @@ SOFTWARE.
   });
 
   // Event listener for resizing the window
-  $(window).resize( () => {
-    if( window.innerWidth > 780 ) {
-      $(".sidebar").width(360);
+  $(window).resize( resizeWindow );
+  function resizeWindow() {
+    // Modify width of sidebar if it becomes too small
+    let sideBarWidth = Math.min(maxSideBarWidth, window.innerWidth ); 
+    $(".sidebar").width( sideBarWidth );
+    $('#positionChart').parent().width( sideBarWidth-10 );
+    $('#velocityChart').parent().width( sideBarWidth-10 );
+    $('#accelerationChart').parent().width( sideBarWidth-10 );
+
+    if( window.innerWidth > 780 ) { // 780 is the division between small/large screens
+      $(".sidebar").width( sideBarWidth );
       $(".showSideBar").hide();
       $(".hideSideBar").hide();      
     } else {
       $(".hideSideBar").click();
     }
-  });  
+  }
   
   // Initialize canvas using Fabric.js
   var canvas = this.__canvas = new fabric.Canvas('canvasOutput', 
@@ -921,7 +931,8 @@ SOFTWARE.
 
   // load all code after the document
   $("document").ready( () => {
-    videoImport.removeAttribute('disabled');    
+    //videoImport.removeAttribute('disabled');
+    resizeWindow();
   });
                       
   // Event listener for the modal boxes
@@ -1606,15 +1617,19 @@ SOFTWARE.
                                                   display: true},
                                     type: 'linear', position: 'bottom'}],
                            yAxes: [{ scaleLabel:{ labelString: 'Position (m)', 
-                                                display: true} }]
-                         }};
+                                                  display: true} }] },
+                legend: { align: "end", 
+                          labels: { boxWidth: 6, usePointStyle: true } } };
 
-  let pData = { datasets: [{ label: 'x', fill: 'false', pointBackgroundColor: 'red', 
-                        borderColor: 'red', backgroundColor: 'red' },
-                       { label: 'y', fill: 'false', pointBackgroundColor: 'blue', 
-                        borderColor: 'blue', backgroundColor: 'blue' }] };
+  let pData = { datasets: [{ label: 'x', fill: 'false', pointStyle: 'rect',
+                             pointBackgroundColor: 'crimson', pointBorderColor: 'crimson',
+                             borderColor: 'firebrick', borderWidth: 1  },
+                           { label: 'y', fill: 'false', 
+                             pointBackgroundColor: 'royalblue', pointBorderColor: 'royalblue',
+                             borderColor: 'mediumblue', borderWidth: 1 }] };
 
-  Chart.defaults.global.responsive = false;
+  //Chart.defaults.global.responsive = false;
+  Chart.defaults.global.maintainAspectRatio = false;
   Chart.defaults.global.defaultFontSize = 10;
   
   let posCtx = document.getElementById('positionChart').getContext('2d');
@@ -1624,10 +1639,12 @@ SOFTWARE.
     options: options
   });
 
-  let vData = { datasets: [{ label: 'x', fill: 'false', pointBackgroundColor: 'red', 
-                        borderColor: 'red', backgroundColor: 'red' },
-                       { label: 'y', fill: 'false', pointBackgroundColor: 'blue', 
-                        borderColor: 'blue', backgroundColor: 'blue' }] };
+  let vData = { datasets: [{ label: 'x', fill: 'false', pointStyle: 'rect',
+                             pointBackgroundColor: 'crimson', pointBorderColor: 'crimson',
+                             borderColor: 'firebrick', borderWidth: 1  },
+                           { label: 'y', fill: 'false', 
+                             pointBackgroundColor: 'royalblue', pointBorderColor: 'royalblue',
+                             borderColor: 'mediumblue', borderWidth: 1 }] };
 
   let velocityCtx = document.getElementById('velocityChart').getContext('2d');
   let velocityChart = new Chart(velocityCtx, {  
@@ -1637,10 +1654,12 @@ SOFTWARE.
   });
   velocityChart.options.scales.yAxes[0].scaleLabel.labelString = "Velocity (m/s)";
 
-  let aData = { datasets: [{ label: 'x', fill: 'false', pointBackgroundColor: 'red', 
-                        borderColor: 'red', backgroundColor: 'red' },
-                       { label: 'y', fill: 'false', pointBackgroundColor: 'blue', 
-                        borderColor: 'blue', backgroundColor: 'blue' }] };
+  let aData = { datasets: [{ label: 'x', fill: 'false', pointStyle: 'rect',
+                             pointBackgroundColor: 'crimson', pointBorderColor: 'crimson',
+                             borderColor: 'firebrick', borderWidth: 1  },
+                           { label: 'y', fill: 'false', 
+                             pointBackgroundColor: 'royalblue', pointBorderColor: 'royalblue',
+                             borderColor: 'mediumblue', borderWidth: 1 }] };
 
   let accelerationCtx = document.getElementById('accelerationChart').getContext('2d');
   let accelerationChart = new Chart(accelerationCtx, {  
