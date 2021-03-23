@@ -304,7 +304,7 @@ SOFTWARE.
 
   
   function toNumber(string){
-    return parseFloat( string.replace(',','.') );
+    return parseFloat( parseFloat( string.replace(',','.') ).toPrecision(6));
   }
 
   function isNumeric(str) {
@@ -796,9 +796,9 @@ SOFTWARE.
         // Video can be enabled
         tryToEnable();
       }
-    } else {
-      this.value = FPS || "";
-    }
+    } //else {
+    this.value = FPS || "";
+    //}
   });
 
   function updateFPS( rate ) {
@@ -821,9 +821,9 @@ SOFTWARE.
       
       // Update plots
       updatePlots();
-    } else {
-      this.value = (typeof originX !== "undefined" ) ? originX : "";
-    }
+    } //else {
+    this.value = (typeof originX !== "undefined" ) ? originX : "";
+    //}
   });
   $("#originYInput").change( function() {
     if( isNumeric(this.value) ) {
@@ -838,9 +838,9 @@ SOFTWARE.
 
       // Update plots
       updatePlots();
-    } else {
-      this.value = (typeof originY !== "undefined" ) ? originY : "";
-    }
+    } //else {
+    this.value = (typeof originY !== "undefined" ) ? originY : "";
+    //}
   });
   
   
@@ -849,9 +849,9 @@ SOFTWARE.
     if( isNumeric(this.value) && toNumber(this.value) > 0 ) {
       distanceInMeter = toNumber( this.value );
       setScale();
-    } else {
-      this.value = distanceInMeter || "?";
-    }
+    } //else {
+    this.value = distanceInMeter || "?";
+    //}
 
   });
   
@@ -866,13 +866,13 @@ SOFTWARE.
       let scale1 = {x: scaleCircle1.left, y: scaleCircle1.top};
       let scale2 = {x: scaleCircle2.left, y: scaleCircle2.top};
       let dist = Math.sqrt((scale2.x-scale1.x)**2 + (scale2.y-scale1.y)**2);
-      $("#distanceInput").val( dist / pixelsPerMeter );
-      distanceInMeter = dist / pixelsPerMeter;
+      distanceInMeter = parseFloat( (dist / pixelsPerMeter).toPrecision(6) ) ;
+      $("#distanceInput").val( distanceInMeter );
       // Update plots
       updatePlots();
-    } else {
-      this.value = pixelsPerMeter || "";
-    }
+    } //else {
+    this.value = pixelsPerMeter || "";
+    //}
   });
   
   function tryToEnable() {
