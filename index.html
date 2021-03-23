@@ -45,7 +45,6 @@
     <div class="page">  
 	  	<div class="page-header">               
         <div class="center">
-          <button id="startAndStopAuto" disabled hidden>Automatic</button>
           <button id="startAndStopManual" class="main-button button-on" disabled>Start analysis</button>
           <input id="automaticAnalysis" type="checkbox">Automatic</input>
         </div>
@@ -53,13 +52,13 @@
            <nobr id="statusMsg"></nobr>
         </div>
         <div class="center">
-          <button id="prev" disabled><i class="fa fa-step-backward"></i></button>
-          <button id="play" disabled><i class="fa fa-play"></i></button>
-          <button id="next" disabled><i class="fa fa-step-forward"></i></button>
+          <button id="prev" class="player" disabled><i class="fa fa-step-backward"></i></button>
+          <button id="play" class="player" disabled><i class="fa fa-play"></i></button>
+          <button id="next" class="player" disabled><i class="fa fa-step-forward"></i></button>
           <input id="slider" type="range" min="0" max="100" step=1 value="0" disabled>
           <nobr id="frameNumber">0 / 0</nobr>
-          <button id="zoomOut" disabled><i class="fa fa-search-minus"></i></button>
-          <button id="zoomIn" disabled><i class="fa fa-search-plus"></i></button>
+          <button id="zoomOut" class="player" disabled><i class="fa fa-search-minus"></i></button>
+          <button id="zoomIn" class="player" disabled><i class="fa fa-search-plus"></i></button>
         </div>
       </div>
       <div class="page-content">

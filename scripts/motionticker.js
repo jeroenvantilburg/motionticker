@@ -84,16 +84,15 @@ SOFTWARE.
   function unHighlightMarker( markerP ) { markerP.set({stroke: 'rgba(200,0,0)', strokeWidth: 1}); }
 
   // Define axes for canvas with dummy coordinates
-  let xAxis = new fabric.Line( [0,0,100,0], {strokeWidth: 2, stroke: 'blue',
+  let xAxis = new fabric.Line( [0,0,100,0], {strokeWidth: 3, stroke: 'royalblue',
                                              hasControls: false, hasBorders: false, 
                                              lockMovementX: true, padding: 10
                                             });    
-  let yAxis = new fabric.Line( [0,0,0,100], {strokeWidth: 2, stroke: 'blue',
+  let yAxis = new fabric.Line( [0,0,0,100], {strokeWidth: 3, stroke: 'royalblue',
                                              hasControls: false, hasBorders: false, 
                                              lockMovementY: true, padding: 10 });    
-  let axesOrigin = new fabric.Circle({ radius: 5, /*stroke: 'blue', strokeWidth: 2,*/
-                                       hasControls: false, hasBorders: false, padding: 10,
-                                       fill: 'blue' });
+  let axesOrigin = new fabric.Circle({ radius: 5, padding: 10, fill: 'blue',
+                                       hasControls: false, hasBorders: false });
   axesOrigin.on("moving", () => {
     xAxis.set({y1: axesOrigin.top, y2: axesOrigin.top} );
     yAxis.set({x1: axesOrigin.left, x2: axesOrigin.left} );  
@@ -122,22 +121,22 @@ SOFTWARE.
   });
 
   // Define ruler for canvas
-  let scaleLine = new fabric.Line( [100,10,100,110], {strokeWidth: 2, stroke: 'darkgreen',
+  let scaleLine = new fabric.Line( [100,10,100,110], {strokeWidth: 3, stroke: 'limegreen',
                                                   hasControls: false, hasBorders: false, 
                                                   padding: 10});    
   let scaleCircle1 = new fabric.Circle({ left:100, top: 10, 
-                                         radius: 5, stroke: 'darkgreen', strokeWidth: 1,
+                                         radius: 5, stroke: 'green', strokeWidth: 1,
                                          hasControls: false, hasBorders: false, padding: 10,
                                          fill: 'rgba(0,0,0,0)' });
   let scaleCircle2 = new fabric.Circle({ left:100, top: 110,
-                                         radius: 5, stroke: 'darkgreen', strokeWidth: 1,
+                                         radius: 5, stroke: 'green', strokeWidth: 1,
                                          hasControls: false, hasBorders: false, padding: 10,
                                          fill: 'rgba(0,0,0,0)' });
-  let scaleRect = new fabric.Rect({left: 0, top: 0, height: 20, width: 70, 
-                                   strokeWidth: 1, stroke: 'darkgreen',
-                                   fill: 'rgba(10,100,10,0.5)' });
-  let scaleTxt = new fabric.Text('m', {left: 25, top: 0, /*originX: 'left', originY: 'bottom',*/ 
-                                   fontSize: 16, fontFamily: "Verdana" });
+  let distHeight = parseFloat($("#distanceInput").css("height").slice(0,-2));
+  let scaleRect = new fabric.Rect({left: 0, top: 0, height: distHeight, width: 70, 
+                                   strokeWidth: 1, stroke: 'green', fill: 'limegreen' });
+  let scaleTxt = new fabric.Text('m', {left: 25, top: 0,
+                                   fontSize: 14, fontFamily: "Verdana" });
   let scaleBox = new fabric.Group( [ scaleRect, scaleTxt], 
                                    {left: 110, top: 50, selectable: false, evented: false}  );
   
@@ -149,7 +148,7 @@ SOFTWARE.
     
     let zoomLevel = canvas.width / video.videoWidth;                               
     $("#distanceInput").css({ transform: "scale("+ zoomLevel +")" });
-    let distHeight = parseFloat($("#distanceInput").css("height").slice(0,-2));
+    console.log(distHeight);
     $("#distanceInput").css({ left: zoomLevel*(xPos-6) + 8 - 0.5*scaleBox.width,
                                top: zoomLevel*yPos - 0.5*distHeight });
   }
@@ -814,7 +813,7 @@ SOFTWARE.
       originX = toNumber( this.value );
       
       // Update the y-axis on the canvas
-      yAxis.set({x1: originX, y1: 0, x2: originX, y2: canvas.height} );
+      yAxis.set({x1: originX, y1: 0, x2: originX, y2: canvas.height/canvas.getZoom()} );
       yAxis.setCoords();
       axesOrigin.set({left: originX });
       axesOrigin.setCoords();
@@ -831,7 +830,7 @@ SOFTWARE.
       originY = toNumber( this.value ) ;
       
       // Update the x-axis on the canvas
-      xAxis.set({x1: 0, y1: originY, x2: canvas.width, y2: originY} );
+      xAxis.set({x1: 0, y1: originY, x2: canvas.width/canvas.getZoom(), y2: originY} );
       xAxis.setCoords();
       axesOrigin.set({top: originY });
       axesOrigin.setCoords();
