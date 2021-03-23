@@ -21,6 +21,7 @@ pre {
   display: inline;
   margin: 5px;
   white-space: pre-wrap;
+  word-break: break-all;
   font-family: "Courier New",Courier,Arial,Verdana;
 }
 

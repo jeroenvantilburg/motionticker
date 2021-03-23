@@ -78,10 +78,10 @@ SOFTWARE.
   fabric.Object.prototype.originX = fabric.Object.prototype.originY = 'center';
   
   // Define marker style
-  let markerPoint = new fabric.Circle({ radius: 3, stroke: 'rgba(200,0,0)', strokeWidth: 1, 
+  let markerPoint = new fabric.Circle({ radius: 3, stroke: 'rgba(220,0,0)', strokeWidth: 1, 
                                         fill: 'rgba(0,0,0,0)' });
   function highlightMarker( markerP ) { markerP.set({stroke: 'red', strokeWidth: 2}); }
-  function unHighlightMarker( markerP ) { markerP.set({stroke: 'rgba(200,0,0)', strokeWidth: 1}); }
+  function unHighlightMarker( markerP ) { markerP.set({stroke: 'rgba(220,0,0)', strokeWidth: 1}); }
 
   // Define axes for canvas with dummy coordinates
   let xAxis = new fabric.Line( [0,0,100,0], {strokeWidth: 3, stroke: 'royalblue',

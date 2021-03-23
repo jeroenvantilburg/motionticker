@@ -30,7 +30,7 @@
           <a id="showAbout"><i class="fa fa-vcard"></i> About</a>
           <a id="showSettings"><i class="fa fa-cogs"></i> Settings</a>
           <a id="videoImport" disabled><i class="fa fa-upload"></i> Upload new video</a>
-          <input id="videoInput" type="file" accept="video/*,.mkv" hidden/>
+          <input id="videoInput" type="file" accept="video/*,.mkv,.mov" hidden/>
           <a id="csvExport"><i class="fa fa-download"></i> Export csv-file</a>
           <a id="csvImport"><i class="fa fa-upload"></i> Import csv-file</a>
           <input id="csvInput" type="file" accept="text/plain,text/csv,.csv,.tsv" hidden>
@@ -151,7 +151,7 @@
 
       <b>Setting up</b><br/>
       Upload the video that you would like to analyse. The supported video formats are
-      MP4, WebM and Ogg.
+      MP4, MOV, WebM and Ogg.
       After uploading your video, the frame rate is calculated using the mediainfo tool. In
       the event that this calculation stalls, you can set the frame rate manually. In most cases
       a frame rate of 30 or 60 frames per second (fps) is appropriate. The next step is to calibrate
