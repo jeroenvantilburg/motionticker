@@ -68,6 +68,7 @@
           <video id="video" autoplay playsinline muted style="display:block;"></video>
           <canvas id="canvasOutput"></canvas>
           <input id="distanceInput" type="text" value="?" style="display:none"></input>
+          <div id="videoTime"></div>
         </div>    
       </div>
 		</div>
@@ -86,13 +87,11 @@
           <tr>
             <td>Scale:</td>
             <td><input id="scaleInput" type="text" style="width:60px"></input> px/m</td>
-            <!--td><button id="scale" disabled hidden>Scale wizard</button></td-->
           </tr>
           <tr>
             <td>Origin (x,y): (</td>
             <td><input id="originXInput" type="text" style="width:40px"></input>,
                 <input id="originYInput" type="text" style="width:40px"></input>) px</td>
-            <!--td><button id="origin" disabled hidden>Origin wizard</button></td-->
           </tr>
         </table>
         <div class="chart-container">

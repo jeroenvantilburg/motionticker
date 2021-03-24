@@ -79,7 +79,8 @@ SOFTWARE.
   
   // Define marker style
   let markerPoint = new fabric.Circle({ radius: 3, stroke: 'rgba(220,0,0)', strokeWidth: 1, 
-                                        fill: 'rgba(0,0,0,0)' });
+                                        fill: 'rgba(0,0,0,0)',
+                                        selectable: false, evented: false });
   function highlightMarker( markerP ) { markerP.set({stroke: 'red', strokeWidth: 2}); }
   function unHighlightMarker( markerP ) { markerP.set({stroke: 'rgba(220,0,0)', strokeWidth: 1}); }
 
@@ -1324,6 +1325,7 @@ SOFTWARE.
     return t0 + (targetFrame + 0.5)/FPS;
   }
 
+  let videoTimeoutID = 0;
   function gotoFrame(targetFrame) {
     let newTime = (targetFrame + 0.5)/FPS;
         
@@ -1332,6 +1334,11 @@ SOFTWARE.
     } else if( newTime > video.duration ) {
       return false;
     } else {
+      // Draw the current time and remove it after 1 s
+      $("#videoTime").html( newTime.toFixed(2) + " s" );
+      clearTimeout( videoTimeoutID ); // remove previous timeout
+      videoTimeoutID = setTimeout( () =>{ $("#videoTime").html( "" ); }, 1000 );
+      
       // Highlight the new marker
       let currentDataPoint = rawData.find(entry => entry.t === currentFrame );
       if( currentDataPoint ) {
