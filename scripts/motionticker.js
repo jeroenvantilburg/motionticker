@@ -933,7 +933,20 @@ SOFTWARE.
     //videoImport.removeAttribute('disabled');
     resizeWindow();
   });
-                      
+  
+
+  // Event listener for the dropdown menu
+  function showDropdownMenu() { $(".dropdown-content").show();}
+  function hideDropdownMenu() { $(".dropdown-content").hide();}
+
+  $(".dropdown").hover( showDropdownMenu, hideDropdownMenu );
+  $(".dropdown-content").click( () => {
+    $(".dropdown-content").hide();
+  });
+
+
+                       
+
   // Event listener for the modal boxes
   $("#showMediaInfo").click( evt => { showModal("mediaInfoModal"); });
   $("#showAbout").click( evt => { showModal("aboutModal");} );
