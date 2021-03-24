@@ -31,10 +31,10 @@
           <a id="showSettings"><i class="fa fa-cogs"></i> Settings</a>
           <a id="videoImport" disabled><i class="fa fa-upload"></i> Upload new video</a>
           <input id="videoInput" type="file" accept="video/*,.mkv,.mov" hidden/>
-          <a id="csvExport"><i class="fa fa-download"></i> Export csv-file</a>
+          <a id="csvExport" disabled><i class="fa fa-download"></i> Export csv-file</a>
           <a id="csvImport"><i class="fa fa-upload"></i> Import csv-file</a>
           <input id="csvInput" type="file" accept="text/plain,text/csv,.csv,.tsv" hidden>
-          <a id="deleteData"><i class="fa fa-trash-o"></i> Delete data</a>
+          <a id="deleteData" disabled><i class="fa fa-trash-o"></i> Delete data</a>
           <a id="showHelp"><i class="fa fa-question-circle-o"></i> Help</a>
         </div>
       </div>
@@ -48,7 +48,7 @@
 	  	<div class="page-header">               
         <div class="center">
           <button id="startAndStopManual" class="main-button button-on" disabled>Start analysis</button>
-          <input id="automaticAnalysis" type="checkbox">Automatic</input>
+          <input id="automaticAnalysis" type="checkbox" disabled>Automatic</input>
         </div>
         <div class="center">
            <nobr id="statusMsg"></nobr>

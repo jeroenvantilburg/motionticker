@@ -272,21 +272,15 @@ input {
   vertical-align: middle;
 }
 
+.dropdown-content a[disabled] {
+  color: #eee;
+  pointer-events: none;
+}
+
 /* Add a grey background color to dropdown links on hover */
 .dropdown-content a:hover {
   background-color: #ddd;
 }
-
-/* Show the dropdown menu on hover */
-/*.dropdown:hover .dropdown-content {
-  display: block;
-}
-
-.dropdown:click .dropdown-content {
-  display: none;
-}
-*/
-
 
 /* https://www.w3schools.com/howto/howto_css_modals.asp */
 /* The Modal (background) */
@@ -414,5 +408,6 @@ input {
 
 
 }
+
 
 

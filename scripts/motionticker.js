@@ -316,20 +316,26 @@ SOFTWARE.
 
   
   $("#deleteData").click( () => { 
-    if( dataCanBeRemoved () ) {
-
-      // Remove the marker from the canvas
-      rawData.forEach(function (item) {
-        canvas.remove( item.marker );
-      });
-      
-      // Clear the raw data
-      rawData = [];
-
-      // Update plots
-      updatePlots();
-    }
+    if( dataCanBeRemoved () ) { deleteRawData(); }
   });
+  
+  function deleteRawData() {
+    // Remove the marker from the canvas
+    rawData.forEach(function (item) {
+      canvas.remove( item.marker );
+    });
+      
+    // Clear the raw data
+    rawData = [];
+    
+    // Disable buttons
+    $("#csvExport").attr('disabled', '');
+    $("#deleteData").attr('disabled', '');
+
+    // Update plots
+    updatePlots();
+  }
+  
   
   $("#zoomOut").click( () => {
     //console.log("zoom: " + canvas.width / video.videoWidth );
@@ -564,10 +570,12 @@ SOFTWARE.
           ) {
 
           // Remove the marker from the canvas
-          rawData.forEach(function (item) {
+          /*rawData.forEach(function (item) {
             canvas.remove( item.marker );
           });
           rawData = []; // Clear old data
+          */
+          deleteRawData(); // Clear old data
 
           // Update the header info
           let meta = results.data[0];
@@ -646,16 +654,15 @@ SOFTWARE.
     video.load();
 
     // Clear raw data and meta data
-    rawData = [];
+    deleteRawData();
     FPS = undefined;
     updateFPS();
-    //fpsInput.value = "";
     pixelsPerMeter = undefined;
     updateScale();
     originX = originY = undefined;
     updateOrigin();
     canvas.clear();
-
+    
     // Disable video control and reset video parameters when selecting new video
     disableAnalysis();
     disableVideoControl();
@@ -712,10 +719,6 @@ SOFTWARE.
 
     console.log("Resolution: " + video.videoWidth + " x " + video.videoHeight );
     console.log("Duration: " + video.duration );
-
-    // Enable manually setting origin and scale
-    $('#origin').removeAttr('disabled');
-    $('#scale').removeAttr('disabled');
     
     // Highlight fields that need to be filled
     $("#scaleInput").css( "background", "pink");
@@ -739,7 +742,6 @@ SOFTWARE.
     canvas.add( scaleCircle2 );
     canvas.add( scaleBox );
     $("#distanceInput").show();
-    //distanceInput.style.display="block";    
   }
 
   function hideCalibrationControls() {
@@ -751,7 +753,6 @@ SOFTWARE.
     canvas.remove( scaleCircle2 );
     canvas.remove( scaleBox );
     $("#distanceInput").hide();
-    //distanceInput.style.display="none";
   }
     
   function blurOnEnter(e){ if(e.keyCode===13){ e.target.blur();} }
@@ -773,9 +774,6 @@ SOFTWARE.
 
     if( isNumeric(this.value) && toNumber(this.value) > 0 && dataCanBeRemoved() ) {
 
-      // Clear data
-      rawData = [];
-
       // Remove status message
       $('#statusMsg').html( "" );   
       this.style.background = ""; // remove pink alert
@@ -783,8 +781,8 @@ SOFTWARE.
       // Set the new FPS
       FPS = toNumber(this.value);
 
-      // Update plots
-      updatePlots();
+      // Clear raw data
+      deleteRawData();
       
       if( video.src !== "" ) {
         // Update the slider
@@ -911,12 +909,6 @@ SOFTWARE.
     startAndStopManual.innerText = startText;
     startAndStopManual.classList.add("button-on");
     startAndStopManual.classList.remove("button-off");
-
-    // Automatic analysis only when openCV is ready
-    //document.getElementById('opencv').onload= () => onOpenCvReady();
-    //function onOpenCvReady() {
-      //startAndStopAuto.removeAttribute('disabled');
-    //}
   }
 
   function disableAnalysis() {    
@@ -925,12 +917,20 @@ SOFTWARE.
     startAndStopManual.classList.remove("button-off");
     $('#statusMsg').html("");
     canvasClick = "";
-    startAndStopManual.setAttribute('disabled', '');
+    startAndStopManual.setAttribute('disabled', '');    
   }
-
+  
+  // Automatic analysis only when openCV is ready
+  //document.getElementById('opencv').onload= () => onOpenCvReady();
+  $("#opencv").on("load", () => {
+    $("#automaticAnalysis").removeAttr('disabled');    
+  });
+  //function onOpenCvReady() {
+  //}
+  
   // load all code after the document
   $("document").ready( () => {
-    //videoImport.removeAttribute('disabled');
+    $("#videoImport").removeAttr('disabled');
     resizeWindow();
   });
   
@@ -1201,6 +1201,12 @@ SOFTWARE.
   }
 
   function addRawData( rawDataPoint ) {
+    
+    // First data point: enable export-csv-data button and delete-data button
+    if( rawData.length === 0 ) {
+      $("#csvExport").removeAttr('disabled');
+      $("#deleteData").removeAttr('disabled');
+    }
     
     // Add a marker to the rawDataPoint
     let markerP = fabric.util.object.clone( markerPoint ) ;
