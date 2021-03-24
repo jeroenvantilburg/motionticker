@@ -921,12 +921,9 @@ SOFTWARE.
   }
   
   // Automatic analysis only when openCV is ready
-  //document.getElementById('opencv').onload= () => onOpenCvReady();
   $("#opencv").on("load", () => {
     $("#automaticAnalysis").removeAttr('disabled');    
   });
-  //function onOpenCvReady() {
-  //}
   
   // load all code after the document
   $("document").ready( () => {
@@ -943,9 +940,7 @@ SOFTWARE.
   $(".dropdown-content").click( () => {
     $(".dropdown-content").hide();
   });
-
-
-                       
+  
 
   // Event listener for the modal boxes
   $("#showMediaInfo").click( evt => { showModal("mediaInfoModal"); });
@@ -1386,6 +1381,7 @@ SOFTWARE.
   function templateMatching() {
     
     $('#statusMsg').html( "Processing..." );
+    disableVideoControl();
     
     // TODO: temporary this can be improved
     /*let box1 = {x: trackingBox.left-0.5*trackingBox.width*trackingBox.scaleX, 
@@ -1438,6 +1434,7 @@ SOFTWARE.
           frame.delete(); dst.delete(); hsv.delete(); roi.delete(); hsvRoi.delete(); mask.delete();
           canvas.remove(rect);
           updatePlots();
+          enableVideoControl();
           return;
         }
 
@@ -1475,11 +1472,12 @@ SOFTWARE.
               processVideo();
             });
           } else {
-            frame.delete(); dst.delete(); hsv.delete(); roi.delete(); hsvRoi.delete(); mask.delete();
-            $('#statusMsg').html( "" );
-            canvas.remove(rect);
-            updatePlots();
+            //frame.delete(); dst.delete(); hsv.delete(); roi.delete(); hsvRoi.delete(); mask.delete();
+            //$('#statusMsg').html( "" );
+            //canvas.remove(rect);
+            //updatePlots();
             startAndStopManual.click();
+            processVideo(); // Will abort since analysisStarted is set to false
           }
         }, 50 );
       } catch (err) {
