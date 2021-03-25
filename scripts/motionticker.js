@@ -738,7 +738,6 @@ SOFTWARE.
   });
   
   function showCalibrationControls() {
-    if( automaticAnalysis ) canvas.add( trackingBox );
     canvas.add( xAxis );
     canvas.add( yAxis );
     canvas.add( axesOrigin );
@@ -746,12 +745,13 @@ SOFTWARE.
     canvas.add( scaleCircle1 );
     canvas.add( scaleCircle2 );
     canvas.add( scaleBox );
+    if( automaticAnalysis ) canvas.add( trackingBox );
     $("#distanceInput").show();
   }
 
   function hideCalibrationControls() {
-    canvas.remove(xAxis);
-    canvas.remove(yAxis);
+    canvas.remove( xAxis );
+    canvas.remove( yAxis );
     canvas.remove( axesOrigin );
     canvas.remove( scaleLine );
     canvas.remove( scaleCircle1 );
@@ -1152,9 +1152,6 @@ SOFTWARE.
       
       // Hide calibration controls (origin, scale, trackingbox)
       hideCalibrationControls();
-
-
-
       
       analysisStarted = true;
       startAndStopManual.innerText = stopText;
@@ -1389,6 +1386,12 @@ SOFTWARE.
     };
   }  
     
+
+  // TODO: temporarily add a canvas to display tracking window
+  let tempCanvas = document.getElementById("tempCanvas");
+  let canvasContext = tempCanvas.getContext('2d');
+
+  
   // Automatic analysis
   function templateMatching() {
     
@@ -1469,7 +1472,9 @@ SOFTWARE.
         }
         let xPos  = maxPoint.x + 0.5*hsvRoi.cols;
         let yPos  = maxPoint.y + 0.5*hsvRoi.rows;
-
+                
+        cv.imshow('tempCanvas', hsvRoi);
+        
         // Draw it on image
         rect.set({ left: xPos, top: yPos });
         rect.setCoords();
@@ -1489,7 +1494,7 @@ SOFTWARE.
             //canvas.remove(rect);
             //updatePlots();
             startAndStopManual.click();
-            processVideo(); // Will abort since analysisStarted is set to false
+            processVideo(); // Will abort next iteration since analysisStarted is set to false
           }
         }, 50 );
       } catch (err) {
@@ -1500,144 +1505,6 @@ SOFTWARE.
     // schedule the first one.
     setTimeout(processVideo, 0);
   }
-
-
-  
-  // Automatic analysis
-  function onVideoStarted() {
-        
-    // Somehow this line is needed to set the right dimensions
-    setVideoZoom(1.0);
-    //video.height = video.width * (video.videoHeight / video.videoWidth);
-  
-    let cap = new cv.VideoCapture(video);
-  
-    // take first frame of the video
-    let frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
-    cap.read(frame);
-
-    // initial location of window
-    let trackWindow = new cv.Rect(box1.x, box1.y, box2.x-box1.x, box2.y-box1.y);
-
-    console.log("TrackWindow");
-    console.log(trackWindow);
-    
-    // Draw it on image
-    let rect = new fabric.Rect({ left: 0.5*(box1.x+box2.x), top: 0.5*(box1.y+box2.y), 
-                                 width: Math.abs(box2.x-box1.x), 
-                                 height: Math.abs(box2.y-box1.y), angle: 0,
-                                 fill: 'rgba(0,0,0,0)', stroke: 'red', strokeWidth: 2 });  
-    canvas.add(rect);
-
-    // set up the ROI for tracking
-    let roi = frame.roi(trackWindow);
-    let hsvRoi = new cv.Mat();
-    cv.cvtColor(roi, hsvRoi, cv.COLOR_RGBA2RGB);
-    cv.cvtColor(hsvRoi, hsvRoi, cv.COLOR_RGB2HSV);
-    let mask = new cv.Mat();
-    let lowScalar = new cv.Scalar(30, 30, 0);
-    let highScalar = new cv.Scalar(180, 180, 180);
-    //let lowScalar = new cv.Scalar(0, 30, 30);
-    //let highScalar = new cv.Scalar(180, 255, 255);
-    let low = new cv.Mat(hsvRoi.rows, hsvRoi.cols, hsvRoi.type(), lowScalar);
-    let high = new cv.Mat(hsvRoi.rows, hsvRoi.cols, hsvRoi.type(), highScalar);
-    cv.inRange(hsvRoi, low, high, mask);
-    let roiHist = new cv.Mat();
-    let hsvRoiVec = new cv.MatVector();
-    hsvRoiVec.push_back(hsvRoi);
-    cv.calcHist(hsvRoiVec, [0], mask, roiHist, [180], [0, 180]);
-    cv.normalize(roiHist, roiHist, 0, 255, cv.NORM_MINMAX);
-
-    // delete useless mats.
-    roi.delete(); hsvRoi.delete(); mask.delete(); low.delete(); high.delete();
-    hsvRoiVec.delete();
-
-    // Setup the termination criteria, either 10 iteration or move by atleast 1 pt
-    let termCrit = new cv.TermCriteria(cv.TERM_CRITERIA_EPS | cv.TERM_CRITERIA_COUNT, 
-                                       10, 1);
-    let hsv = new cv.Mat(video.height, video.width, cv.CV_8UC3);
-    let hsvVec = new cv.MatVector();
-    hsvVec.push_back(hsv);
-    let dst = new cv.Mat();
-    let trackBox = null;
-
-    function processVideo() {
-      try {  
-        if (!analysisStarted) {    
-          // clean and stop.
-          frame.delete(); dst.delete(); hsvVec.delete(); roiHist.delete(); hsv.delete();
-          canvas.remove(rect);
-          updatePlots();
-          return;
-        }
-
-        // start processing.
-        cap.read(frame);
-        cv.cvtColor(frame, hsv, cv.COLOR_RGBA2RGB);
-        cv.cvtColor(hsv, hsv, cv.COLOR_RGB2HSV);
-        cv.calcBackProject(hsvVec, [0], roiHist, dst, [0, 180], 1);
-
-        let xPos, yPos, xSize, ySize, angle = 0;
-        if( adaptive ) {
-          // apply camshift to get the new location
-          [trackBox, trackWindow] = cv.CamShift(dst, trackWindow, termCrit);
-          xPos = trackBox.center.x;
-          yPos = trackBox.center.y;
-          xSize = trackBox.size.width;
-          ySize = trackBox.size.height;
-          angle = trackBox.angle;
-        } else {
-          // apply meanshift instead
-          [, trackWindow] = cv.meanShift(dst, trackWindow, termCrit);
-          xPos = trackWindow.x+0.5*trackWindow.width;
-          yPos = trackWindow.y+0.5*trackWindow.height;
-          xSize = trackWindow.width;
-          ySize = trackWindow.height;
-        }
-
-        // Draw it on image
-        //let rect = new fabric.Rect({ left: xPos, top: yPos, width: xSize, height: ySize, angle: angle,
-        //                             fill: 'rgba(0,0,0,0)', stroke: 'red', strokeWidth: 2 });  
-        //canvas.add(rect);
-        rect.set({ left: xPos, top: yPos, width: xSize, height: ySize, angle: angle});
-        rect.setCoords();
-  
-        let rawDataPoint = {t: currentFrame, x: xPos, y: yPos};
-        addRawData( rawDataPoint );
-    
-        // Update plots
-        //updatePlots();
-        
-        /* This does not work for points in between
-        let time = getTime( currentFrame );
-        let pos = getXYposition( rawDataPoint );
-        positionChart.data.datasets[0].data.push( {x: time, y: pos.x} );
-        positionChart.data.datasets[1].data.push( {x: time, y: pos.y} );
-        positionChart.update();  
-        */
-
-        setTimeout( function() {
-          if( gotoFrame(currentFrame+framesToSkip) ) {
-            video.addEventListener("seeked", function(e) {
-              e.target.removeEventListener(e.type, arguments.callee); 
-              processVideo();
-            });
-          } else {
-            frame.delete(); dst.delete(); hsvVec.delete(); roiHist.delete(); hsv.delete();
-            canvas.remove(rect);
-            updatePlots();
-            startAndStopManual.click();
-          }
-        }, 50 );
-      } catch (err) {
-        alert("An error occuring during the automatic analysis: "+err);
-      }
-    };
-
-    // schedule the first one.
-    setTimeout(processVideo, 0);
-  }
-
   
   
   // Plotting stuff
