@@ -30,20 +30,30 @@ SOFTWARE.
   
   // HTML elements
   let video              = document.getElementById('video');
-  let startAndStopManual = document.getElementById('startAndStopManual');
-  
-  let startText = startAndStopManual.innerText;
-  let stopText = "Stop analysis";
 
-  let maxSideBarWidth = 360;
+  // Global video parameters
+  let currentFrame = 0;
+  let t0 = 0.0;
+  let FPS;
+  let pixelsPerMeter;
+  let distanceInMeter;
+  let originX, originY; // in pixels
+
+  // The raw data (all derived data is calculated on the fly)
+  let rawData = [];
+
+  /* ========== RESPONSIVE SECTION =============
+       Adjust design to screen size
+     =========================================== */
   
+  // Hide/show sidebar on small screens
+  let maxSideBarWidth = 360; // Width of sidebar (can be smaller on small mobile screens)
   $(".showSideBar").click( () => {     
     let sideBarWidth = Math.min(maxSideBarWidth, window.innerWidth ); 
     $(".sidebar").width( sideBarWidth );
     $(".showSideBar").hide();
     $(".hideSideBar").show();
   });
-
   $(".hideSideBar").click( () => { 
     $(".sidebar").width(0);
     $(".showSideBar").show();
@@ -68,7 +78,27 @@ SOFTWARE.
       $(".hideSideBar").click();
     }
   }
+
+  /* ========== General functions ====================
+      Useful functions to check/convert numbers
+     ================================================= */
   
+  function toNumber(string){
+    return parseFloat( parseFloat( string.replace(',','.') ).toPrecision(6));
+  }
+
+  function isNumeric(str) {
+    if (typeof str != "string") return false; // we only process strings!  
+    let string = str.replace(',','.')
+    return !isNaN(string) && // use type coercion to parse the _entirety_ of the string
+           !isNaN(parseFloat(string)) // ...and ensure strings of whitespace fail
+  }
+  
+  /* ========== GRAPHICS SECTION ==============
+       Draw the calibration controls with 
+       Fabric.js library
+     =========================================== */
+
   // Initialize canvas using Fabric.js
   var canvas = this.__canvas = new fabric.Canvas('canvasOutput', 
                                                  { selection: false, 
@@ -84,6 +114,15 @@ SOFTWARE.
   function highlightMarker( markerP ) { markerP.set({stroke: 'red', strokeWidth: 2}); }
   function unHighlightMarker( markerP ) { markerP.set({stroke: 'rgba(220,0,0)', strokeWidth: 1}); }
 
+  // Define tracking box for automatic analysis
+  let trackingBox = new fabric.Rect({left: -100, top: -100, height: 50, width: 50, 
+                                     fill: 'rgba(0,0,0,0)', stroke: 'red', strokeWidth: 2,
+                                     lockRotation: true, strokeUniform: true, noScaleCache: false,
+                                     cornerSize: 8, cornerStyle: 'circle', 
+                                     cornerColor: 'rgba(35,118,200)',
+                                     hasBorders: false, selectable: true, evented: true });  
+  trackingBox.setControlsVisibility({ mtr: false }); // Hide rotating point
+
   // Define axes for canvas with dummy coordinates
   let xAxis = new fabric.Line( [0,0,100,0], {strokeWidth: 3, stroke: 'royalblue',
                                              hasControls: false, hasBorders: false, 
@@ -94,6 +133,8 @@ SOFTWARE.
                                              lockMovementY: true, padding: 10 });    
   let axesOrigin = new fabric.Circle({ radius: 5, padding: 10, fill: 'blue',
                                        hasControls: false, hasBorders: false });
+  
+  // Event listeners for axes
   axesOrigin.on("moving", () => {
     xAxis.set({y1: axesOrigin.top, y2: axesOrigin.top} );
     yAxis.set({x1: axesOrigin.left, x2: axesOrigin.left} );  
@@ -121,7 +162,7 @@ SOFTWARE.
     $("#originXInput").change();
   });
 
-  // Define ruler for canvas
+  // Define ruler (line + 2 circles + box) for canvas
   let scaleLine = new fabric.Line( [100,10,100,110], {strokeWidth: 3, stroke: 'limegreen',
                                                   hasControls: false, hasBorders: false, 
                                                   padding: 10});    
@@ -154,6 +195,7 @@ SOFTWARE.
                                top: zoomLevel*yPos - 0.5*distHeight });
   }
   
+  // Event listeners for ruler
   scaleCircle1.on("moving", () => {
     scaleLine.set({x1: scaleCircle1.left, y1: scaleCircle1.top} );
     scaleLine.setCoords();
@@ -183,29 +225,7 @@ SOFTWARE.
     scaleCircle1.setCoords();
     scaleCircle2.setCoords();
   });
-  
-  
-  
-  // Define tracking box for automatic analysis
-  let trackingBox = new fabric.Rect({left: -100, top: -100, height: 50, width: 50, 
-                                     fill: 'rgba(0,0,0,0)', stroke: 'red', strokeWidth: 2,
-                                     lockRotation: true, strokeUniform: true, noScaleCache: false,
-                                     cornerSize: 8, cornerStyle: 'circle', 
-                                     cornerColor: 'rgba(35,118,200)',
-                                     hasBorders: false, selectable: true, evented: true });  
-  trackingBox.setControlsVisibility({ mtr: false }); // Hide rotating point
-  
-  // Global video parameters
-  let currentFrame = 0;
-  let t0 = 0.0;
-  let FPS;
-  let pixelsPerMeter;
-  let distanceInMeter;
-  let originX, originY; // in pixels
-
-  // The raw data (all derived data is calculated on the fly)
-  let rawData = [];
-  
+    
   /* ========== USER SETTINGS ======================
      These settings can be changed in settings menu
      ================================================= */
@@ -297,23 +317,12 @@ SOFTWARE.
   $('#avoidEmptyCells').on('change', function(e) {
     avoidEmptyCells = $('#avoidEmptyCells').is(':checked');
   });
+  // END USER SETTINGS
   
-  /*$('input[name=decimalSeparatorInput][value="' + decimalSeparator +'"]').prop('checked',true);
-  $('input[name=decimalSeparatorInput]').on('change', function(e) {
-    decimalSeparator = document.querySelector('input[name="decimalSeparatorInput"]:checked').value;
-  });*/
-
   
-  function toNumber(string){
-    return parseFloat( parseFloat( string.replace(',','.') ).toPrecision(6));
-  }
-
-  function isNumeric(str) {
-    if (typeof str != "string") return false; // we only process strings!  
-    let string = str.replace(',','.')
-    return !isNaN(string) && // use type coercion to parse the _entirety_ of the string
-           !isNaN(parseFloat(string)) // ...and ensure strings of whitespace fail
-  }
+  /* ==========  ====================
+     
+     ================================================= */
 
   
   $("#deleteData").click( () => { 
@@ -339,19 +348,15 @@ SOFTWARE.
   
   
   $("#zoomOut").click( () => {
-    //console.log("zoom: " + canvas.width / video.videoWidth );
     if( canvas.width > 200 ) { // minimum 200 px should be small enough
       setVideoZoom( 0.5*canvas.width / video.videoWidth );
     }
-
   });
 
   $("#zoomIn").click( () => {
-    //console.log("zoom: " + canvas.width / video.videoWidth );
     if( canvas.width < 8 * video.videoWidth ) { // Maximum zoom x8
       setVideoZoom( 2*canvas.width / video.videoWidth )
     }
-
   });
 
   function setVideoZoom( scaleRatio ) {
@@ -757,6 +762,7 @@ SOFTWARE.
     canvas.remove( scaleCircle1 );
     canvas.remove( scaleCircle2 );
     canvas.remove( scaleBox );
+    if( automaticAnalysis ) canvas.remove( trackingBox );
     $("#distanceInput").hide();
   }
     
@@ -898,10 +904,6 @@ SOFTWARE.
 
   // Disable the video control buttons
   function disableVideoControl() {
-    //$('#frameNumber').html( "0 / 0" );
-    //$('#showMediaInfo').attr('disabled', '');
-    //$('#origin').attr('disabled', '');
-    //$('#scale').attr('disabled', '');
     $('#prev').attr('disabled', '');
     $('#play').attr('disabled', '');
     $('#next').attr('disabled', '');
@@ -909,27 +911,6 @@ SOFTWARE.
     $("#zoomIn").attr('disabled', '');
     $("#zoomOut").attr('disabled', '');
   }
-
-  function enableAnalysis() {
-    startAndStopManual.removeAttribute('disabled');
-    startAndStopManual.innerText = startText;
-    startAndStopManual.classList.add("button-on");
-    startAndStopManual.classList.remove("button-off");
-  }
-
-  function disableAnalysis() {    
-    startAndStopManual.innerText = startText;
-    startAndStopManual.classList.add("button-on");
-    startAndStopManual.classList.remove("button-off");
-    $('#statusMsg').html("");
-    canvasClick = "";
-    startAndStopManual.setAttribute('disabled', '');    
-  }
-  
-  // Automatic analysis only when openCV is ready
-  $("#opencv").on("load", () => {
-    $("#automaticAnalysis").removeAttr('disabled');    
-  });
   
   // load all code after the document
   $("document").ready( () => {
@@ -1117,12 +1098,6 @@ SOFTWARE.
     setScaleBox();
     //updateScale(scale);
   }
-
-  // Set scale button
-  /*$('#scale').click( evt => {
-    distanceInMeter = toNumber( prompt("How long is the green ruler in meter?", distanceInMeter) );
-    setScale();
-  });*/
   
   // Set the scale 
   function setScale() {
@@ -1144,42 +1119,65 @@ SOFTWARE.
     $("#scaleInput").change();
   }
 
-  
-  // Manual analysis
+  // Enable automatic analysis only when openCV is ready
+  let openCVReady = false;
+  $("#opencv").on("load", () => {
+    openCVReady = true;
+  });
+
+  // Enable, disable and set "Start/Stop analysis" button
   let analysisStarted = false;
-  startAndStopManual.addEventListener('click', evt => {
+  function setStartAnalysis() {
+    analysisStarted = false;
+    $("#startAnalysis").text( "Start analysis" );
+    $("#startAnalysis").addClass("button-on");
+    $("#startAnalysis").removeClass("button-off");    
+    if( openCVReady ) $("#automaticAnalysis").removeAttr('disabled');    
+  }
+  function setStopAnalysis() {
+    analysisStarted = true;
+    $("#startAnalysis").text( "Stop analysis" );
+    $("#startAnalysis").addClass("button-off");
+    $("#startAnalysis").removeClass("button-on");
+    if( openCVReady ) $("#automaticAnalysis").attr('disabled','');    
+  }  
+  function enableAnalysis() {
+    $("#startAnalysis").removeAttr('disabled');
+    setStartAnalysis();
+  }
+  function disableAnalysis() {    
+    $("#startAnalysis").attr('disabled', '');    
+    setStartAnalysis();
+    $('#statusMsg').html("");
+    canvasClick = "";
+  }
+  
+  // Event listener when clicking "Start/Stop analysis" button
+  $("#startAnalysis").click( () => {
     if( analysisStarted === false ) {
-      
+      // Change the button to "Stop analysis"
+      setStopAnalysis();
+
       // Hide calibration controls (origin, scale, trackingbox)
       hideCalibrationControls();
-      
-      analysisStarted = true;
-      startAndStopManual.innerText = stopText;
+
       if( automaticAnalysis ) {
-        // Put back controls
-        canvas.remove( trackingBox );
         canvasClick = "";
-        //console.log("call onVideoStarted()")
-        //console.log(video);
-        //onVideoStarted();
-        //setBox();
         templateMatching();
       } else {
         $('#statusMsg').html( "Click on the object" );
         canvasClick = "addRawDataPoint";
       }
     } else {
+      // Change the button to "Start analysis"
+      setStartAnalysis();
+
       // Put back calibration controls
       showCalibrationControls();
 
-      analysisStarted = false;
-      startAndStopManual.innerText = startText;
       $('#statusMsg').html( "" );
       canvasClick = "";
-    }
-    startAndStopManual.classList.toggle('button-on');
-    startAndStopManual.classList.toggle('button-off');
-
+    }    
   });
 
   
@@ -1457,7 +1455,6 @@ SOFTWARE.
         cap.read(frame);
         cv.cvtColor(frame, hsv, cv.COLOR_RGBA2RGB);
         cv.cvtColor(hsv, hsv, cv.COLOR_RGB2HSV);
-
         
         cv.matchTemplate(hsv, hsvRoi, dst, cv.TM_CCOEFF, mask);
         let result = cv.minMaxLoc(dst, mask);
@@ -1489,11 +1486,7 @@ SOFTWARE.
               processVideo();
             });
           } else {
-            //frame.delete(); dst.delete(); hsv.delete(); roi.delete(); hsvRoi.delete(); mask.delete();
-            //$('#statusMsg').html( "" );
-            //canvas.remove(rect);
-            //updatePlots();
-            startAndStopManual.click();
+            $("#startAnalysis").click();
             processVideo(); // Will abort next iteration since analysisStarted is set to false
           }
         }, 50 );
