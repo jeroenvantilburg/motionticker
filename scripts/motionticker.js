@@ -667,7 +667,9 @@ SOFTWARE.
     // Disable video control and reset video parameters when selecting new video
     disableAnalysis();
     disableVideoControl();
-    
+    $('#frameNumber').html( "0 / 0" );
+
+
     // Get the file
     let URL = window.URL || window.webkitURL;
     let file = this.files[0];
@@ -696,6 +698,8 @@ SOFTWARE.
     }
     disableAnalysis();
     disableVideoControl();
+    $('#frameNumber').html( "0 / 0" );
+
     // Remove old source
     video.removeAttribute('src'); // empty source
     video.load();
@@ -883,6 +887,7 @@ SOFTWARE.
   
   // Enable the video control buttons
   function enableVideoControl() {
+    //$('#showMediaInfo').removeAttr('disabled');
     $('#prev').removeAttr('disabled');
     $('#play').removeAttr('disabled');
     $('#next').removeAttr('disabled');
@@ -893,10 +898,10 @@ SOFTWARE.
 
   // Disable the video control buttons
   function disableVideoControl() {
-    $('#frameNumber').html( "0 / 0" );
-    $('#showMediaInfo').attr('disabled', '');
-    $('#origin').attr('disabled', '');
-    $('#scale').attr('disabled', '');
+    //$('#frameNumber').html( "0 / 0" );
+    //$('#showMediaInfo').attr('disabled', '');
+    //$('#origin').attr('disabled', '');
+    //$('#scale').attr('disabled', '');
     $('#prev').attr('disabled', '');
     $('#play').attr('disabled', '');
     $('#next').attr('disabled', '');
