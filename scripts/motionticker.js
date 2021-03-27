@@ -927,14 +927,12 @@ SOFTWARE.
   });
   
 
-  // Event listener for the dropdown menu
+  // Event listeners for the dropdown menu
   function showDropdownMenu() { $(".dropdown-content").show();}
   function hideDropdownMenu() { $(".dropdown-content").hide();}
-
   $(".dropdown").hover( showDropdownMenu, hideDropdownMenu );
-  $(".dropdown-content").click( () => {
-    $(".dropdown-content").hide();
-  });
+  //$(".dropdown-content").click( hideDropdownMenu );
+  $(".dropdown").click( () => { $(".dropdown-content").toggle();} );
   
 
   // Event listener for the modal boxes
