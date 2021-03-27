@@ -743,7 +743,7 @@ SOFTWARE.
     $("#fpsInput").css("background", "pink");
     
     videoImage = new fabric.Image(video, { left: 0.5*video.videoWidth, top: 0.5*video.videoHeight,
-                                           objectCaching: false } );
+                                           selectable: false, evented: false, objectCaching: false } );
     canvas.add(videoImage);
 
     
