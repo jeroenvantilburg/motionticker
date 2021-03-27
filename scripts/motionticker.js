@@ -106,32 +106,32 @@ SOFTWARE.
                                                    allowTouchScrolling: true,
                                                    preserveObjectStacking: true });
   fabric.Object.prototype.originX = fabric.Object.prototype.originY = 'center';
-  
+  let shadow = new fabric.Shadow({color: 'black', blur: 1 });
+
   // Define marker style
   let markerPoint = new fabric.Circle({ radius: 3, stroke: 'rgba(220,0,0)', strokeWidth: 1, 
-                                        fill: 'rgba(0,0,0,0)',
+                                        fill: 'rgba(0,0,0,0)', shadow: shadow,
                                         selectable: false, evented: false });
   function highlightMarker( markerP ) { markerP.set({stroke: 'red', strokeWidth: 2}); }
   function unHighlightMarker( markerP ) { markerP.set({stroke: 'rgba(220,0,0)', strokeWidth: 1}); }
-
+  
   // Define tracking box for automatic analysis
   let trackingBox = new fabric.Rect({left: -100, top: -100, height: 50, width: 50, 
                                      fill: 'rgba(0,0,0,0)', stroke: 'red', strokeWidth: 2,
                                      lockRotation: true, strokeUniform: true, noScaleCache: false,
                                      cornerSize: 8, cornerStyle: 'circle', 
-                                     cornerColor: 'rgba(35,118,200)',
+                                     cornerColor: 'rgba(35,118,200)', shadow: shadow,
                                      hasBorders: false, selectable: true, evented: true });  
   trackingBox.setControlsVisibility({ mtr: false }); // Hide rotating point
-
+  
   // Define axes for canvas with dummy coordinates
   let xAxis = new fabric.Line( [0,0,100,0], {strokeWidth: 3, stroke: 'royalblue',
                                              hasControls: false, hasBorders: false, 
-                                             lockMovementX: true, padding: 10
-                                            });    
+                                             lockMovementX: true, padding: 10, shadow: shadow });    
   let yAxis = new fabric.Line( [0,0,0,100], {strokeWidth: 3, stroke: 'royalblue',
                                              hasControls: false, hasBorders: false, 
-                                             lockMovementY: true, padding: 10 });    
-  let axesOrigin = new fabric.Circle({ radius: 5, padding: 10, fill: 'blue',
+                                             lockMovementY: true, padding: 10, shadow: shadow });    
+  let axesOrigin = new fabric.Circle({ radius: 5, padding: 10, fill: 'blue', shadow: shadow,
                                        hasControls: false, hasBorders: false });
   
   // Event listeners for axes
@@ -165,15 +165,15 @@ SOFTWARE.
   // Define ruler (line + 2 circles + box) for canvas
   let scaleLine = new fabric.Line( [100,10,100,110], {strokeWidth: 3, stroke: 'limegreen',
                                                   hasControls: false, hasBorders: false, 
-                                                  padding: 10});    
+                                                  padding: 10, shadow: shadow});    
   let scaleCircle1 = new fabric.Circle({ left:100, top: 10, 
                                          radius: 5, stroke: 'green', strokeWidth: 1,
                                          hasControls: false, hasBorders: false, padding: 10,
-                                         fill: 'rgba(0,0,0,0)' });
+                                         fill: 'rgba(0,0,0,0)', shadow: shadow, });
   let scaleCircle2 = new fabric.Circle({ left:100, top: 110,
                                          radius: 5, stroke: 'green', strokeWidth: 1,
                                          hasControls: false, hasBorders: false, padding: 10,
-                                         fill: 'rgba(0,0,0,0)' });
+                                         fill: 'rgba(0,0,0,0)', shadow: shadow, });
   let distHeight = parseFloat($("#distanceInput").css("height").slice(0,-2));
   let scaleRect = new fabric.Rect({left: 0, top: 0, height: distHeight, width: 70, 
                                    strokeWidth: 1, stroke: 'green', fill: 'limegreen' });
