@@ -162,19 +162,31 @@ input, select {
 .showSideBar{
   display: none;
   position: absolute;
-  top: 5px;
+  top: 0px;
   right: 10px;
+  overflow: hidden;
+  height: 40px;
   font-size: 3.0em;
   z-index: 1;
+}
+.showSideBar i {
+  vertical-align: top;
+  margin-top: -5px;
 }
 
 .hideSideBar{
   display: none;
   position: absolute;
-  top: 5px;
+  top: 0px;
   right: 10px;
+  overflow: hidden;
+  height: 40px;
   font-size: 3.0em;
   z-index: 1;
+}
+.hideSideBar i {
+  vertical-align: top;
+  margin-top: -5px;
 }
 
 
