@@ -190,7 +190,7 @@ SOFTWARE.
     
     let zoomLevel = canvas.width / video.videoWidth;                               
     $("#distanceInput").css({ transform: "scale("+ zoomLevel +")" });
-    console.log(distHeight);
+    //console.log(distHeight);
     $("#distanceInput").css({ left: zoomLevel*(xPos-6) + 8 - 0.5*scaleBox.width,
                                top: zoomLevel*yPos - 0.5*distHeight });
   }
@@ -674,12 +674,12 @@ SOFTWARE.
     disableVideoControl();
     $('#frameNumber').html( "0 / 0" );
 
-
     // Get the file
     let URL = window.URL || window.webkitURL;
     let file = this.files[0];
     video.src = URL.createObjectURL(file);
-    console.log("video src=" + video.src);
+    //console.log("video src=" + video.src);
+    
   });
   
   // video playback failed - show a message saying why
@@ -727,8 +727,8 @@ SOFTWARE.
                  0.2*video.videoWidth, 0.7*video.videoHeight );
     trackingBox.set({left: 0.5*video.videoWidth, top: 0.3*video.videoHeight });
 
-    console.log("Resolution: " + video.videoWidth + " x " + video.videoHeight );
-    console.log("Duration: " + video.duration );
+    //console.log("Resolution: " + video.videoWidth + " x " + video.videoHeight );
+    //console.log("Duration: " + video.duration );
     
     // Highlight fields that need to be filled
     $("#scaleInput").css( "background", "pink");
@@ -736,6 +736,13 @@ SOFTWARE.
     
     // Put the graphics back
     showCalibrationControls();
+
+    // Show video info
+    let videoFile = $('#videoInput').prop('files')[0];
+    let videoName = (typeof videoFile === "undefined" ) ? "" : videoFile.name;
+    let tracks = [{ "@type": videoName, Duration: video.duration, 
+                    Width: video.videoWidth, Height: video.videoHeight }];
+    $("#videoInfo").html( convertToTable(tracks)  );
 
     // Get the frame rate
     getFPS();
@@ -893,13 +900,13 @@ SOFTWARE.
   
   // Enable the video control buttons
   function enableVideoControl() {
-    //$('#showMediaInfo').removeAttr('disabled');
     $('#prev').removeAttr('disabled');
     $('#play').removeAttr('disabled');
     $('#next').removeAttr('disabled');
     $('#slider').removeAttr('disabled');
     $("#zoomIn").removeAttr('disabled');
     $("#zoomOut").removeAttr('disabled');
+    $('#showMediaInfo').removeAttr('disabled');
   }
 
   // Disable the video control buttons
@@ -910,6 +917,7 @@ SOFTWARE.
     $('#slider').attr('disabled', '');  
     $("#zoomIn").attr('disabled', '');
     $("#zoomOut").attr('disabled', '');
+    $("#showMediaInfo").attr('disabled', '');
   }
   
   // load all code after the document
@@ -994,14 +1002,14 @@ SOFTWARE.
           mediainfo.analyzeData(getSize, readChunk).then((result) => {
             $("#mediaInfoResult").html( convertToTable(result.media.track) );
 
-            //console.log(result);
+            //console.log(result.media.track);
             result.media.track.forEach(track => {
               if( track["@type"] === "Video") {                        
                 // Set the new FPS
                 updateFPS( track.FrameRate );
                 //fpsInput.value = track.FrameRate;
                 //fpsInput.onchange();
-                $("#showMediaInfo").removeAttr("disabled");
+                //$("#showMediaInfo").removeAttr("disabled");
                 $('#statusMsg').html( "" );
               }
             } );
@@ -1018,17 +1026,13 @@ SOFTWARE.
     let output = "\n <table>";
     tracks.forEach(track => {
       //if( track["@type"] === "Video") {
-      //output += "<tr>";
       for (const [key, value] of Object.entries(track)) {
         if( key === "@type" ) {
           output += `<tr class="table-header"><th colspan=2>${value}</th></tr>\n`;
         } else {
-          //console.log(`${key}: ${value}`);
           output += `<tr><td>${key}</td><td>${value}</td></tr>\n`;
-          //output += "\n";
         }
       }
-      //output += "</tr>";
     } );
     output += "</table>";
     

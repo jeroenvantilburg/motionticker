@@ -333,11 +333,12 @@ input {
   cursor: pointer;
 }
 
-#mediaInfoResult>table {
+#mediaInfoModal table {
   border-collapse: collapse;
+  margin-bottom: 20px;
 }
 
-#mediaInfoResult>table th {
+#mediaInfoModal table th {
   font-weight: bold;
   font-size: 1.5em;
   text-align: left;
@@ -345,15 +346,15 @@ input {
   padding-bottom: 2px;
 }
 
-#mediaInfoResult>table .table-header {
+#mediaInfoModal table .table-header {
   background-color: rgba(0,0,0,0) !important;
 }
 
-#mediaInfoResult>table td {
+#mediaInfoModal table td {
   border: 1px solid #ddd;
 }
 
-#mediaInfoResult>table tr:nth-child(odd) {
+#mediaInfoModal table tr:nth-child(odd) {
   background-color: rgba(0,0,0,0.1);
 }
 
