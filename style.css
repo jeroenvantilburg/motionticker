@@ -2,7 +2,7 @@
 html, body {
   height: 100%;
   overflow: hidden;
-  font:100% Verdana,Tahoma,Arial,sans-serif;
+  font: 100% arial,sans-serif;
   margin: 0;
 }
 
@@ -12,9 +12,9 @@ body * {
 }
 
 /* Set the text size to 12pt */
-body {
-  font-size: 0.75em;
-}
+/*body {
+  font-size: 1.00em;
+}*/
 
 /* Display <pre> tag inline */
 pre {
@@ -25,14 +25,15 @@ pre {
   font-family: "Courier New",Courier,Arial,Verdana;
 }
 
-input {
+input, select {
   text-align: right;
-  background-color: rgba(255,255,255,0.2);
-  margin-top: 2px;
-  margin-bottom: 2px;
-  padding: 2px;
+  /*background-color: rgba(255,255,255,0.2);*/
+  margin-top: 0px;
+  margin-bottom: 0px;
+  padding: 1px;
   border: 1px solid #ddd;
   border-radius: 3px;
+  font-size: 1.0em;
 }
 
 .center {
@@ -55,12 +56,13 @@ input {
 }
 
 .player {
-  width: 30px;
+  width: 35px;
   background: #666666;
   border: none;
   color: white;
   padding: 3px 0px;
   border-radius: 4px;
+  font-size: 0.9em;
 }
 
 .player:disabled {
@@ -76,7 +78,7 @@ input {
   position: absolute;
   top: 3px;
   left: 3px;
-  font-size: 20px;  
+  font-size: 1.25em;  
   text-shadow: 1px 0px 1px white, 0px 1px 1px white, 0px -1px 1px white, -1px 1px 1px white;
 }
 
@@ -86,7 +88,7 @@ input {
   margin: 0px;
   padding: 0px;
   padding-right: 2px;
-  font-size: 14px;
+  /*font-size: 14px;*/
   background-color: rgba(255,255,255,0.0);
   border: none;
 }
@@ -147,7 +149,8 @@ input {
   margin: 0px 0px;
   padding: 5px;
   background: #bbb;
-  font-size: 18px;
+  font-size: 1.25em;
+  font-family: Verdana;
   font-weight: bold;
 }
 
@@ -159,18 +162,18 @@ input {
 .showSideBar{
   display: none;
   position: absolute;
-  top: 0px;
-  right: 5px;
-  font-size: 28px;
+  top: 5px;
+  right: 10px;
+  font-size: 3.0em;
   z-index: 1;
 }
 
 .hideSideBar{
   display: none;
   position: absolute;
-  top: 0px;
-  right: 5px;
-  font-size: 28px;
+  top: 5px;
+  right: 10px;
+  font-size: 3.0em;
   z-index: 1;
 }
 
@@ -182,9 +185,8 @@ input {
   color: white;
   padding: 5px 20px;
   text-align: center;
-  text-decoration: none;
   display: inline-block;
-  font-size: 14px;
+  font-size: 1.0em;
   border-radius: 4px;
 }
 
@@ -212,7 +214,8 @@ input {
   overflow: hidden;
   flex: 1;
   float: left;
-  font-size: 24px;
+  font-size: 1.5em;
+  font-family: Verdana;
   font-weight: bold;
   padding: 10px 10px;
 }
@@ -236,7 +239,7 @@ input {
 
 /* Dropdown button */
 .dropdown .dropbtn {
-  font-size: 24px;
+  font-size: 1.5em;
   color: inherit;
   border: none;
   outline: none;
@@ -267,7 +270,7 @@ input {
   float: none;
   color: black;
   text-decoration: none;
-  font-size: 14px; 
+  /*font-size: 14px;*/ 
   display: block;
   text-align: left;
   outline: 0px; 
@@ -322,7 +325,8 @@ input {
 .close {
   color: #aaa;
   float: right;
-  font-size: 28px;
+  margin-right: 10px;
+  font-size: 2.5em;
   font-weight: bold;
 }
 
@@ -413,8 +417,8 @@ input {
    #settingsModal table td:nth-child(1) {min-width: 80px;}
    #settingsModal table td:nth-child(3) {padding-left: 5px;}
 
-  /* Avoid zoom on iOS */ 
-  input:active { font-size: 16px; }
+  /* Avoid zoom on iOS  
+  input:active { font-size: 16px; }*/
 
 }
 

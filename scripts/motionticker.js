@@ -178,7 +178,7 @@ SOFTWARE.
   let scaleRect = new fabric.Rect({left: 0, top: 0, height: distHeight, width: 70, 
                                    strokeWidth: 1, stroke: 'green', fill: 'limegreen' });
   let scaleTxt = new fabric.Text('m', {left: 25, top: 0,
-                                   fontSize: 14, fontFamily: "Verdana" });
+                                   fontSize: 16, fontFamily: "Arial" });
   let scaleBox = new fabric.Group( [ scaleRect, scaleTxt], 
                                    {left: 110, top: 50, selectable: false, evented: false}  );
   
@@ -1520,7 +1520,7 @@ SOFTWARE.
 
   //Chart.defaults.global.responsive = false;
   Chart.defaults.global.maintainAspectRatio = false;
-  Chart.defaults.global.defaultFontSize = 10;
+  Chart.defaults.global.defaultFontSize = 12;
   
   let posCtx = document.getElementById('positionChart').getContext('2d');
   let positionChart = new Chart(posCtx, {
