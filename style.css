@@ -352,6 +352,7 @@ input, select {
 #mediaInfoModal table {
   border-collapse: collapse;
   margin-bottom: 20px;
+  word-break: break-all;
 }
 
 #mediaInfoModal table th {
@@ -368,6 +369,7 @@ input, select {
 
 #mediaInfoModal table td {
   border: 1px solid #ddd;
+  width: 50%;
 }
 
 #mediaInfoModal table tr:nth-child(odd) {
