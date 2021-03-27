@@ -32,7 +32,7 @@ input {
   margin-bottom: 2px;
   padding: 2px;
   border: 1px solid #ddd;
-  border-radius: 3px
+  border-radius: 3px;
 }
 
 .center {
@@ -60,7 +60,6 @@ input {
   border: none;
   color: white;
   padding: 3px 0px;
-  font-size: 12px;
   border-radius: 4px;
 }
 
@@ -413,7 +412,8 @@ input {
    #settingsModal table td:nth-child(1) {min-width: 80px;}
    #settingsModal table td:nth-child(3) {padding-left: 5px;}
 
-
+  /* Avoid zoom on iOS */ 
+  input:active { font-size: 16px; }
 
 }
 
