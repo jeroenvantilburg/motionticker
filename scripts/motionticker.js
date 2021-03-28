@@ -372,12 +372,17 @@ SOFTWARE.
     canvas.setDimensions({ width: video.videoWidth * scaleRatio, 
                            height: video.videoHeight * scaleRatio })
     canvas.setZoom( scaleRatio );
+    //videoImage.set({ width: video.videoWidth, 
+    //                height: video.videoHeight});
+    //videoImage.setCoords();
+    //console.log( videoImage );
+    //console.log("width: "+videoImage.width +", height: "+videoImage.height );
     canvas.renderAll();
     
     setScaleBox();
 
-    video.width = video.videoWidth * scaleRatio ;
-    video.height = video.videoHeight * scaleRatio;
+    //video.width = video.videoWidth * scaleRatio ;
+    //video.height = video.videoHeight * scaleRatio;
   }
   
   /* ============= CSV SECTION =================
@@ -724,6 +729,14 @@ SOFTWARE.
     // Pause the video (needed because of autoplay)
     video.pause();
 
+    video.width = video.videoWidth ;   // required by Fabric.js
+    video.height = video.videoHeight ; // required by Fabric.js
+    videoImage = new fabric.Image(video, { left: 0.5*video.videoWidth, top: 0.5*video.videoHeight,
+                                          width: video.videoWidth, height: video.videoHeight,
+                                          selectable: false, evented: false, objectCaching: false } );
+    canvas.add(videoImage);
+
+    
     // Set the dimensions of the video and prepare the canvas
     setVideoZoom(1.0);
     
@@ -741,11 +754,6 @@ SOFTWARE.
     // Highlight fields that need to be filled
     $("#scaleInput").css( "background", "pink");
     $("#fpsInput").css("background", "pink");
-    
-    videoImage = new fabric.Image(video, { left: 0.5*video.videoWidth, top: 0.5*video.videoHeight,
-                                           selectable: false, evented: false, objectCaching: false } );
-    canvas.add(videoImage);
-
     
     // Put the graphics back
     showCalibrationControls();
