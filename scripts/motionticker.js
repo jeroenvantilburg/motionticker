@@ -569,6 +569,7 @@ SOFTWARE.
   $("#csvImport").click( () => {
     if( dataCanBeRemoved() ) {      
       // Progagate to hidden DOM element
+      hideDropdownMenu();
       $("#csvInput").click();
     }
   });
@@ -661,6 +662,7 @@ SOFTWARE.
   $("#videoImport").click( () => {
     if( dataCanBeRemoved() ) {      
       // Progagate to hidden DOM element
+      hideDropdownMenu();
       $("#videoInput").click();
     }
   });
