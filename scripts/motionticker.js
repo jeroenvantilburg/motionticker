@@ -31,7 +31,15 @@ SOFTWARE.
   // HTML elements
   let video              = document.getElementById('video');
   let videoImage; // Fabric Image of video
+  let canvasVideo = document.getElementById('canvasVideo');
+  let canvasVideoCtx = canvasVideo.getContext('2d');
 
+
+  let orientation = -1;
+  let rotationAngle = 0.0;
+
+
+  
   // Global video parameters
   let currentFrame = 0;
   let t0 = 0.0;
@@ -381,6 +389,16 @@ SOFTWARE.
     
     setScaleBox();
 
+    //canvasVideoCtx.save();
+    rotateContext();
+    canvasVideo.width = video.videoWidth * scaleRatio;
+    canvasVideo.height = video.videoHeight * scaleRatio;
+    canvasVideoCtx.scale(scaleRatio,scaleRatio);
+    canvasVideoCtx.drawImage(video,0,0);
+    //canvasVideoCtx.restore();
+
+
+
     //video.width = video.videoWidth * scaleRatio ;
     //video.height = video.videoHeight * scaleRatio;
   }
@@ -684,6 +702,10 @@ SOFTWARE.
     updateOrigin();
     canvas.clear();
     
+    //canvasVideoCtx.restore(); // TODO: clear?
+    orientation = -1;
+    rotationAngle = 0.0;
+    
     // Disable video control and reset video parameters when selecting new video
     disableAnalysis();
     disableVideoControl();
@@ -731,13 +753,12 @@ SOFTWARE.
     // Pause the video (needed because of autoplay)
     video.pause();
 
-    video.width = video.videoWidth ;   // required by Fabric.js
+    /*video.width = video.videoWidth ;   // required by Fabric.js
     video.height = video.videoHeight ; // required by Fabric.js
     videoImage = new fabric.Image(video, { left: 0.5*video.videoWidth, top: 0.5*video.videoHeight,
                                           width: video.videoWidth, height: video.videoHeight,
                                           selectable: false, evented: false, objectCaching: false } );
-    canvas.add(videoImage);
-
+    canvas.add(videoImage);*/
     
     // Set the dimensions of the video and prepare the canvas
     setVideoZoom(1.0);
@@ -1034,8 +1055,10 @@ SOFTWARE.
                 
                 // Check orientation and set rotation
                 if( track.Rotation && iOS() ) {
-                  videoImage.set( { angle: track.Rotation, originX: 'center', 
-                                    originY: 'center', });
+                  //videoImage.set( { angle: track.Rotation, originX: 'center', 
+                  //                  originY: 'center', });
+                  rotationAngle = track.Rotation;
+                  rotateContext();
                 }
                 
                 $('#statusMsg').html( "" );
@@ -1049,6 +1072,30 @@ SOFTWARE.
       }
     })
   }
+  
+  function rotateContext() {
+    //canvasVideoCtx.save(); // TODO: restore
+    console.log("tot hier 1");
+    orientation = -1;
+    if( Math.abs(90 - rotationAngle) < 1 ) {              
+      orientation = cv.ROTATE_90_CLOCKWISE;
+      canvasVideoCtx.rotate(Math.PI/2 );
+      canvasVideoCtx.translate(0, -video.videoWidth );
+      console.log("found 90 cw");
+    } else if( Math.abs(180 - rotationAngle ) < 1 ) {
+      orientation = cv.ROTATE_180;
+      canvasVideoCtx.rotate(Math.PI );
+      canvasVideoCtx.translate(-video.videoHeight, -video.videoWidth );
+      console.log("found 180 cw");
+    } else if( Math.abs(270 - rotationAngle ) < 1 ) { 
+      orientation = cv.ROTATE_90_COUNTERCLOCKWISE;
+      canvasVideoCtx.rotate(-Math.PI/2 );
+      canvasVideoCtx.translate(-video.videoHeight, 0 );
+      console.log("found 90 ccw");
+    }
+    console.log( orientation );
+    orientation = -1; 
+  } 
   
   function convertToTable(tracks) {
     let output = "\n <table>";
@@ -1388,6 +1435,7 @@ SOFTWARE.
       video.addEventListener("seeked", function(e) {
         e.target.removeEventListener(e.type, arguments.callee); // remove the handler or else it will draw another frame on the same canvas, when the next seek happens
         //canvasContext.drawImage(video,0,0, width, height );
+        canvasVideoCtx.drawImage(video,0,0);
         $('#frameNumber').html( currentFrame + " / " + $("#slider").attr("max") );
         $("#slider").val( currentFrame );
       });
@@ -1446,11 +1494,11 @@ SOFTWARE.
     // Somehow this line is needed to set the right dimensions
     setVideoZoom(1.0);
   
-    let cap = new cv.VideoCapture(video);
+    //let cap = new cv.VideoCapture(video);
   
     // Check orientation
-    let orientation = -1;
-    let videoWidth = video.width;
+    //let orientation = -1;
+    /*let videoWidth = video.width;
     let videoHeight = video.height;
     console.log( videoImage.angle );
     if( Math.abs(90 - videoImage.angle) < 1 ) {
@@ -1468,10 +1516,12 @@ SOFTWARE.
       videoHeight = video.width;
     }
     console.log( orientation );
-
+    */
+    
     // take first frame of the video
-    let frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
-    cap.read(frame);
+    //let frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+    //cap.read(frame);
+    let frame = cv.imread('canvasVideo');
     
     // initial location of window
     let trackWindow = new cv.Rect(boxX1, boxY1, boxWidth, boxHeight );
@@ -1514,7 +1564,8 @@ SOFTWARE.
         }
 
         // start processing.
-        cap.read(frame);
+        //cap.read(frame);
+        frame = cv.imread('canvasVideo');
         if( orientation != -1 ) {
           cv.rotate(frame, rotFrame, orientation );
           cv.cvtColor(rotFrame, hsv, cv.COLOR_RGBA2RGB);
@@ -1540,9 +1591,9 @@ SOFTWARE.
                 
         //cv.imshow('tempCanvas', hsvRoi);
         if( orientation == -1 ) {
-          cv.imshow('tempCanvas', frame );          
+          cv.imshow('tempCanvas', hsvRoi );          
         } else {
-          cv.imshow('tempCanvas', rotFrame );
+          cv.imshow('tempCanvas', hsvRoi );
         }
         
         // Draw it on image
