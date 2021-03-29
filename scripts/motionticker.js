@@ -394,7 +394,7 @@ SOFTWARE.
     canvasVideo.width = video.videoWidth * scaleRatio;
     canvasVideo.height = video.videoHeight * scaleRatio;
     canvasVideoCtx.scale(scaleRatio,scaleRatio);
-    rotateContext(); // only for iOS
+    if( iOS() ) { rotateContext(); } // rotate context due to bug/feature in iOS
     
     /*let videoWidth = video.videoWidth;
     let videoHeight = video.videoHeight;
@@ -1068,7 +1068,7 @@ SOFTWARE.
                 //$("#showMediaInfo").removeAttr("disabled");
                 
                 // Check orientation and set rotation
-                if( track.Rotation && iOS() ) {
+                if( iOS() && track.Rotation ) {
                   //videoImage.set( { angle: track.Rotation, originX: 'center', 
                   //                  originY: 'center', });
                   rotationAngle = track.Rotation;
