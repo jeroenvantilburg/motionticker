@@ -1094,7 +1094,7 @@ SOFTWARE.
       orientation = cv.ROTATE_90_CLOCKWISE;
       canvasVideoCtx.rotate(Math.PI/2 );
       canvasVideoCtx.translate(0, -video.videoWidth );
-      canvasVideoCtx.scale(1, video.videoHeight/video.videoWidth);
+      canvasVideoCtx.scale(video.videoHeight/video.videoWidth,1);
       console.log("found 90 cw");
     } else if( Math.abs(180 - rotationAngle ) < 1 ) {
       orientation = cv.ROTATE_180;
@@ -1105,7 +1105,7 @@ SOFTWARE.
       orientation = cv.ROTATE_90_COUNTERCLOCKWISE;
       canvasVideoCtx.rotate(-Math.PI/2 );
       canvasVideoCtx.translate(-video.videoWidth, 0 );
-      canvasVideoCtx.scale(1, video.videoHeight/video.videoWidth);
+      canvasVideoCtx.scale(video.videoHeight/video.videoWidth,1);
       console.log("found 90 ccw");
     }
     console.log( orientation );
