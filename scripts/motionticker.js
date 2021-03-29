@@ -33,9 +33,10 @@ SOFTWARE.
   let videoImage; // Fabric Image of video
   let canvasVideo = document.getElementById('canvasVideo');
   let canvasVideoCtx = canvasVideo.getContext('2d');
+  canvasVideoCtx.save();
 
 
-  let orientation = -1;
+  //let orientation = -1;
   let rotationAngle = 0.0;
 
 
@@ -389,21 +390,21 @@ SOFTWARE.
     
     setScaleBox();
 
-    //canvasVideoCtx.save();
+    canvasVideoCtx.restore();
     canvasVideo.width = video.videoWidth * scaleRatio;
     canvasVideo.height = video.videoHeight * scaleRatio;
     canvasVideoCtx.scale(scaleRatio,scaleRatio);
-    rotateContext();
+    rotateContext(); // only for iOS
     
-    let videoWidth = video.videoWidth;
+    /*let videoWidth = video.videoWidth;
     let videoHeight = video.videoHeight;
     if( iOS() && ( orientation == cv.ROTATE_90_CLOCKWISE || 
                    orientation == cv.ROTATE_90_COUNTERCLOCKWISE) ) {
       videoWidth = video.videoHeight;
       //videoHeight = video.videoWidth;
-    }
-    canvasVideoCtx.drawImage(video,0,0,video.videoWidth,video.videoHeight,0,0,
-                             videoWidth,videoHeight);
+    }*/
+    canvasVideoCtx.drawImage(video,0,0);//,video.videoWidth,video.videoHeight,0,0,
+                             //videoWidth,videoHeight);
 
 
     //canvasVideoCtx.drawImage(video,0,0);
@@ -715,8 +716,8 @@ SOFTWARE.
     updateOrigin();
     canvas.clear();
     
-    //canvasVideoCtx.restore(); // TODO: clear?
-    orientation = -1;
+    canvasVideoCtx.restore(); // TODO: clear?
+    //orientation = -1;
     rotationAngle = 0.0;
     
     // Disable video control and reset video parameters when selecting new video
@@ -1087,27 +1088,27 @@ SOFTWARE.
   }
   
   function rotateContext() {
-    orientation = -1;
+    //orientation = -1;
     if( Math.abs(90 - rotationAngle) < 1 ) {              
-      orientation = cv.ROTATE_90_CLOCKWISE;
+      //orientation = cv.ROTATE_90_CLOCKWISE;
       canvasVideoCtx.rotate(Math.PI/2 );
       canvasVideoCtx.translate(0, -video.videoWidth );
       canvasVideoCtx.scale(video.videoHeight/video.videoWidth,1);
       //console.log("found 90 cw");
     } else if( Math.abs(180 - rotationAngle ) < 1 ) {
-      orientation = cv.ROTATE_180;
+      //orientation = cv.ROTATE_180;
       canvasVideoCtx.rotate(Math.PI );
       canvasVideoCtx.translate(-video.videoWidth, -video.videoHeight );
       //console.log("found 180 cw");
     } else if( Math.abs(270 - rotationAngle ) < 1 ) { 
-      orientation = cv.ROTATE_90_COUNTERCLOCKWISE;
+      //orientation = cv.ROTATE_90_COUNTERCLOCKWISE;
       canvasVideoCtx.rotate(-Math.PI/2 );
       canvasVideoCtx.translate(-video.videoHeight, 0 );
       canvasVideoCtx.scale(video.videoHeight/video.videoWidth,1);
       //console.log("found 90 ccw");
     }
     //console.log( orientation );
-    orientation = -1; 
+    //orientation = -1; 
   } 
   
   function convertToTable(tracks) {
@@ -1448,15 +1449,15 @@ SOFTWARE.
       video.addEventListener("seeked", function(e) {
         e.target.removeEventListener(e.type, arguments.callee); // remove the handler or else it will draw another frame on the same canvas, when the next seek happens
         //canvasContext.drawImage(video,0,0, width, height );
-        let videoWidth = video.videoWidth;
+        /*let videoWidth = video.videoWidth;
         let videoHeight = video.videoHeight;
         if( iOS() && ( orientation == cv.ROTATE_90_CLOCKWISE || 
                        orientation == cv.ROTATE_90_COUNTERCLOCKWISE) ) {
           videoWidth = video.videoHeight;
           //videoHeight = video.videoWidth;
-        }
-        canvasVideoCtx.drawImage(video,0,0,video.videoWidth,video.videoHeight,0,0,
-                                 videoWidth,videoHeight);
+        }*/
+        canvasVideoCtx.drawImage(video,0,0);//,video.videoWidth,video.videoHeight,0,0,
+                                 //videoWidth,videoHeight);
         $('#frameNumber').html( currentFrame + " / " + $("#slider").attr("max") );
         $("#slider").val( currentFrame );
       });
@@ -1556,14 +1557,14 @@ SOFTWARE.
 
     // set up the ROI for tracking
     let roi;
-    let rotFrame = new cv.Mat();
+    /*let rotFrame = new cv.Mat();
     if( orientation != -1 ) {
       cv.rotate(frame, rotFrame, orientation );
       roi = rotFrame.roi(trackWindow);
-    } else {
+    } else {*/
       //rotFrame = frame.clone();
-      roi = frame.roi(trackWindow);
-    }
+    roi = frame.roi(trackWindow);
+    //}
     let hsvRoi = new cv.Mat();
     cv.cvtColor(roi, hsvRoi, cv.COLOR_RGBA2RGB);
     cv.cvtColor(hsvRoi, hsvRoi, cv.COLOR_RGB2HSV);
@@ -1577,7 +1578,7 @@ SOFTWARE.
         if (!analysisStarted) {    
           // clean and stop.
           frame.delete(); dst.delete(); hsv.delete(); roi.delete(); hsvRoi.delete(); mask.delete();
-          rotFrame.delete();
+          //rotFrame.delete();
           canvas.remove(rect);
           updatePlots();
           enableVideoControl();
@@ -1587,13 +1588,13 @@ SOFTWARE.
         // start processing.
         //cap.read(frame);
         frame = cv.imread('canvasVideo');
-        if( orientation != -1 ) {
+        /*if( orientation != -1 ) {
           cv.rotate(frame, rotFrame, orientation );
           cv.cvtColor(rotFrame, hsv, cv.COLOR_RGBA2RGB);
-        } else {
+        } else {*/
           //rotFrame = frame.clone();
-          cv.cvtColor(frame, hsv, cv.COLOR_RGBA2RGB);
-        }
+        cv.cvtColor(frame, hsv, cv.COLOR_RGBA2RGB);
+        //}
         cv.cvtColor(hsv, hsv, cv.COLOR_RGB2HSV);
         
         cv.matchTemplate(hsv, hsvRoi, dst, cv.TM_CCOEFF, mask);
@@ -1603,7 +1604,8 @@ SOFTWARE.
         // Adaptive
         if( adaptive ) {
           let trackWindow2 = new cv.Rect(maxPoint.x, maxPoint.y, hsvRoi.cols, hsvRoi.rows);
-          roi = (orientation == -1 ) ? frame.roi(trackWindow2) : rotFrame.roi(trackWindow2);
+          //roi = (orientation == -1 ) ? frame.roi(trackWindow2) : rotFrame.roi(trackWindow2);
+          roi = frame.roi(trackWindow2);
           cv.cvtColor(roi, hsvRoi, cv.COLOR_RGBA2RGB);
           cv.cvtColor(hsvRoi, hsvRoi, cv.COLOR_RGB2HSV);
         }
@@ -1611,11 +1613,11 @@ SOFTWARE.
         let yPos  = maxPoint.y + 0.5*hsvRoi.rows;
                 
         //cv.imshow('tempCanvas', hsvRoi);
-        if( orientation == -1 ) {
+        /*if( orientation == -1 ) {
           cv.imshow('tempCanvas', hsvRoi );          
-        } else {
-          cv.imshow('tempCanvas', hsvRoi );
-        }
+        } else {*/
+        cv.imshow('tempCanvas', roi );
+        //}
         
         // Draw it on image
         rect.set({ left: xPos, top: yPos });
