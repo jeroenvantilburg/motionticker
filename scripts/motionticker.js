@@ -399,8 +399,8 @@ SOFTWARE.
     let videoHeight = video.videoHeight;
     if( iOS() && ( orientation == cv.ROTATE_90_CLOCKWISE || 
                    orientation == cv.ROTATE_90_COUNTERCLOCKWISE) ) {
-      videoWidth = video.videoHeight;
-      videoHeight = video.videoWidth;
+      //videoWidth = video.videoHeight;
+      //videoHeight = video.videoWidth;
     }
     canvasVideoCtx.drawImage(video,0,0,videoWidth,videoHeight,0,0,
                              video.videoWidth,video.videoHeight);
@@ -1452,8 +1452,8 @@ SOFTWARE.
         let videoHeight = video.videoHeight;
         if( iOS() && ( orientation == cv.ROTATE_90_CLOCKWISE || 
                        orientation == cv.ROTATE_90_COUNTERCLOCKWISE) ) {
-          videoWidth = video.videoHeight;
-          videoHeight = video.videoWidth;
+          //videoWidth = video.videoHeight;
+          //videoHeight = video.videoWidth;
         }
         canvasVideoCtx.drawImage(video,0,0,videoWidth,videoHeight,0,0,
                                  video.videoWidth,video.videoHeight);
