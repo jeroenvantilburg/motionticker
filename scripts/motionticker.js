@@ -104,7 +104,7 @@ SOFTWARE.
   }
  
   function iOS() {
-    return true;
+    //return true;
     return [ 'iPad Simulator', 'iPhone Simulator', 'iPod Simulator',
             'iPad', 'iPhone', 'iPod' ].includes(navigator.platform)
       || (navigator.userAgent.includes("Mac") && "ontouchend" in document);  // iPad on iOS 13 detection
