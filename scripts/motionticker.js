@@ -1104,7 +1104,7 @@ SOFTWARE.
     } else if( Math.abs(270 - rotationAngle ) < 1 ) { 
       orientation = cv.ROTATE_90_COUNTERCLOCKWISE;
       canvasVideoCtx.rotate(-Math.PI/2 );
-      canvasVideoCtx.translate(-video.videoWidth, 0 );
+      canvasVideoCtx.translate(-video.videoHeight, 0 );
       canvasVideoCtx.scale(video.videoHeight/video.videoWidth,1);
       console.log("found 90 ccw");
     }
