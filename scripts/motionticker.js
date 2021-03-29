@@ -390,11 +390,12 @@ SOFTWARE.
     setScaleBox();
 
     //canvasVideoCtx.save();
-    rotateContext();
     canvasVideo.width = video.videoWidth * scaleRatio;
     canvasVideo.height = video.videoHeight * scaleRatio;
     canvasVideoCtx.scale(scaleRatio,scaleRatio);
+    rotateContext();
     canvasVideoCtx.drawImage(video,0,0);
+
     //canvasVideoCtx.restore();
 
 
@@ -1435,7 +1436,15 @@ SOFTWARE.
       video.addEventListener("seeked", function(e) {
         e.target.removeEventListener(e.type, arguments.callee); // remove the handler or else it will draw another frame on the same canvas, when the next seek happens
         //canvasContext.drawImage(video,0,0, width, height );
-        canvasVideoCtx.drawImage(video,0,0);
+        let videoWidth = video.videoWidth;
+        let videoHeight = video.videoHeight;
+        if( iOS() && ( orientation == cv.ROTATE_90_CLOCKWISE || 
+                       orientation == cv.ROTATE_90_COUNTERCLOCKWISE) ) {
+          videoWidth = video.videoHeight;
+          videoHeight = video.videoWidth;
+        }
+        canvasVideoCtx.drawImage(video,0,0,videoWidth,videoHeight,0,0,
+                                 video.videoWidth,video.videoHeight);
         $('#frameNumber').html( currentFrame + " / " + $("#slider").attr("max") );
         $("#slider").val( currentFrame );
       });
