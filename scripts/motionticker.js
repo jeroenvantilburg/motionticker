@@ -1094,16 +1094,18 @@ SOFTWARE.
       orientation = cv.ROTATE_90_CLOCKWISE;
       canvasVideoCtx.rotate(Math.PI/2 );
       canvasVideoCtx.translate(0, -video.videoWidth );
+      canvasVideoCtx.scale(1, video.videoHeight/video.videoWidth);
       console.log("found 90 cw");
     } else if( Math.abs(180 - rotationAngle ) < 1 ) {
       orientation = cv.ROTATE_180;
       canvasVideoCtx.rotate(Math.PI );
-      canvasVideoCtx.translate(-video.videoHeight, -video.videoWidth );
+      canvasVideoCtx.translate(-video.videoWidth, -video.videoHeight );
       console.log("found 180 cw");
     } else if( Math.abs(270 - rotationAngle ) < 1 ) { 
       orientation = cv.ROTATE_90_COUNTERCLOCKWISE;
       canvasVideoCtx.rotate(-Math.PI/2 );
-      canvasVideoCtx.translate(-video.videoHeight, 0 );
+      canvasVideoCtx.translate(-video.videoWidth, 0 );
+      canvasVideoCtx.scale(1, video.videoHeight/video.videoWidth);
       console.log("found 90 ccw");
     }
     console.log( orientation );
