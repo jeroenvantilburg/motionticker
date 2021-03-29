@@ -402,7 +402,7 @@ SOFTWARE.
       videoWidth = video.videoHeight;
       videoHeight = video.videoWidth;
     }
-    canvasVideoCtx.drawImage(video,0,0,video.videoWidth,video.videoHeight,0,0,
+    canvasVideoCtx.drawImage(video,0,0,videoWidth,videoHeight,0,0,
                              videoWidth,videoHeight);
 
 
@@ -1455,7 +1455,7 @@ SOFTWARE.
           videoWidth = video.videoHeight;
           videoHeight = video.videoWidth;
         }
-        canvasVideoCtx.drawImage(video,0,0,video.videoWidth,video.videoHeight,0,0,
+        canvasVideoCtx.drawImage(video,0,0,videoWidth,videoHeight,0,0,
                                  videoWidth,videoHeight);
         $('#frameNumber').html( currentFrame + " / " + $("#slider").attr("max") );
         $("#slider").val( currentFrame );
