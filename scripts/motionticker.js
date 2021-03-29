@@ -402,7 +402,7 @@ SOFTWARE.
       videoWidth = video.videoHeight;
       videoHeight = video.videoWidth;
     }
-    canvasVideoCtx.drawImage(video,0,0,videoWidth,videoHeight,0,0,
+    canvasVideoCtx.drawImage(video,0,0,video.videoWidth,video.videoHeight,0,0,
                              videoWidth,videoHeight);
 
 
@@ -1087,29 +1087,27 @@ SOFTWARE.
   }
   
   function rotateContext() {
-    //canvasVideoCtx.save(); // TODO: restore
-    console.log("tot hier 1");
     orientation = -1;
     if( Math.abs(90 - rotationAngle) < 1 ) {              
       orientation = cv.ROTATE_90_CLOCKWISE;
       canvasVideoCtx.rotate(Math.PI/2 );
       canvasVideoCtx.translate(0, -video.videoWidth );
-      canvasVideoCtx.scale(video.videoHeight/video.videoWidth,1);
-      console.log("found 90 cw");
+      //canvasVideoCtx.scale(video.videoHeight/video.videoWidth,1);
+      //console.log("found 90 cw");
     } else if( Math.abs(180 - rotationAngle ) < 1 ) {
       orientation = cv.ROTATE_180;
       canvasVideoCtx.rotate(Math.PI );
       canvasVideoCtx.translate(-video.videoWidth, -video.videoHeight );
-      console.log("found 180 cw");
+      //console.log("found 180 cw");
     } else if( Math.abs(270 - rotationAngle ) < 1 ) { 
       orientation = cv.ROTATE_90_COUNTERCLOCKWISE;
       canvasVideoCtx.rotate(-Math.PI/2 );
       canvasVideoCtx.translate(-video.videoHeight, 0 );
-      canvasVideoCtx.scale(video.videoHeight/video.videoWidth,1);
-      console.log("found 90 ccw");
+      //canvasVideoCtx.scale(video.videoHeight/video.videoWidth,1);
+      //console.log("found 90 ccw");
     }
-    console.log( orientation );
-    orientation = -1; 
+    //console.log( orientation );
+    //orientation = -1; 
   } 
   
   function convertToTable(tracks) {
@@ -1457,7 +1455,7 @@ SOFTWARE.
           videoWidth = video.videoHeight;
           videoHeight = video.videoWidth;
         }
-        canvasVideoCtx.drawImage(video,0,0,videoWidth,videoHeight,0,0,
+        canvasVideoCtx.drawImage(video,0,0,video.videoWidth,video.videoHeight,0,0,
                                  videoWidth,videoHeight);
         $('#frameNumber').html( currentFrame + " / " + $("#slider").attr("max") );
         $("#slider").val( currentFrame );
