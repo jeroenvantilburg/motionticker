@@ -395,6 +395,8 @@ SOFTWARE.
     canvasVideoCtx.scale(scaleRatio,scaleRatio);
     rotateContext();
     
+    let videoWidth = video.videoWidth;
+    let videoHeight = video.videoHeight;
     if( iOS() && ( orientation == cv.ROTATE_90_CLOCKWISE || 
                    orientation == cv.ROTATE_90_COUNTERCLOCKWISE) ) {
       videoWidth = video.videoHeight;
