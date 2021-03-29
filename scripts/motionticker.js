@@ -104,7 +104,7 @@ SOFTWARE.
   }
  
   function iOS() {
-    //return true;
+    return true;
     return [ 'iPad Simulator', 'iPhone Simulator', 'iPod Simulator',
             'iPad', 'iPhone', 'iPod' ].includes(navigator.platform)
       || (navigator.userAgent.includes("Mac") && "ontouchend" in document);  // iPad on iOS 13 detection
@@ -394,7 +394,17 @@ SOFTWARE.
     canvasVideo.height = video.videoHeight * scaleRatio;
     canvasVideoCtx.scale(scaleRatio,scaleRatio);
     rotateContext();
-    canvasVideoCtx.drawImage(video,0,0);
+    
+    if( iOS() && ( orientation == cv.ROTATE_90_CLOCKWISE || 
+                   orientation == cv.ROTATE_90_COUNTERCLOCKWISE) ) {
+      videoWidth = video.videoHeight;
+      videoHeight = video.videoWidth;
+    }
+    canvasVideoCtx.drawImage(video,0,0,videoWidth,videoHeight,0,0,
+                             video.videoWidth,video.videoHeight);
+
+
+    //canvasVideoCtx.drawImage(video,0,0);
 
     //canvasVideoCtx.restore();
 
