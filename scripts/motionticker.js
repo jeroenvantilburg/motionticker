@@ -105,10 +105,37 @@ SOFTWARE.
   }
  
   function iOS() {
-    //return true;
     return [ 'iPad Simulator', 'iPhone Simulator', 'iPod Simulator',
             'iPad', 'iPhone', 'iPod' ].includes(navigator.platform)
       || (navigator.userAgent.includes("Mac") && "ontouchend" in document);  // iPad on iOS 13 detection
+  }
+
+  /* ========= Load the MediaInfo library ============
+       Dynamically choose between Wasm and 
+       asm.js libraries.
+     ================================================= */
+
+  let MediaInfoJs = document.createElement('script');
+  if ('WebAssembly' in window && typeof Promise  !== 'undefined' && !iOS() ) {
+    // Only browsers that support Wasm, Promise. iOS gives maximum stack size exceeded error
+    MediaInfoJs.src = "scripts/MediaInfoWasm.js";
+  } else {
+    MediaInfoJs.src = "scripts/MediaInfo.js";
+  }
+  document.body.appendChild(MediaInfoJs);
+
+  // Continue initialization
+  let MediaInfoModule;
+  MediaInfoJs.onload = function () {
+    MediaInfoModule = MediaInfoLib({
+      'postRun': function() {
+        if (typeof Promise !== 'undefined' && MediaInfoModule instanceof Promise) {
+          MediaInfoModule.then(function(module) {          
+            MediaInfoModule = module;
+          });
+        }
+      }
+    });
   }
   
   /* ========== GRAPHICS SECTION ==============
@@ -795,13 +822,6 @@ SOFTWARE.
     // Put the graphics back
     showCalibrationControls();
 
-    // Show video info
-    let videoFile = $('#videoInput').prop('files')[0];
-    let videoName = (typeof videoFile === "undefined" ) ? "" : videoFile.name;
-    let tracks = [{ "@type": videoName, Duration: video.duration, 
-                    Width: video.videoWidth, Height: video.videoHeight }];
-    $("#videoInfo").html( convertToTable(tracks)  );
-
     // Get the frame rate
     getFPS();
 
@@ -994,7 +1014,7 @@ SOFTWARE.
   
 
   // Event listener for the modal boxes
-  $("#showMediaInfo").click( evt => { showModal("mediaInfoModal"); });
+  $("#showMediaInfo").click( evt => { writeVideoInfo(); showModal("mediaInfoModal"); });
   $("#showAbout").click( evt => { showModal("aboutModal");} );
   $("#showHelp").click( evt => { showModal("helpModal");} );
   $("#showSettings").click( evt => { showModal("settingsModal");} );
@@ -1037,8 +1057,41 @@ SOFTWARE.
   
   function getFPS() {
     $('#statusMsg').html( "Calculating frame rate... <i class='fa fa-spinner fa-spin fa-fw'></i>" );
+       
+    // Examples about how to get results
+    let MI;
+    let getResults = function() {
+
+      // Update frame rate
+      let frameRate = MI.Get(MediaInfoModule.Stream.Video, 0, 'FrameRate');
+      updateFPS( frameRate );
+
+      // Update orientation/rotation
+      let orientation = MI.Get(MediaInfoModule.Stream.Video, 0, 'Rotation');
+      if( iOS() && orientation ) {
+        rotationAngle = orientation;
+        rotateContext();
+      }
+
+      // Finalize
+      $('#statusMsg').html( "" );
+      MI.Close();
+      MI.delete();
+    }
+              
+    // Initialise MediaInfo
+    MI = new MediaInfoModule.MediaInfo();
+
+    //Open the file
+    try{
+      const file = $('#videoInput').prop('files')[0];
+      MI.Open(file, getResults);
+    } catch (error) {
+      alert("An error occured. Please set frame rate manually.\n" + error);
+      $('#statusMsg').html( "" );
+    }
     
-    MediaInfo({ format: 'object' }, (mediainfo) => {
+    /*MediaInfo({ format: 'object' }, (mediainfo) => {
       const file = $('#videoInput').prop('files')[0];
       if (file) {        
         const getSize = () => file.size;
@@ -1084,7 +1137,7 @@ SOFTWARE.
             $('#statusMsg').html( "" );
         })
       }
-    })
+    })*/
   }
   
   function rotateContext() {
@@ -1110,6 +1163,16 @@ SOFTWARE.
     //console.log( orientation );
     //orientation = -1; 
   } 
+
+  function writeVideoInfo() {
+    // Show video info
+    let videoFile = $('#videoInput').prop('files')[0];
+    let videoName = (typeof videoFile === "undefined" ) ? "" : videoFile.name;
+    let tracks = [{ "@type": videoName, Duration: video.duration, 
+                    Width: video.videoWidth, Height: video.videoHeight,
+                    Rotation: rotationAngle }];
+    $("#videoInfo").html( convertToTable(tracks)  );
+  }
   
   function convertToTable(tracks) {
     let output = "\n <table>";
