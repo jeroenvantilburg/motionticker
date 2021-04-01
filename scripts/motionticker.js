@@ -73,6 +73,7 @@ SOFTWARE.
   // Event listener for resizing the window
   $(window).resize( resizeWindow );
   function resizeWindow() {
+        
     // Modify width of sidebar if it becomes too small
     let sideBarWidth = Math.min(maxSideBarWidth, window.innerWidth ); 
     $(".sidebar").width( sideBarWidth );
@@ -85,7 +86,8 @@ SOFTWARE.
       $(".showSideBar").hide();
       $(".hideSideBar").hide();      
     } else {
-      $(".hideSideBar").click();
+      if( $(".sidebar").width() < 1 ) { $(".hideSideBar").click(); }
+      else { $(".showSideBar").click(); }
     }
   }
 
