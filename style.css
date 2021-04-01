@@ -37,6 +37,10 @@ input, select {
   font-size: 1.0em;
 }
 
+input:disabled+label {
+  color: #bbb;
+}
+
 .center {
   text-align: center;
 }
