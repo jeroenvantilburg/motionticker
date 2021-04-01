@@ -414,15 +414,19 @@ SOFTWARE.
   $("#zoomOut").click( () => {
     if( canvas.width > 200 ) { // minimum 200 px should be small enough
       setVideoZoom( 0.5*canvas.width / video.videoWidth );
+      $("#zoomIn").removeAttr('disabled');
+      if( canvas.width <= 200 ) $("#zoomOut").attr('disabled', '');
     }
   });
 
   $("#zoomIn").click( () => {
-    if( canvas.width < 8 * video.videoWidth ) { // Maximum zoom x8
-      setVideoZoom( 2*canvas.width / video.videoWidth )
+    if( canvas.width*canvas.height < 4e6 ) { // Maximum canvas size: 16 Mpx
+      setVideoZoom( 2*canvas.width / video.videoWidth );
+      $("#zoomOut").removeAttr('disabled');
+      if( canvas.width*canvas.height >= 4e6 ) $("#zoomIn").attr('disabled', '');
     }
   });
-
+  
   function setVideoZoom( scaleRatio ) {
     //console.log("scale ratio = " + scaleRatio );
     canvas.setDimensions({ width: video.videoWidth * scaleRatio, 
