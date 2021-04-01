@@ -110,6 +110,26 @@ SOFTWARE.
       || (navigator.userAgent.includes("Mac") && "ontouchend" in document);  // iPad on iOS 13 detection
   }
 
+  function isQuicktime() {
+    let videoFile = $('#videoInput').prop('files')[0];
+    let videoType = (typeof videoFile === "undefined" ) ? "" : videoFile.type;
+    return videoType.toLowerCase() === ("video/quicktime").toLowerCase();
+  }
+
+  function formatBytes(bytes, decimals = 2) {
+    if (bytes === 0) return '0 Bytes';
+
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  }
+
+
+
   /* ========= Load the MediaInfo library ============
        Dynamically choose between Wasm and 
        asm.js libraries.
@@ -1054,7 +1074,7 @@ SOFTWARE.
     name = name.substr(5,11); // remove salt
     $("feedback").html(name+"@gmail.com");  
   }
-  
+    
   function getFPS() {
     $('#statusMsg').html( "Calculating frame rate... <i class='fa fa-spinner fa-spin fa-fw'></i>" );
        
@@ -1068,7 +1088,7 @@ SOFTWARE.
 
       // Update orientation/rotation
       let orientation = MI.Get(MediaInfoModule.Stream.Video, 0, 'Rotation');
-      if( iOS() && orientation ) {
+      if( iOS() && isQuicktime() && orientation ) {
         rotationAngle = orientation;
         rotateContext();
       }
@@ -1167,11 +1187,18 @@ SOFTWARE.
   function writeVideoInfo() {
     // Show video info
     let videoFile = $('#videoInput').prop('files')[0];
-    let videoName = (typeof videoFile === "undefined" ) ? "" : videoFile.name;
-    let tracks = [{ "@type": videoName, Duration: video.duration, 
-                    Width: video.videoWidth, Height: video.videoHeight,
-                    Rotation: rotationAngle }];
-    $("#videoInfo").html( convertToTable(tracks)  );
+    let videoName = "", videoType = "", videoSize = "";
+    if( typeof videoFile !== "undefined" ) {
+      videoName = videoFile.name;
+      videoType = videoFile.type;
+      videoSize = formatBytes(videoFile.size);
+    }
+    let videoInfo = [{ "@type": videoName, "Duration": toCSV(video.duration)+" s", 
+                       "Width": video.videoWidth + " px", "Height": video.videoHeight + " px",
+                       "Rotation": rotationAngle + "&deg;", "MIME type": videoType,
+                       "File size": videoSize }];
+
+    $("#videoInfo").html( convertToTable( videoInfo )  );
   }
   
   function convertToTable(tracks) {
