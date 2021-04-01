@@ -1034,9 +1034,10 @@ SOFTWARE.
   // Event listeners for the dropdown menu
   function showDropdownMenu() { $(".dropdown-content").show();}
   function hideDropdownMenu() { $(".dropdown-content").hide();}
-  $(".dropdown").hover( showDropdownMenu, hideDropdownMenu );
   //$(".dropdown-content").click( hideDropdownMenu );
   $(".dropdown").click( () => { $(".dropdown-content").toggle();} );
+  $(".dropdown").hover( showDropdownMenu, hideDropdownMenu );
+
   
 
   // Event listener for the modal boxes
