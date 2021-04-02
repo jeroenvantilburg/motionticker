@@ -260,7 +260,7 @@ input:disabled+label {
   color: inherit;
   border: none;
   outline: none;
-  padding: 10px 20px;
+  padding: 11px 20px;
   background-color: inherit;
   font-family: inherit; /* Important for vertical align on mobile phones */
   margin: 0; /* Important for vertical align on mobile phones */
