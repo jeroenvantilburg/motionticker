@@ -1189,7 +1189,7 @@ SOFTWARE.
       canvasVideoCtx.rotate(Math.PI/2 );
       canvasVideoCtx.translate(0, -video.videoWidth );
       if( aspectRatio < 1 ) canvasVideoCtx.scale( 1/aspectRatio, 1);
-      else canvasVideoCtx.scale( 1, aspectRatio );
+      else canvasVideoCtx.scale( 1/aspectRatio, aspectRatio );
     } else if( $("#orientationInput").val() == "180" ) {
       canvasVideoCtx.rotate(Math.PI );
       canvasVideoCtx.translate(-video.videoWidth, -video.videoHeight );
@@ -1197,7 +1197,7 @@ SOFTWARE.
       canvasVideoCtx.rotate(-Math.PI/2 );
       canvasVideoCtx.translate(-video.videoHeight, 0 );
       if( aspectRatio < 1 ) canvasVideoCtx.scale( 1/aspectRatio, 1);
-      else canvasVideoCtx.scale( 1, aspectRatio );
+      else canvasVideoCtx.scale( 1/aspectRatio, aspectRatio );
     }
 
   } 
