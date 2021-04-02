@@ -441,7 +441,7 @@ SOFTWARE.
     
     setScaleBox();
 
-    canvasVideoCtx.restore();
+    //canvasVideoCtx.restore();
     canvasVideo.width = video.videoWidth * scaleRatio;
     canvasVideo.height = video.videoHeight * scaleRatio;
     canvasVideoCtx.scale(scaleRatio,scaleRatio);
@@ -1088,10 +1088,6 @@ SOFTWARE.
     let MI;
     let getResults = function() {
 
-      // Update frame rate
-      let frameRate = MI.Get(MediaInfoModule.Stream.Video, 0, 'FrameRate');
-      updateFPS( frameRate );
-
       // Update orientation/rotation
       videoRotation = MI.Get(MediaInfoModule.Stream.Video, 0, 'Rotation');
       if( iOS() && videoRotation ) {        
@@ -1109,6 +1105,10 @@ SOFTWARE.
         rotateContext();
       }
       
+      // Update frame rate
+      let frameRate = MI.Get(MediaInfoModule.Stream.Video, 0, 'FrameRate');
+      updateFPS( frameRate );
+
       // Finalize
       $('#statusMsg').html( "" );
       MI.Close();
@@ -1187,7 +1187,7 @@ SOFTWARE.
       canvasVideoCtx.rotate(Math.PI/2 );
       canvasVideoCtx.translate(0, -video.videoWidth );
       if( aspectRatio < 1 ) canvasVideoCtx.scale( 1/aspectRatio, 1);
-      else canvasVideoCtx.scale( aspectRatio, 1);
+      else canvasVideoCtx.scale( 1, aspectRatio );
     } else if( $("#orientationInput").val() == "180" ) {
       canvasVideoCtx.rotate(Math.PI );
       canvasVideoCtx.translate(-video.videoWidth, -video.videoHeight );
@@ -1195,7 +1195,7 @@ SOFTWARE.
       canvasVideoCtx.rotate(-Math.PI/2 );
       canvasVideoCtx.translate(-video.videoHeight, 0 );
       if( aspectRatio < 1 ) canvasVideoCtx.scale( 1/aspectRatio, 1);
-      else canvasVideoCtx.scale( aspectRatio, 1);
+      else canvasVideoCtx.scale( 1, aspectRatio );
     }
 
   } 
