@@ -1182,18 +1182,21 @@ SOFTWARE.
     canvasVideoCtx.save();    // save for next time
     if( $("#orientationInput").val() == "0" ) return;
     
+    let aspectRatio = video.videoWidth / video.videoHeight;
     if( $("#orientationInput").val() == "90" ) {
       canvasVideoCtx.rotate(Math.PI/2 );
       canvasVideoCtx.translate(0, -video.videoWidth );
+      if( aspectRatio < 1 ) canvasVideoCtx.scale( 1/aspectRatio, 1);
+      else canvasVideoCtx.scale( aspectRatio, 1);
     } else if( $("#orientationInput").val() == "180" ) {
       canvasVideoCtx.rotate(Math.PI );
       canvasVideoCtx.translate(-video.videoWidth, -video.videoHeight );
     } else if( $("#orientationInput").val() == "270" ) { 
       canvasVideoCtx.rotate(-Math.PI/2 );
       canvasVideoCtx.translate(-video.videoHeight, 0 );
+      if( aspectRatio < 1 ) canvasVideoCtx.scale( 1/aspectRatio, 1);
+      else canvasVideoCtx.scale( aspectRatio, 1);
     }
-    let aspectRatio = video.videoWidth / video.videoHeight;
-    if( aspectRatio < 1 ) canvasVideoCtx.scale( 1/aspectRatio, 1);
 
   } 
 
