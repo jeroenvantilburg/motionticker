@@ -34,20 +34,15 @@ SOFTWARE.
   let canvasVideo = document.getElementById('canvasVideo');
   let canvasVideoCtx = canvasVideo.getContext('2d');
   canvasVideoCtx.save();
-
-
-  //let orientation = -1;
-  let rotationAngle = 0.0;
-
-
   
   // Global video parameters
   let currentFrame = 0;
-  let t0 = 0.0;
+  let t0 = 0;
   let FPS;
   let pixelsPerMeter;
   let distanceInMeter;
   let originX, originY; // in pixels
+  let videoRotation = 0; // in degrees
 
   // The raw data (all derived data is calculated on the fly)
   let rawData = [];
@@ -112,24 +107,20 @@ SOFTWARE.
       || (navigator.userAgent.includes("Mac") && "ontouchend" in document);  // iPad on iOS 13 detection
   }
 
-  function isQuicktime() {
+  /*function isQuicktime() {
     let videoFile = $('#videoInput').prop('files')[0];
     let videoType = (typeof videoFile === "undefined" ) ? "" : videoFile.type;
     return videoType.toLowerCase() === ("video/quicktime").toLowerCase();
-  }
+  }*/
 
   function formatBytes(bytes, decimals = 2) {
     if (bytes === 0) return '0 Bytes';
-
     const k = 1024;
     const dm = decimals < 0 ? 0 : decimals;
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   }
-
 
 
   /* ========= Load the MediaInfo library ============
@@ -307,6 +298,13 @@ SOFTWARE.
     }   
   });  
   
+  $("#orientationInput").val( "0" );
+  $("#orientationInput").change( function() { 
+    //orientation = toNumber( this.value );
+    rotateContext();
+    gotoFrame(currentFrame);
+  });
+  
   let drawAllPoints = true;
   $('#drawAllPoints').prop('checked',drawAllPoints);
   $('#drawAllPoints').on('change', function(e) {
@@ -447,7 +445,8 @@ SOFTWARE.
     canvasVideo.width = video.videoWidth * scaleRatio;
     canvasVideo.height = video.videoHeight * scaleRatio;
     canvasVideoCtx.scale(scaleRatio,scaleRatio);
-    if( iOS() ) { rotateContext(); } // rotate context due to bug/feature in iOS
+    canvasVideoCtx.save(); // save unrotated state
+    rotateContext(); // rotate context due to bug/feature in iOS
     
     /*let videoWidth = video.videoWidth;
     let videoHeight = video.videoHeight;
@@ -770,8 +769,8 @@ SOFTWARE.
     canvas.clear();
     
     canvasVideoCtx.restore(); // TODO: clear?
-    //orientation = -1;
-    rotationAngle = 0.0;
+    $("#orientationInput").val("0"); 
+    videoRotation = 0;
     
     // Disable video control and reset video parameters when selecting new video
     disableAnalysis();
@@ -1094,12 +1093,22 @@ SOFTWARE.
       updateFPS( frameRate );
 
       // Update orientation/rotation
-      let orientation = MI.Get(MediaInfoModule.Stream.Video, 0, 'Rotation');
-      if( iOS() && isQuicktime() && orientation ) {
-        rotationAngle = orientation;
+      videoRotation = MI.Get(MediaInfoModule.Stream.Video, 0, 'Rotation');
+      if( iOS() && videoRotation ) {        
+        if( Math.abs(90 - videoRotation) < 1 ) {
+          $("#orientationInput").val( "90" );
+          //console.log("found 90 cw");
+        } else if( Math.abs(180 - videoRotation ) < 1 ) {
+          $("#orientationInput").val( "180" );
+          //console.log("found 180 cw");
+        } else if( Math.abs(270 - videoRotation ) < 1 ) { 
+          $("#orientationInput").val( "270" );
+          //console.log("found 90 ccw");
+        }
+        canvasVideoCtx.save(); // save unrotated state
         rotateContext();
       }
-
+      
       // Finalize
       $('#statusMsg').html( "" );
       MI.Close();
@@ -1168,27 +1177,24 @@ SOFTWARE.
   }
   
   function rotateContext() {
-    //orientation = -1;
-    if( Math.abs(90 - rotationAngle) < 1 ) {              
-      //orientation = cv.ROTATE_90_CLOCKWISE;
+    
+    canvasVideoCtx.restore(); // remove old rotation
+    canvasVideoCtx.save();    // save for next time
+    if( $("#orientationInput").val() == "0" ) return;
+    
+    if( $("#orientationInput").val() == "90" ) {
       canvasVideoCtx.rotate(Math.PI/2 );
       canvasVideoCtx.translate(0, -video.videoWidth );
-      canvasVideoCtx.scale(video.videoHeight/video.videoWidth,1);
-      //console.log("found 90 cw");
-    } else if( Math.abs(180 - rotationAngle ) < 1 ) {
-      //orientation = cv.ROTATE_180;
+    } else if( $("#orientationInput").val() == "180" ) {
       canvasVideoCtx.rotate(Math.PI );
       canvasVideoCtx.translate(-video.videoWidth, -video.videoHeight );
-      //console.log("found 180 cw");
-    } else if( Math.abs(270 - rotationAngle ) < 1 ) { 
-      //orientation = cv.ROTATE_90_COUNTERCLOCKWISE;
+    } else if( $("#orientationInput").val() == "270" ) { 
       canvasVideoCtx.rotate(-Math.PI/2 );
       canvasVideoCtx.translate(-video.videoHeight, 0 );
-      canvasVideoCtx.scale(video.videoHeight/video.videoWidth,1);
-      //console.log("found 90 ccw");
     }
-    //console.log( orientation );
-    //orientation = -1; 
+    let aspectRatio = video.videoWidth / video.videoHeight;
+    if( aspectRatio < 1 ) canvasVideoCtx.scale( 1/aspectRatio, 1);
+
   } 
 
   function writeVideoInfo() {
@@ -1202,7 +1208,7 @@ SOFTWARE.
     }
     let videoInfo = [{ "@type": videoName, "Duration": toCSV(video.duration)+" s", 
                        "Width": video.videoWidth + " px", "Height": video.videoHeight + " px",
-                       "Rotation": rotationAngle + "&deg;", "MIME type": videoType,
+                       "Rotation": videoRotation + "&deg;", "MIME type": videoType,
                        "File size": videoSize }];
 
     $("#videoInfo").html( convertToTable( videoInfo )  );
