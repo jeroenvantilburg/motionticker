@@ -12,11 +12,6 @@ body * {
   box-sizing: border-box;
 }
 
-/* Set the text size to 12pt */
-/*body {
-  font-size: 1.00em;
-}*/
-
 /* Display <pre> tag inline */
 pre {
   display: inline;
@@ -24,6 +19,11 @@ pre {
   white-space: pre-wrap;
   word-break: break-all;
   font-family: "Courier New",Courier,Arial,Verdana;
+}
+
+#main-icon {
+  height: 50px;
+  vertical-align: middle;  
 }
 
 input, select {
@@ -234,7 +234,7 @@ input:disabled+label {
   font-size: 1.5em;
   font-family: Verdana;
   font-weight: bold;
-  padding: 10px 10px;
+  padding: 0px 10px;
 }
 
 /* Menubar inside the header */

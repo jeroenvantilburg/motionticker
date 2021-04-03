@@ -10,11 +10,15 @@
   <meta property="og:image" content="https://jeroenvantilburg.nl/motionticker/img/screenshot.png" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://jeroenvantilburg.nl/motionticker/" />
-  <link rel="apple-touch-icon" sizes="180x180" href="favicon-apple-touch-180.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-  <link rel="icon" type="image/vnd.microsoft.icon" sizes="32x32" href="favicon.ico">
-  <link rel="icon" type="image/x-icon" href="favicon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="mask-icon" href="safari-pinned-tab.svg" color="#3a77ed">
+  <link rel="shortcut icon" href="favicon.ico">
+  <meta name="msapplication-TileColor" content="#2d89ef">
+  <meta name="msapplication-config" content="browserconfig.xml">
+  <meta name="theme-color" content="#ffffff">  
   <link rel="stylesheet" type="text/css" href="style.css" media="screen,projection" />
   <link rel="stylesheet" 
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -22,7 +26,9 @@
 </head>  
 <body>
   <div class="header">    
-    <div class="titlebar"><i class="fa fa-film"></i> Motion Ticker</div>    
+    <div class="titlebar">
+      <img id="main-icon" src="mstile-70x70.png"></img> Motion Ticker
+    </div>    
     <div class="menubar">    
       <div class="dropdown"> 
         <button class="dropbtn"><i class="fa fa-bars"></i></button>    
@@ -115,7 +121,7 @@
     <div class="modal-content modal-small"> <span class="close">&times;</span>
       <center>
         <h3>Motion Ticker</h3>
-          <img src="img/favicon-apple-touch-114.png"/><br clear="all"/><br/>
+          <img id="about-icon" src="mstile-70x70.png"></img><br clear="all"/><br/>
           &copy; 2021 Jeroen van Tilburg, MIT licentie <br/>
           Feedback to <feedback></feedback> <br/> 
           Source code: <a href="https://github.com/jeroenvantilburg/motionticker">Github</a> <br/>
