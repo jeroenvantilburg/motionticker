@@ -950,11 +950,16 @@ SOFTWARE.
     
   
   // Remove focus after enter for all input text elements
-  function blurOnEnter(e){ if(e.keyCode===13){ e.target.blur();} }
+  let focusedElement;
+  function blurOnEnter(e){ 
+    if(e.keyCode===13){ 
+      e.target.blur();
+      focusedElement = undefined;
+    } 
+  }
   $("input[type=text]").on("keydown", blurOnEnter );
 
   // Select text when clicking on input text element
-  let focusedElement;
   $(document).on('focus', 'input', function () {    
     //already focused, return so user can now place cursor at specific point in input.    
     if (focusedElement == this) return; 
