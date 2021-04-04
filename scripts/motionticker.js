@@ -38,6 +38,7 @@ SOFTWARE.
   // Global video parameters
   let currentFrame = 0;
   let t0 = 0;
+  let zoomLevel = 1;
   let FPS;
   let pixelsPerMeter;
   let distanceInMeter;
@@ -173,7 +174,7 @@ SOFTWARE.
   function unHighlightMarker( markerP ) { markerP.set({stroke: 'rgba(220,0,0)', strokeWidth: 1}); }
   
   // Define tracking box for automatic analysis
-  let trackingBox = new fabric.Rect({left: -100, top: -100, height: 50, width: 50, 
+  let trackingBox = new fabric.Rect({left: -100, top: -100, height: 150, width: 150, 
                                      fill: 'rgba(0,0,0,0)', stroke: 'red', strokeWidth: 2,
                                      lockRotation: true, strokeUniform: true, noScaleCache: false,
                                      cornerSize: 8, cornerStyle: 'circle', 
@@ -199,7 +200,7 @@ SOFTWARE.
     yAxis.setCoords();
   });
   axesOrigin.on("moved", () => {
-    let zoomLevel = canvas.width / video.videoWidth;
+    //let zoomLevel = canvas.width / video.videoWidth;
     $("#originXInput").val( axesOrigin.left / zoomLevel );
     $("#originYInput").val( axesOrigin.top / zoomLevel );
     $("#originXInput").change();
@@ -209,7 +210,7 @@ SOFTWARE.
     axesOrigin.set({top: xAxis.top});
   });
   xAxis.on("moved", () => {
-    let zoomLevel = canvas.width / video.videoWidth;
+    //let zoomLevel = canvas.width / video.videoWidth;
     $("#originYInput").val( xAxis.top / zoomLevel );
     $("#originYInput").change();
   });
@@ -217,7 +218,7 @@ SOFTWARE.
     axesOrigin.set({left: yAxis.left});
   });
   yAxis.on("moved", () => {
-    let zoomLevel = canvas.width / video.videoWidth;
+    //let zoomLevel = canvas.width / video.videoWidth;
     $("#originXInput").val( yAxis.left / zoomLevel );
     $("#originXInput").change();
   });
@@ -256,11 +257,11 @@ SOFTWARE.
 
 
     
-    let zoomLevel = 1; //canvas.width / video.videoWidth;                               
+    //let zoomLevel = 1; //canvas.width / video.videoWidth;                               
     //$("#distanceInput").css({ transform: "scale("+ zoomLevel +")" });
     //console.log(distHeight);
-    $("#distanceInput").css({ left: zoomLevel*(xPos-6) + 8 - 0.5*scaleBox.width,
-                               top: zoomLevel*yPos - 0.5*distHeight });
+    $("#distanceInput").css({ left: (xPos-6) + 8 - 0.5*scaleBox.width,
+                               top: yPos - 0.5*distHeight });
   }
   
   // Event listeners for ruler
@@ -436,19 +437,22 @@ SOFTWARE.
     }
   });
   
-  function setVideoZoom( scaleRatio ) {
-    // Get previous zoom for ruler
-    let prevZoom = canvas.width / video.videoWidth;
-    
-    //console.log("prevZoom = " + prevZoom );
+  // 
+  function setVideoZoom( newZoom ) {
+    // Calculate the relative zoom and save the previous zoom level
+    let relZoom = newZoom / zoomLevel;
+    let prevZoom = zoomLevel;
+        
+    // Update to new zoom level
+    zoomLevel = newZoom;
 
     // Update the drawing canvas
-    canvas.setDimensions({ width: video.videoWidth * scaleRatio, 
-                           height: video.videoHeight * scaleRatio })
+    canvas.setDimensions({ width: video.videoWidth * newZoom, 
+                           height: video.videoHeight * newZoom })
 
     // Update axes
-    axesOrigin.set({ left: scaleRatio*$("#originXInput").val(), 
-                     top:  scaleRatio*$("#originYInput").val() });
+    axesOrigin.set({ left: newZoom * $("#originXInput").val(), 
+                     top:  newZoom * $("#originYInput").val() });
     axesOrigin.setCoords();
     xAxis.set({x2: canvas.width, y1: axesOrigin.top, y2: axesOrigin.top} );
     yAxis.set({x1: axesOrigin.left, x2: axesOrigin.left, y2: canvas.height } );  
@@ -458,77 +462,35 @@ SOFTWARE.
     // Update ruler
     updateRuler( scaleCircle1.left/prevZoom, scaleCircle1.top/prevZoom,
                  scaleCircle2.left/prevZoom, scaleCircle2.top/prevZoom );
-    /*scaleCircle1.setCoords();
-    scaleCircle2.setCoords();
 
-    scaleLine.set({x1: scaleCircle1.left*scaleRatio/prevZoom, 
-                   y1: scaleCircle1.top*scaleRatio/prevZoom, 
-                   x2: scaleCircle2.left*scaleRatio/prevZoom, 
-                   y2: scaleCircle2.top*scaleRatio/prevZoom });
-    scaleCircle1.set({left: scaleLine.x1, top: scaleLine.y1});
-    scaleCircle2.set({left: scaleLine.x2, top: scaleLine.y2});
-    scaleLine.setCoords();
-    scaleCircle1.setCoords();
-    scaleCircle2.setCoords();
-    */
-
-
-    trackingBox.set({ left: trackingBox.left*scaleRatio/prevZoom,
-                       top: trackingBox.top*scaleRatio/prevZoom, 
-                     width: trackingBox.width*scaleRatio/prevZoom, 
-                    height: trackingBox.height*scaleRatio/prevZoom });
+    // Update tracking box
+    trackingBox.set({ left: trackingBox.left * relZoom,
+                       top: trackingBox.top * relZoom, 
+                     width: trackingBox.width * relZoom, 
+                    height: trackingBox.height * relZoom });
     trackingBox.setCoords();
     
+    // Update the data markers
     rawData.forEach( function (item) {
-      item.marker.set({ left: item.marker.left*scaleRatio/prevZoom,
-                         top: item.marker.top*scaleRatio/prevZoom});
+      item.marker.set({ left: item.marker.left * relZoom,
+                         top: item.marker.top * relZoom});
       item.marker.setCoords();
     } );
 
-           
-                    
-    // TODO set the data points
-    
-    //canvas.setZoom( scaleRatio );
-    
-    //videoImage.set({ width: video.videoWidth, 
-    //                height: video.videoHeight});
-    //videoImage.setCoords();
-    //console.log( videoImage );
-    //console.log("width: "+videoImage.width +", height: "+videoImage.height );
+    // Finally update the calibration canvas
     canvas.renderAll();
     
-    //setScaleBox();
-
-    //canvas.renderAll();
-
-
-    //canvasVideoCtx.restore();
-    canvasVideo.width = video.videoWidth * scaleRatio;
-    canvasVideo.height = video.videoHeight * scaleRatio;
-    canvasVideoCtx.scale(scaleRatio,scaleRatio);
+    // Update the video canvas
+    canvasVideo.width = video.videoWidth * newZoom;
+    canvasVideo.height = video.videoHeight * newZoom;
+    canvasVideoCtx.scale(newZoom,newZoom);
     canvasVideoCtx.save(); // save unrotated state
-    rotateContext(); // rotate context due to bug/feature in iOS
+    rotateContext(); // rotate context due to bug/feature in iOS    
+    canvasVideoCtx.drawImage(video,0,0);
     
-    /*let videoWidth = video.videoWidth;
-    let videoHeight = video.videoHeight;
-    if( iOS() && ( orientation == cv.ROTATE_90_CLOCKWISE || 
-                   orientation == cv.ROTATE_90_COUNTERCLOCKWISE) ) {
-      videoWidth = video.videoHeight;
-      //videoHeight = video.videoWidth;
-    }*/
-    canvasVideoCtx.drawImage(video,0,0);//,video.videoWidth,video.videoHeight,0,0,
-                             //videoWidth,videoHeight);
+    // Show the current zoom level
+    flashTextOnVideo( zoomLevel + "x" );
 
-
-    //canvasVideoCtx.drawImage(video,0,0);
-
-    //canvasVideoCtx.restore();
-
-
-
-    //video.width = video.videoWidth * scaleRatio ;
-    //video.height = video.videoHeight * scaleRatio;
   }
   
   /* ============= CSV SECTION =================
@@ -589,7 +551,7 @@ SOFTWARE.
     if( rawData.length === 0 ) return;
     
     // First line contains headers and meta data
-    let zoomLevel = canvas.width / video.videoWidth;
+    //let zoomLevel = canvas.width / video.videoWidth;
     let csvData = [];
     csvData.push({[timeStr]: "", [posXStr]: "", [posYStr]: "", 
                   [velXStr]: "", [velYStr]: "", [accXStr]: "", [accYStr]: "",
@@ -766,7 +728,7 @@ SOFTWARE.
           // Update the tracking box
           if( isNumeric( meta[boxXStr] ) && isNumeric( meta[boxYStr] ) &&
               isNumeric( meta[boxWStr] ) && isNumeric( meta[boxHStr] ) ) {
-            let zoomLevel = canvas.width / video.videoWidth;
+            //let zoomLevel = canvas.width / video.videoWidth;
             trackingBox.set({ left: toNumber( meta[boxXStr] )*zoomLevel, 
                                top: toNumber( meta[boxYStr] )*zoomLevel,
                              width: toNumber( meta[boxWStr] )*zoomLevel,
@@ -1017,7 +979,7 @@ SOFTWARE.
       originX = toNumber( this.value );
       
       // Update the y-axis on the canvas
-      let zoomLevel = canvas.width / video.videoWidth;
+      //let zoomLevel = canvas.width / video.videoWidth;
       yAxis.set({x1: originX*zoomLevel, y1: 0, 
                  x2: originX*zoomLevel, y2: canvas.height} );
       yAxis.setCoords();
@@ -1036,7 +998,7 @@ SOFTWARE.
       originY = toNumber( this.value ) ;
       
       // Update the x-axis on the canvas
-      let zoomLevel = canvas.width / video.videoWidth;
+      //let zoomLevel = canvas.width / video.videoWidth;
       xAxis.set({x1: 0, y1: originY*zoomLevel, 
                  x2: canvas.width, y2: originY*zoomLevel} );
       xAxis.setCoords();
@@ -1071,7 +1033,7 @@ SOFTWARE.
       // Enable video analysis
       tryToEnable() ;
       // Set the distanceInMeter
-      let zoomLevel = canvas.width / video.videoWidth;
+      //let zoomLevel = canvas.width / video.videoWidth;
       let scale1 = {x: scaleCircle1.left/zoomLevel, y: scaleCircle1.top/zoomLevel };
       let scale2 = {x: scaleCircle2.left/zoomLevel, y: scaleCircle2.top/zoomLevel };
       let dist = Math.sqrt((scale2.x-scale1.x)**2 + (scale2.y-scale1.y)**2);
@@ -1117,6 +1079,9 @@ SOFTWARE.
   $("document").ready( () => {
     $("#videoImport").removeAttr('disabled');
     resizeWindow();
+    
+    // Hide the address bar
+    setTimeout(function(){ window.scrollTo(0, 1); }, 0);
   });
   
 
@@ -1382,7 +1347,7 @@ SOFTWARE.
   }
   
   function updateRuler( scaleX1, scaleY1, scaleX2, scaleY2 ) {
-    let zoomLevel = canvas.width / video.videoWidth;
+    //let zoomLevel = canvas.width / video.videoWidth;
     scaleLine.set({x1: scaleX1*zoomLevel, y1: scaleY1*zoomLevel, 
                    x2: scaleX2*zoomLevel, y2: scaleY2*zoomLevel });
     scaleCircle1.set({left: scaleLine.x1, top: scaleLine.y1});
@@ -1400,7 +1365,7 @@ SOFTWARE.
     // Check if distanceInMeter is set
     if( distanceInMeter ) {
       // Get the scale points
-      let zoomLevel = canvas.width / video.videoWidth;
+      //let zoomLevel = canvas.width / video.videoWidth;
       let scale1 = {x: scaleCircle1.left/zoomLevel, y: scaleCircle1.top/zoomLevel };
       let scale2 = {x: scaleCircle2.left/zoomLevel, y: scaleCircle2.top/zoomLevel };
 
@@ -1482,7 +1447,7 @@ SOFTWARE.
     let posPx = canvas.getPointer( evt );
 
     // Add raw data
-    let rawDataPoint = {t: currentFrame, x: posPx.x, y: posPx.y};
+    let rawDataPoint = {t: currentFrame, x: posPx.x/zoomLevel, y: posPx.y/zoomLevel};
     addRawData( rawDataPoint );
     
     // Update plots
@@ -1502,7 +1467,7 @@ SOFTWARE.
     
     // Add a marker to the rawDataPoint
     let markerP = fabric.util.object.clone( markerPoint ) ;
-    markerP.set({left: rawDataPoint.x, top: rawDataPoint.y});    
+    markerP.set({left: rawDataPoint.x * zoomLevel, top: rawDataPoint.y * zoomLevel });    
     if( rawDataPoint.t === currentFrame ) {
       highlightMarker( markerP );
       canvas.add( markerP );    
@@ -1621,7 +1586,14 @@ SOFTWARE.
     return t0 + (targetFrame + 0.5)/FPS;
   }
 
+  // Show the text on the video and remove it after 1 s
   let videoTimeoutID = 0;
+  function flashTextOnVideo( text ) {
+    $("#videoText").html( text );
+    clearTimeout( videoTimeoutID ); // remove previous timeout
+    videoTimeoutID = setTimeout( () =>{ $("#videoText").html( "" ); }, 1000 );
+  }
+  
   function gotoFrame(targetFrame) {
     let newTime = (targetFrame + 0.5)/FPS;
         
@@ -1631,9 +1603,10 @@ SOFTWARE.
       return false;
     } else {
       // Draw the current time and remove it after 1 s
-      $("#videoTime").html( newTime.toFixed(2) + " s" );
+      flashTextOnVideo( newTime.toFixed(2) + " s" );
+      /*$("#videoTime").html( newTime.toFixed(2) + " s" );
       clearTimeout( videoTimeoutID ); // remove previous timeout
-      videoTimeoutID = setTimeout( () =>{ $("#videoTime").html( "" ); }, 1000 );
+      videoTimeoutID = setTimeout( () =>{ $("#videoTime").html( "" ); }, 1000 );*/
       
       // Highlight the new marker
       let currentDataPoint = rawData.find(entry => entry.t === currentFrame );
@@ -1711,7 +1684,7 @@ SOFTWARE.
     console.log(box2);
     */
 
-    let zoomLevel = canvas.width / video.videoWidth;
+    //let zoomLevel = canvas.width / video.videoWidth;
 
     let boxWidth  = Math.abs( trackingBox.width*trackingBox.scaleX/zoomLevel );
     let boxHeight = Math.abs( trackingBox.height*trackingBox.scaleY/zoomLevel );
