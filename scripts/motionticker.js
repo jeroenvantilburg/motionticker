@@ -934,9 +934,7 @@ SOFTWARE.
     focusedElement = this;
     // select all text in any field on focus for easy re-entry. 
     // Delay sightly to allow focus to "stick" before selecting.
-    setTimeout(function () { 
-      document.execCommand('selectall');
-    }, 300);
+    setTimeout(function () { document.execCommand('selectall');}, 300);
   });
   
 
@@ -1099,9 +1097,11 @@ SOFTWARE.
   $(".dropdown").hover( showDropdownMenu, hideDropdownMenu );
   $(".dropdown").click( () => { 
     // Hide the address bar
-    setTimeout(function(){ window.scrollTo(0, 1); }, 500);
+    //setTimeout(function(){ window.scrollTo(0, 1); }, 500);
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {elem.requestFullscreen()};
     
-    if( $(".dropdown-content").is(":hover") ) hideDropdownMenu() ;
+    if( $(".dropdown").is(":hover") ) hideDropdownMenu() ;
   } );
 
 
