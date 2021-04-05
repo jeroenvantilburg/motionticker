@@ -935,9 +935,11 @@ SOFTWARE.
     // select all text in any field on focus for easy re-entry. 
     // Delay sightly to allow focus to "stick" before selecting.
     setTimeout(function () { 
-      focusedElement.setSelectionRange(0, focusedElement.value.length)
-      focusedElement.select(); 
-    }, 100); 
+      document.execCommand('selectall');
+
+      //focusedElement.setSelectionRange(0, focusedElement.value.length)
+      //focusedElement.select(); 
+    }, 200);
   });
   
 
