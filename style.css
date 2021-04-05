@@ -272,9 +272,9 @@ input:disabled+label {
 }
 
 /* Add a grey background color to menu bars on hover */
-.dropdown:hover .dropbtn {
+/*.dropdown:hover .dropbtn {
   background-color: #aaa;
-}
+}*/
 
 /* Dropdown content (hidden by default) */
 .dropdown-content {

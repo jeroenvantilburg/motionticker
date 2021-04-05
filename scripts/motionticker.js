@@ -1085,23 +1085,23 @@ SOFTWARE.
   $("document").ready( () => {
     $("#videoImport").removeAttr('disabled');
     resizeWindow();
-    
-    // Hide the address bar
-    //setTimeout(function(){ window.scrollTo(0, 1); }, 500);
   });
   
 
   // Event listeners for the dropdown menu
-  function showDropdownMenu() { $(".dropdown-content").show();}
-  function hideDropdownMenu() { $(".dropdown-content").hide();}
+  function showDropdownMenu() { 
+    $(".dropbtn").css("background-color","#aaa");
+    $(".dropdown-content").show();}
+  function hideDropdownMenu() {
+    $(".dropbtn").css("background-color","inherit");
+    $(".dropdown-content").hide();
+  }
   $(".dropdown").hover( showDropdownMenu, hideDropdownMenu );
-  $(".dropdown").click( () => { 
-    // Hide the address bar
-    //setTimeout(function(){ window.scrollTo(0, 1); }, 500);
-    const elem = document.documentElement;
-    if (elem.requestFullscreen) {elem.requestFullscreen()};
-    
-    if( $(".dropdown").is(":hover") ) hideDropdownMenu() ;
+  $(".dropdown").on("click touchend", (e) => { 
+    // prevent touch event from being called twice
+    if( e.type == "touchend" ) e.preventDefault();    
+    if( $(".dropdown-content").is(":visible") ) hideDropdownMenu() ;
+    else if( $(".dropdown-content").is(":hidden") ) showDropdownMenu() ;
   } );
 
 
