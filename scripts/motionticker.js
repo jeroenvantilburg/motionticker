@@ -847,7 +847,8 @@ SOFTWARE.
     video.load();
   });
   
-  // Add event listener when the video is loaded
+  
+  // Prepare canvas size, calibration controls and set frame rate when meta data is available
   video.addEventListener('loadedmetadata', () => {
 
     // Pause the video (needed because of autoplay)
@@ -886,6 +887,11 @@ SOFTWARE.
 
   });
   
+  // Show video when it has been loaded
+  video.addEventListener('loadeddata', () => {
+    gotoFrame( 0 );
+  });
+  
   function showCalibrationControls() {
     canvas.add( xAxis );
     canvas.add( yAxis );
@@ -916,7 +922,7 @@ SOFTWARE.
   function blurOnEnter(e){ 
     if(e.keyCode===13){ 
       e.target.blur();
-      focusedElement = undefined;
+      focusedElement = null;
     } 
   }
   $("input[type=text]").on("keydown", blurOnEnter );
@@ -928,7 +934,10 @@ SOFTWARE.
     focusedElement = this;
     // select all text in any field on focus for easy re-entry. 
     // Delay sightly to allow focus to "stick" before selecting.
-    setTimeout(function () { focusedElement.select(); }, 100); 
+    setTimeout(function () { 
+      focusedElement.setSelectionRange(0, focusedElement.value.length)
+      focusedElement.select(); 
+    }, 100); 
   });
   
 
@@ -1081,7 +1090,7 @@ SOFTWARE.
     resizeWindow();
     
     // Hide the address bar
-    setTimeout(function(){ window.scrollTo(0, 1); }, 0);
+    //setTimeout(function(){ window.scrollTo(0, 1); }, 500);
   });
   
 
@@ -1090,6 +1099,9 @@ SOFTWARE.
   function hideDropdownMenu() { $(".dropdown-content").hide();}
   $(".dropdown").hover( showDropdownMenu, hideDropdownMenu );
   $(".dropdown").click( () => { 
+    // Hide the address bar
+    setTimeout(function(){ window.scrollTo(0, 1); }, 500);
+    
     if( $(".dropdown-content").is(":hover") ) hideDropdownMenu() ;
   } );
 

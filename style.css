@@ -32,6 +32,11 @@ input, select {
   font-size: 1.0em;
 }
 
+::placeholder {
+  color: gray;
+  opacity: 1; 
+}
+
 input:disabled+label {
   color: #bbb;
 }
