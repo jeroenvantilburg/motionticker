@@ -934,7 +934,7 @@ SOFTWARE.
     focusedElement = this;
     // select all text in any field on focus for easy re-entry. 
     // Delay sightly to allow focus to "stick" before selecting.
-    setTimeout(function () { document.execCommand('selectall');}, 300);
+    setTimeout(function () { document.execCommand('selectall');}, 400);
   });
   
 
@@ -1097,12 +1097,18 @@ SOFTWARE.
     $(".dropdown-content").hide();
   }
   $(".dropdown").hover( showDropdownMenu, hideDropdownMenu );
-  $(".dropdown").on("click touchend", (e) => { 
-    // prevent touch event from being called twice
+  $(".dropdown-content").on("click", hideDropdownMenu );
+  $(".dropbtn").on("click touchend", (e) => { 
+    // prevent touch event from propagating and showing dropdown via onmouseenter + click method
     if( e.type == "touchend" ) e.preventDefault();    
     if( $(".dropdown-content").is(":visible") ) hideDropdownMenu() ;
     else if( $(".dropdown-content").is(":hidden") ) showDropdownMenu() ;
   } );
+  // Close the dropdown menu when user touches anywhere outside the menu
+  $(window).on("touchend", (e) => {
+    if( $(".dropdown-content").is(":visible") &&
+        $(".dropdown").has(e.target).length == 0 ) hideDropdownMenu();
+  });
 
 
   
