@@ -936,10 +936,7 @@ SOFTWARE.
     // Delay sightly to allow focus to "stick" before selecting.
     setTimeout(function () { 
       document.execCommand('selectall');
-
-      //focusedElement.setSelectionRange(0, focusedElement.value.length)
-      //focusedElement.select(); 
-    }, 200);
+    }, 300);
   });
   
 
