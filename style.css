@@ -43,6 +43,7 @@ input:disabled+label {
 
 .center {
   text-align: center;
+  margin: 2px;
 }
 
 .chart {
@@ -137,7 +138,7 @@ input:disabled+label {
 }
 
 .page-header {
-  padding: 5px 5px;
+  padding: 3px 5px;
   background: #ddd;
 }
 
