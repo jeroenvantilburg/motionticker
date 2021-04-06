@@ -47,6 +47,7 @@ SOFTWARE.
 
   // The raw data (all derived data is calculated on the fly)
   let rawData = [];
+  let dataIsSaved = true;
 
   /* ========== RESPONSIVE SECTION =============
        Adjust design to screen size
@@ -400,7 +401,7 @@ SOFTWARE.
 
   
   $("#deleteData").click( () => { 
-    if( dataCanBeRemoved () ) { deleteRawData(); }
+    if( dataCanBeRemoved() ) { deleteRawData(); }
   });
   
   function deleteRawData() {
@@ -419,8 +420,7 @@ SOFTWARE.
     // Update plots
     updatePlots();
   }
-  
-  
+    
   $("#zoomOut").click( () => {
     if( canvas.width > 200 ) { // minimum 200 px should be small enough
       setVideoZoom( 0.5*canvas.width / video.videoWidth );
@@ -677,6 +677,9 @@ SOFTWARE.
     if (filename != null && filename != "") {
       download( filename, csv);
     }
+    
+    // Set the "data is saved" flag to true
+    dataIsSaved = true;
 
   });
   
@@ -935,10 +938,11 @@ SOFTWARE.
     // select all text in any field on focus for easy re-entry. 
     // Delay sightly to allow focus to "stick" before selecting.
     setTimeout(function () {focusedElement.setSelectionRange(9999,9999);}, 0);
-  });  
+  });
 
+  
   function dataCanBeRemoved() {
-    return (rawData.length == 0 || 
+    return (rawData.length == 0 || dataIsSaved ||
            confirm("This will clear your current data. Are you sure?") );
   }
   
@@ -1481,6 +1485,9 @@ SOFTWARE.
       $("#deleteData").removeAttr('disabled');
     }
     
+    // Set the "data is saved" flag to false
+    dataIsSaved = true;
+
     // Add a marker to the rawDataPoint
     let markerP = fabric.util.object.clone( markerPoint ) ;
     markerP.set({left: rawDataPoint.x * zoomLevel, top: rawDataPoint.y * zoomLevel });    
