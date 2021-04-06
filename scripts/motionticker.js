@@ -927,16 +927,15 @@ SOFTWARE.
   }
   $("input[type=text]").on("keydown", blurOnEnter );
 
-  // Select text when clicking on input text element
+  // Put cursor always at last position when clicking on input text element
   $(document).on('focus', 'input', function () {    
     //already focused, return so user can now place cursor at specific point in input.    
     if (focusedElement == this) return; 
     focusedElement = this;
     // select all text in any field on focus for easy re-entry. 
     // Delay sightly to allow focus to "stick" before selecting.
-    setTimeout(function () { document.execCommand('selectall');}, 400);
-  });
-  
+    setTimeout(function () {focusedElement.setSelectionRange(9999,9999);}, 0);
+  });  
 
   function dataCanBeRemoved() {
     return (rawData.length == 0 || 
