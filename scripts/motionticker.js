@@ -313,9 +313,14 @@ SOFTWARE.
   
   $("#orientationInput").val( "0" );
   $("#orientationInput").change( function() { 
-    //orientation = toNumber( this.value );
     rotateContext();
     gotoFrame(currentFrame);
+  });
+  
+  let getMediaInfo = true;
+  $("#getMediaInfo").prop('checked', getMediaInfo);
+  $("#getMediaInfo").change( function() { 
+     getMediaInfo = $('#getMediaInfo').is(':checked');
   });
   
   let drawAllPoints = true;
@@ -424,7 +429,7 @@ SOFTWARE.
   // Warn user on reload or closing window when there is unsaved data
   $(window).on('beforeunload', function() {
     if( rawData.length == 0 || dataIsSaved ) return undefined;
-    return 'You have unsaved changes.'  
+    return "You have unsaved changes.";
   });
   
     
@@ -820,6 +825,7 @@ SOFTWARE.
     disableAnalysis();
     disableVideoControl();
     $('#frameNumber').html( "0 / 0" );
+    $("#slider").attr("max", 0 );
 
     // Get the file
     let URL = window.URL || window.webkitURL;
@@ -893,7 +899,8 @@ SOFTWARE.
     showCalibrationControls();
 
     // Get the frame rate
-    getFPS();
+    if( getMediaInfo ) getFPS();
+    else $('#statusMsg').html("Set the frame rate manually");
 
   });
   
@@ -1493,7 +1500,7 @@ SOFTWARE.
     }
     
     // Set the "data is saved" flag to false
-    dataIsSaved = true;
+    dataIsSaved = false;
 
     // Add a marker to the rawDataPoint
     let markerP = fabric.util.object.clone( markerPoint ) ;
@@ -1625,8 +1632,9 @@ SOFTWARE.
   }
   
   function gotoFrame(targetFrame) {
-    let newTime = (targetFrame + 0.5)/FPS;
-        
+    let newTime = 0;
+    if( FPS ) newTime = (targetFrame + 0.5)/FPS;
+    
     if( newTime < t0 ) {
       return false;
     } else if( newTime > video.duration ) {

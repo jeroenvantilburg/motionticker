@@ -64,7 +64,7 @@
           <button id="prev" class="player" disabled><i class="fa fa-step-backward"></i></button>
           <button id="play" class="player" disabled><i class="fa fa-play"></i></button>
           <button id="next" class="player" disabled><i class="fa fa-step-forward"></i></button>
-          <input id="slider" type="range" min="0" max="100" step=1 value="0" disabled>
+          <input id="slider" type="range" min="0" max="0" step=1 value="0" disabled>
           <nobr id="frameNumber">0 / 0</nobr>
           <button id="zoomOut" class="player" disabled><i class="fa fa-search-minus"></i></button>
           <button id="zoomIn" class="player" disabled><i class="fa fa-search-plus"></i></button>
@@ -91,7 +91,6 @@
           <tr>
             <td>Frame rate:</td>
             <td><input id="fpsInput" type="text" style="width:80px"></input> fps</td>
-            <!--td><button id="showMediaInfo" disabled>Media info</button></td-->
           </tr>
           <tr>
             <td>Scale:</td>
@@ -294,6 +293,12 @@
       <br/>
       <table>
         <tr><th colspan="3">Video</th></tr>        
+        <tr>
+          <td>Get media info:</td>
+          <td><input id="getMediaInfo" type="checkbox"></input></td>
+          <td>When checked, the frame rate (and for iOS the video orientation) is extracted 
+            automatically from the video meta data when loading a video.</td>
+        </tr>
         <tr>
           <td>Video orientation:</td>
           <td>
