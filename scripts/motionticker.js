@@ -352,6 +352,12 @@ SOFTWARE.
     adaptive = $('#adaptive').is(':checked');
   });
   
+  let templateMatchMode = "TM_CCOEFF";
+  $("#templateMatchMode").val( templateMatchMode );
+  $("#templateMatchMode").change( function() { 
+    templateMatchMode = this.value ;
+  });
+  
   let integrationTime = 2;
   $("#integrationTimeInput").val( integrationTime );
   $("#integrationTimeInput").change( function() {
@@ -1712,6 +1718,10 @@ SOFTWARE.
     $('#statusMsg').html( "Processing..." );
     disableVideoControl();
     
+    // Set the matching mode    
+    let mode = cv[ templateMatchMode ];
+    //console.log( "Mode = " + mode );
+    
     // TODO: temporary this can be improved
     /*let box1 = {x: trackingBox.left-0.5*trackingBox.width*trackingBox.scaleX, 
                 y: trackingBox.top-0.5*trackingBox.height*trackingBox.scaleY};
@@ -1814,9 +1824,11 @@ SOFTWARE.
         //}
         cv.cvtColor(hsv, hsv, cv.COLOR_RGB2HSV);
         
-        cv.matchTemplate(hsv, hsvRoi, dst, cv.TM_CCOEFF, mask);
+        //cv.matchTemplate(hsv, hsvRoi, dst, cv.TM_CCOEFF, mask);
+        cv.matchTemplate(hsv, hsvRoi, dst, mode, mask);
         let result = cv.minMaxLoc(dst, mask);
         let maxPoint = result.maxLoc;
+        if( templateMatchMode.startsWith("TM_SQDIFF") ) maxPoint = result.minLoc;
 
         // Adaptive
         if( adaptive ) {
