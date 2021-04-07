@@ -420,6 +420,13 @@ SOFTWARE.
     // Update plots
     updatePlots();
   }
+  
+  // Warn user on reload or closing window when there is unsaved data
+  $(window).on('beforeunload', function() {
+    if( dataCanBeRemoved() ) return undefined;
+    return 'You have unsaved changes.'  
+  });
+  
     
   $("#zoomOut").click( () => {
     if( canvas.width > 200 ) { // minimum 200 px should be small enough
