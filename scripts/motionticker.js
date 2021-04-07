@@ -423,7 +423,7 @@ SOFTWARE.
   
   // Warn user on reload or closing window when there is unsaved data
   $(window).on('beforeunload', function() {
-    if( dataCanBeRemoved() ) return undefined;
+    if( rawData.length == 0 || dataIsSaved ) return undefined;
     return 'You have unsaved changes.'  
   });
   
