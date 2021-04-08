@@ -358,6 +358,12 @@ SOFTWARE.
     templateMatchMode = this.value ;
   });
   
+  let imageConvMode = "";
+  $("#imageConvMode").val( imageConvMode );
+  $("#imageConvMode").change( function() { 
+    imageConvMode = this.value ;
+  });
+  
   let integrationTime = 2;
   $("#integrationTimeInput").val( integrationTime );
   $("#integrationTimeInput").change( function() {
@@ -819,6 +825,7 @@ SOFTWARE.
     updateFPS();
     pixelsPerMeter = undefined;
     updateScale();
+    $("#distanceInput").val("");
     originX = originY = undefined;
     updateOrigin();
     canvas.clear();
@@ -875,13 +882,6 @@ SOFTWARE.
 
     // Pause the video (needed because of autoplay)
     video.pause();
-
-    /*video.width = video.videoWidth ;   // required by Fabric.js
-    video.height = video.videoHeight ; // required by Fabric.js
-    videoImage = new fabric.Image(video, { left: 0.5*video.videoWidth, top: 0.5*video.videoHeight,
-                                          width: video.videoWidth, height: video.videoHeight,
-                                          selectable: false, evented: false, objectCaching: false } );
-    canvas.add(videoImage);*/
     
     // Set the dimensions of the video and prepare the canvas
     setVideoZoom(1.0);
@@ -892,10 +892,10 @@ SOFTWARE.
     // TODO: This should get a better name
     updateRuler( 0.2*video.videoWidth, 0.3*video.videoHeight,
                  0.2*video.videoWidth, 0.7*video.videoHeight );
-    trackingBox.set({left: 0.5*video.videoWidth, top: 0.3*video.videoHeight });
-
-    //console.log("Resolution: " + video.videoWidth + " x " + video.videoHeight );
-    //console.log("Duration: " + video.duration );
+    trackingBox.set({left: 0.5*video.videoWidth, top: 0.3*video.videoHeight,
+                     width: 0.1*video.videoWidth/trackingBox.scaleX, 
+                     height: 0.1*video.videoHeight/trackingBox.scaleY });
+    trackingBox.setCoords();
     
     // Highlight fields that need to be filled
     $("#scaleInput").css( "background", "pink");
@@ -1049,10 +1049,11 @@ SOFTWARE.
       distanceInMeter = toNumber( this.value );
       setScale();
     } //else {
-    this.value = distanceInMeter || "?";
+    this.value = distanceInMeter || "";
     //}
 
   });
+  
   
   // Update the scale when user gives input or when calculated
   $("#scaleInput").change( function() {
@@ -1711,6 +1712,18 @@ SOFTWARE.
   let tempCanvas = document.getElementById("tempCanvas");
   let canvasContext = tempCanvas.getContext('2d');
 
+  // Convert image before template matching
+  function convertImage( image ) {
+    if( imageConvMode == "HSV" ) {
+      cv.cvtColor(image, image, cv.COLOR_RGBA2RGB);
+      cv.cvtColor(image, image, cv.COLOR_RGB2HSV);
+    } else if( imageConvMode == "GRAY" ) {
+      cv.cvtColor(image, image, cv.COLOR_RGBA2GRAY,0);
+    } else if( imageConvMode == "CANNY" ) {
+      cv.cvtColor(image, image, cv.COLOR_RGBA2GRAY,0);
+      cv.Canny(image, image, 20, 50, 3, true);
+    }
+  }
   
   // Automatic analysis
   function templateMatching() {
@@ -1720,92 +1733,37 @@ SOFTWARE.
     
     // Set the matching mode    
     let mode = cv[ templateMatchMode ];
-    //console.log( "Mode = " + mode );
     
-    // TODO: temporary this can be improved
-    /*let box1 = {x: trackingBox.left-0.5*trackingBox.width*trackingBox.scaleX, 
-                y: trackingBox.top-0.5*trackingBox.height*trackingBox.scaleY};
-    let box2 = {x: trackingBox.left+0.5*trackingBox.width*trackingBox.scaleX, 
-                y: trackingBox.top+0.5*trackingBox.height*trackingBox.scaleY};
-    
-    console.log(box1);
-    console.log(box2);
-    */
-
-    //let zoomLevel = canvas.width / video.videoWidth;
-
-    let boxWidth  = Math.abs( trackingBox.width*trackingBox.scaleX/zoomLevel );
-    let boxHeight = Math.abs( trackingBox.height*trackingBox.scaleY/zoomLevel );
-    let boxX1     = trackingBox.left/zoomLevel - 0.5*boxWidth;
-    let boxY1     = trackingBox.top/zoomLevel - 0.5*boxHeight;
-    
-    // Somehow this line is needed to set the right dimensions
-    setVideoZoom(1.0);
-  
-    //let cap = new cv.VideoCapture(video);
-  
-    // Check orientation
-    //let orientation = -1;
-    /*let videoWidth = video.width;
-    let videoHeight = video.height;
-    console.log( videoImage.angle );
-    if( Math.abs(90 - videoImage.angle) < 1 ) {
-      orientation = cv.ROTATE_90_CLOCKWISE;
-      videoWidth = video.height;
-      videoHeight = video.width;
-      console.log("found 90 cw");
-    } else if( Math.abs(180 - videoImage.angle) < 1 ) {
-      orientation = cv.ROTATE_180;
-      console.log("found 180 cw");
-    } else if( Math.abs(270 - videoImage.angle) < 1 ) { // TODO: check if it is 270
-      orientation = cv.ROTATE_90_COUNTERCLOCKWISE;
-      console.log("found 90 ccw");
-      videoWidth = video.height;
-      videoHeight = video.width;
-    }
-    console.log( orientation );
-    */
+    // TODO: explain in help that best results are when analysing in original dimensions
+    //setVideoZoom(1.0);
     
     // take first frame of the video
-    //let frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
-    //cap.read(frame);
     let frame = cv.imread('canvasVideo');
     
     // initial location of window
+    let boxWidth  = trackingBox.width  * trackingBox.scaleX;
+    let boxHeight = trackingBox.height * trackingBox.scaleY;
+    let boxX1     = trackingBox.left - 0.5*boxWidth;
+    let boxY1     = trackingBox.top  - 0.5*boxHeight;
     let trackWindow = new cv.Rect(boxX1, boxY1, boxWidth, boxHeight );
 
     // Draw it on image
-    let rect = new fabric.Rect({ left: trackingBox.left/zoomLevel, 
-                                 top: trackingBox.top/zoomLevel, 
-                                 width: boxWidth, 
-                                 height: boxHeight, angle: 0,
+    let rect = new fabric.Rect({ left: trackingBox.left, 
+                                 top: trackingBox.top, 
+                                 width: boxWidth, height: boxHeight,
                                  fill: 'rgba(0,0,0,0)', stroke: 'red', strokeWidth: 2 });  
     canvas.add(rect);
 
     // set up the ROI for tracking
-    let roi;
-    /*let rotFrame = new cv.Mat();
-    if( orientation != -1 ) {
-      cv.rotate(frame, rotFrame, orientation );
-      roi = rotFrame.roi(trackWindow);
-    } else {*/
-      //rotFrame = frame.clone();
-    roi = frame.roi(trackWindow);
-    //}
-    let hsvRoi = new cv.Mat();
-    cv.cvtColor(roi, hsvRoi, cv.COLOR_RGBA2RGB);
-    cv.cvtColor(hsvRoi, hsvRoi, cv.COLOR_RGB2HSV);
-    let mask = new cv.Mat();
-
-    let hsv = new cv.Mat(video.height, video.width, cv.CV_8UC3);
+    let roi = frame.roi(trackWindow);
+    convertImage( roi );
     let dst = new cv.Mat();
 
     function processVideo() {
       try {  
         if (!analysisStarted) {    
           // clean and stop.
-          frame.delete(); dst.delete(); hsv.delete(); roi.delete(); hsvRoi.delete(); mask.delete();
-          //rotFrame.delete();
+          frame.delete(); dst.delete(); roi.delete(); 
           canvas.remove(rect);
           updatePlots();
           enableVideoControl();
@@ -1813,46 +1771,29 @@ SOFTWARE.
         }
 
         // start processing.
-        //cap.read(frame);
         frame = cv.imread('canvasVideo');
-        /*if( orientation != -1 ) {
-          cv.rotate(frame, rotFrame, orientation );
-          cv.cvtColor(rotFrame, hsv, cv.COLOR_RGBA2RGB);
-        } else {*/
-          //rotFrame = frame.clone();
-        cv.cvtColor(frame, hsv, cv.COLOR_RGBA2RGB);
-        //}
-        cv.cvtColor(hsv, hsv, cv.COLOR_RGB2HSV);
-        
-        //cv.matchTemplate(hsv, hsvRoi, dst, cv.TM_CCOEFF, mask);
-        cv.matchTemplate(hsv, hsvRoi, dst, mode, mask);
-        let result = cv.minMaxLoc(dst, mask);
+        convertImage( frame );
+        cv.matchTemplate(frame, roi, dst, mode);
+
+        let result = cv.minMaxLoc(dst);
         let maxPoint = result.maxLoc;
         if( templateMatchMode.startsWith("TM_SQDIFF") ) maxPoint = result.minLoc;
 
         // Adaptive
         if( adaptive ) {
-          let trackWindow2 = new cv.Rect(maxPoint.x, maxPoint.y, hsvRoi.cols, hsvRoi.rows);
-          //roi = (orientation == -1 ) ? frame.roi(trackWindow2) : rotFrame.roi(trackWindow2);
+          let trackWindow2 = new cv.Rect(maxPoint.x, maxPoint.y, roi.cols, roi.rows);
           roi = frame.roi(trackWindow2);
-          cv.cvtColor(roi, hsvRoi, cv.COLOR_RGBA2RGB);
-          cv.cvtColor(hsvRoi, hsvRoi, cv.COLOR_RGB2HSV);
         }
-        let xPos  = maxPoint.x + 0.5*hsvRoi.cols;
-        let yPos  = maxPoint.y + 0.5*hsvRoi.rows;
+        let xPos  = maxPoint.x + 0.5*roi.cols;
+        let yPos  = maxPoint.y + 0.5*roi.rows;
                 
-        //cv.imshow('tempCanvas', hsvRoi);
-        /*if( orientation == -1 ) {
-          cv.imshow('tempCanvas', hsvRoi );          
-        } else {*/
         cv.imshow('tempCanvas', roi );
-        //}
         
         // Draw it on image
         rect.set({ left: xPos, top: yPos });
         rect.setCoords();
   
-        let rawDataPoint = {t: currentFrame, x: xPos, y: yPos};
+        let rawDataPoint = {t: currentFrame, x: xPos/zoomLevel, y: yPos/zoomLevel };
         addRawData( rawDataPoint );
     
         setTimeout( function() {

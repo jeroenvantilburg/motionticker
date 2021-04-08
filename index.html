@@ -281,7 +281,7 @@
         <tr>
           <td>Skip frames:</td>
           <td><input id="framesToSkip" type="number" min="-100" step="1" max="100"></input></td>
-          <td>Number of frames to skip during manual analysis.</td>
+          <td>Number of frames to skip during analysis. Negative number reverses the playback.</td>
         </tr>
         <tr>
           <td>Adaptive tracking:</td>
@@ -301,6 +301,17 @@
               <option value="TM_CCOEFF_NORMED">TM_CCOEFF_NORMED</option>
             </select>
           <td>Only for the automatic analysis: select the matching algorithm.</td>
+        </tr>
+        <tr>
+          <td>Image conversion:</td>
+          <td>
+            <select id="imageConvMode">
+              <option value="">RGB (original)</option>
+              <option value="HSV">HSV colors</option>
+              <option value="GRAY">Gray-scale</option>
+              <option value="CANNY">Edge-detection</option>
+            </select>
+          <td>Only for the automatic analysis: Convert the frame image before template matching.</td>
         </tr>
       </table>
       <br/>
