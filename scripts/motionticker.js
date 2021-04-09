@@ -935,7 +935,7 @@ SOFTWARE.
     canvas.remove( scaleCircle1 );
     canvas.remove( scaleCircle2 );
     canvas.remove( scaleBox );
-    if( automaticAnalysis ) canvas.remove( trackingBox );
+    //if( automaticAnalysis ) canvas.remove( trackingBox );
     $("#distanceInput").hide();
   }
     
@@ -1649,9 +1649,6 @@ SOFTWARE.
     } else {
       // Draw the current time and remove it after 1 s
       flashTextOnVideo( newTime.toFixed(2) + " s" );
-      /*$("#videoTime").html( newTime.toFixed(2) + " s" );
-      clearTimeout( videoTimeoutID ); // remove previous timeout
-      videoTimeoutID = setTimeout( () =>{ $("#videoTime").html( "" ); }, 1000 );*/
       
       // Highlight the new marker
       let currentDataPoint = rawData.find(entry => entry.t === currentFrame );
@@ -1659,26 +1656,22 @@ SOFTWARE.
         unHighlightMarker( currentDataPoint.marker );
         if ( !drawAllPoints ) canvas.remove( currentDataPoint.marker );
       }
-      //console.log( currentDataPoint );
       let nextDataPoint = rawData.find(entry => entry.t === targetFrame );
-      if( nextDataPoint ) highlightMarker( nextDataPoint.marker );
-      //console.log( nextDataPoint );
+      if( nextDataPoint ) {
+        let nextMarker = nextDataPoint.marker;
+        highlightMarker( nextMarker );
+        if( !analysisStarted && automaticAnalysis ) {  // Also update tracking box
+          trackingBox.set({ left: nextMarker.left, top: nextMarker.top });
+          trackingBox.setCoords();
+        }
+      }
       canvas.requestRenderAll();
     
       currentFrame = targetFrame;
       video.currentTime = newTime;
       video.addEventListener("seeked", function(e) {
         e.target.removeEventListener(e.type, arguments.callee); // remove the handler or else it will draw another frame on the same canvas, when the next seek happens
-        //canvasContext.drawImage(video,0,0, width, height );
-        /*let videoWidth = video.videoWidth;
-        let videoHeight = video.videoHeight;
-        if( iOS() && ( orientation == cv.ROTATE_90_CLOCKWISE || 
-                       orientation == cv.ROTATE_90_COUNTERCLOCKWISE) ) {
-          videoWidth = video.videoHeight;
-          //videoHeight = video.videoWidth;
-        }*/
-        canvasVideoCtx.drawImage(video,0,0);//,video.videoWidth,video.videoHeight,0,0,
-                                 //videoWidth,videoHeight);
+        canvasVideoCtx.drawImage(video,0,0);
         $('#frameNumber').html( currentFrame + " / " + $("#slider").attr("max") );
         $("#slider").val( currentFrame );
       });
@@ -1731,6 +1724,9 @@ SOFTWARE.
     $('#statusMsg').html( "Processing..." );
     disableVideoControl();
     
+    // Make sure that the trackingBox is not active anymore (just remove the controls)
+    canvas.discardActiveObject().renderAll();
+    
     // Set the matching mode    
     let mode = cv[ templateMatchMode ];
     
@@ -1748,25 +1744,31 @@ SOFTWARE.
     let trackWindow = new cv.Rect(boxX1, boxY1, boxWidth, boxHeight );
 
     // Draw it on image
-    let rect = new fabric.Rect({ left: trackingBox.left, 
+    /*let rect = new fabric.Rect({ left: trackingBox.left, 
                                  top: trackingBox.top, 
                                  width: boxWidth, height: boxHeight,
                                  fill: 'rgba(0,0,0,0)', stroke: 'red', strokeWidth: 2 });  
     canvas.add(rect);
+    */
 
     // set up the ROI for tracking
     let roi = frame.roi(trackWindow);
     convertImage( roi );
     let dst = new cv.Mat();
 
+
+    function abortAnalysis() {
+      // clean and stop.
+      frame.delete(); dst.delete(); roi.delete(); 
+      //canvas.remove(rect);
+      updatePlots();    
+      enableVideoControl();
+    } 
+    
     function processVideo() {
       try {  
-        if (!analysisStarted) {    
-          // clean and stop.
-          frame.delete(); dst.delete(); roi.delete(); 
-          canvas.remove(rect);
-          updatePlots();
-          enableVideoControl();
+        if (!analysisStarted) {
+          abortAnalysis();
           return;
         }
 
@@ -1790,8 +1792,10 @@ SOFTWARE.
         cv.imshow('tempCanvas', roi );
         
         // Draw it on image
-        rect.set({ left: xPos, top: yPos });
-        rect.setCoords();
+        //rect.set({ left: xPos, top: yPos });
+        //rect.setCoords();
+        trackingBox.set({ left: xPos, top: yPos });
+        trackingBox.setCoords();
   
         let rawDataPoint = {t: currentFrame, x: xPos/zoomLevel, y: yPos/zoomLevel };
         addRawData( rawDataPoint );
@@ -1804,11 +1808,13 @@ SOFTWARE.
             });
           } else {
             $("#startAnalysis").click();
-            processVideo(); // Will abort next iteration since analysisStarted is set to false
+            abortAnalysis();
           }
         }, 50 );
       } catch (err) {
         alert("An error occuring during the automatic analysis: "+err);
+        $("#startAnalysis").click();
+        abortAnalysis();
       }
     };
 
