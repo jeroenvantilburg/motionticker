@@ -225,9 +225,9 @@ SOFTWARE.
   });
 
   // Define ruler (line + 2 circles + box) for canvas
-  let scaleLine = new fabric.Line( [100,10,100,110], {strokeWidth: 3, stroke: 'limegreen',
+  let scaleLine = new fabric.LineArrow( [100,10,100,110], {strokeWidth: 3, stroke: 'limegreen',
                                                   hasControls: false, hasBorders: false, 
-                                                  padding: 10, shadow: shadow});    
+                                                  padding: 10, shadow: shadow, heads: [1,1] });    
   let scaleCircle1 = new fabric.Circle({ left:100, top: 10, 
                                          radius: 5, stroke: 'green', strokeWidth: 1,
                                          hasControls: false, hasBorders: false, padding: 10,
