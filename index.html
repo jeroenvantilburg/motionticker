@@ -321,6 +321,14 @@
             </select>
           <td>Only for the automatic analysis: Convert the frame image before template matching.</td>
         </tr>
+        <tr>
+          <td>ROI scale:</td>
+          <td><input id="roiScale" type="number" min="0" step="1" max="100"></input></td>
+          <td>Restrict the search to within a region of interest that is nxn times larger than the
+              template image, where n is the ROI scale. This also speeds up the matching algorithm. 
+              A value of 0 searches the complete frame.</td>
+        </tr>
+
       </table>
       <br/>
       <table>

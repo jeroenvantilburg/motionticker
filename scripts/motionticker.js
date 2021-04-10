@@ -363,6 +363,12 @@ SOFTWARE.
   $("#imageConvMode").change( function() { 
     imageConvMode = this.value ;
   });
+ 
+  let roiScale = 0;
+  $("#roiScale").val( roiScale );
+  $("#roiScale").change( function() { 
+    roiScale = this.value ;
+  });
   
   let integrationTime = 2;
   $("#integrationTimeInput").val( integrationTime );
@@ -903,6 +909,7 @@ SOFTWARE.
     
     // Put the graphics back
     showCalibrationControls();
+    if( automaticAnalysis ) canvas.add( trackingBox );
 
     // Get the frame rate
     if( getMediaInfo ) getFPS();
@@ -923,7 +930,6 @@ SOFTWARE.
     canvas.add( scaleCircle1 );
     canvas.add( scaleCircle2 );
     canvas.add( scaleBox );
-    if( automaticAnalysis ) canvas.add( trackingBox );
     $("#distanceInput").show();
   }
 
@@ -935,7 +941,6 @@ SOFTWARE.
     canvas.remove( scaleCircle1 );
     canvas.remove( scaleCircle2 );
     canvas.remove( scaleBox );
-    //if( automaticAnalysis ) canvas.remove( trackingBox );
     $("#distanceInput").hide();
   }
     
@@ -1487,7 +1492,7 @@ SOFTWARE.
       // Change the button to "Stop analysis"
       setStopAnalysis();
 
-      // Hide calibration controls (origin, scale, trackingbox)
+      // Hide calibration controls (origin, scale)
       hideCalibrationControls();
 
       if( automaticAnalysis ) {
@@ -1764,30 +1769,21 @@ SOFTWARE.
     let frame = cv.imread('canvasVideo');
     
     // initial location of window
+    let xPos  = trackingBox.left;
+    let yPos  = trackingBox.top;
     let boxWidth  = trackingBox.width  * trackingBox.scaleX;
     let boxHeight = trackingBox.height * trackingBox.scaleY;
-    let boxX1     = trackingBox.left - 0.5*boxWidth;
-    let boxY1     = trackingBox.top  - 0.5*boxHeight;
-    let trackWindow = new cv.Rect(boxX1, boxY1, boxWidth, boxHeight );
+    let trackWindow = new cv.Rect(xPos- 0.5*boxWidth, yPos-0.5*boxHeight, boxWidth, boxHeight );
 
-    // Draw it on image
-    /*let rect = new fabric.Rect({ left: trackingBox.left, 
-                                 top: trackingBox.top, 
-                                 width: boxWidth, height: boxHeight,
-                                 fill: 'rgba(0,0,0,0)', stroke: 'red', strokeWidth: 2 });  
-    canvas.add(rect);
-    */
-
-    // set up the ROI for tracking
-    let roi = frame.roi(trackWindow);
-    convertImage( roi );
+    // set up the template for tracking
+    let template = frame.roi(trackWindow);
+    convertImage( template );
     let dst = new cv.Mat();
-
+    let roi = new cv.Mat();
 
     function abortAnalysis() {
       // clean and stop.
-      frame.delete(); dst.delete(); roi.delete(); 
-      //canvas.remove(rect);
+      frame.delete(); dst.delete(); template.delete(); roi.delete();
       updatePlots();    
       enableVideoControl();
     } 
@@ -1801,8 +1797,21 @@ SOFTWARE.
 
         // start processing.
         frame = cv.imread('canvasVideo');
-        convertImage( frame );
-        cv.matchTemplate(frame, roi, dst, mode);
+
+        // Setup the region of interest (to narrow down the search)
+        let roiX1 = 0, roiY1 = 0, roiX2 = frame.cols, roiY2 = frame.rows;
+        if( roiScale != 0 ) { 
+          roiX1 = Math.max(0, xPos-0.5*roiScale*boxWidth);
+          roiY1 = Math.max(0, yPos-0.5*roiScale*boxHeight);
+          roiX2 = Math.min( xPos+0.5*roiScale*boxWidth,  frame.cols );
+          roiY2 = Math.min( yPos+0.5*roiScale*boxHeight, frame.rows );
+        }
+        let roiWidth = roiX2 - roiX1;
+        let roiHeight = roiY2 - roiY1;
+        let roiWindow = new cv.Rect(roiX1, roiY1, roiWidth, roiHeight );
+        roi = frame.roi( roiWindow );
+        convertImage( roi );
+        cv.matchTemplate( roi, template, dst, mode );
 
         let result = cv.minMaxLoc(dst);
         let maxPoint = result.maxLoc;
@@ -1810,17 +1819,16 @@ SOFTWARE.
 
         // Adaptive
         if( adaptive ) {
-          let trackWindow2 = new cv.Rect(maxPoint.x, maxPoint.y, roi.cols, roi.rows);
-          roi = frame.roi(trackWindow2);
+          let trackWindow2 = new cv.Rect(maxPoint.x, maxPoint.y, template.cols, template.rows);
+          template = frame.roi(trackWindow2);
         }
-        let xPos  = maxPoint.x + 0.5*roi.cols;
-        let yPos  = maxPoint.y + 0.5*roi.rows;
+        xPos  = roiWindow.x + maxPoint.x + 0.5*template.cols;
+        yPos  = roiWindow.y + maxPoint.y + 0.5*template.rows;
                 
+        // TODO: this is only temporary
         cv.imshow('tempCanvas', roi );
         
         // Draw it on image
-        //rect.set({ left: xPos, top: yPos });
-        //rect.setCoords();
         trackingBox.set({ left: xPos, top: yPos });
         trackingBox.setCoords();
   
