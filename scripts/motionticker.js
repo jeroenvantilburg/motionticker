@@ -1142,7 +1142,8 @@ SOFTWARE.
   $("#showAbout").click( evt => { showModal("aboutModal");} );
   $("#showHelp").click( evt => { showModal("helpModal");} );
   $("#showSettings").click( evt => { showModal("settingsModal");} );
-
+  $(".chart").click( function() { showModalChart( this ); showModal("graphModal"); });
+  
   /* Define functions for the modal box */
   let currentModal = "";
 
@@ -1178,6 +1179,32 @@ SOFTWARE.
     name = name.substr(5,11); // remove salt
     $("feedback").html(name+"@gmail.com");  
   }
+  
+  // Draw and/or update the chart in the modal box
+  let modalChart;
+  function showModalChart( thisCanvas ) { 
+
+    // Get the right chart
+    let chart;
+    Chart.helpers.each(Chart.instances, function(instance){
+      if( instance.canvas == thisCanvas ) chart = instance;
+    });
+    if( !chart ) return;
+    
+    // create a new chart or just update
+    if( (typeof modalChart === "undefined" ) ) {
+      ctx = document.getElementById("modalChart").getContext('2d') ;
+      modalChart = new Chart(ctx, {
+        type: chart.config.type,
+        data: chart.config.data, 
+        options: chart.config.options
+      });
+    } else { // update
+      modalChart.data = chart.config.data;
+      modalChart.options = chart.config.options;
+      modalChart.update();   
+    } 
+  } 
     
   function getFPS() {
     $('#statusMsg').html( "Calculating frame rate... <i class='fa fa-spinner fa-spin fa-fw'></i>" );
