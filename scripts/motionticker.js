@@ -30,7 +30,7 @@ SOFTWARE.
   
   // HTML elements
   let video              = document.getElementById('video');
-  let videoImage; // Fabric Image of video
+  //let videoImage; // canvas of video
   let canvasVideo = document.getElementById('canvasVideo');
   let canvasVideoCtx = canvasVideo.getContext('2d');
   canvasVideoCtx.save();
@@ -1746,9 +1746,20 @@ SOFTWARE.
       cv.cvtColor(image, image, cv.COLOR_RGBA2GRAY,0);
     } else if( imageConvMode == "CANNY" ) {
       cv.cvtColor(image, image, cv.COLOR_RGBA2GRAY,0);
-      cv.Canny(image, image, 20, 50, 3, true);
+      cv.Canny(image, image, 10, 40, 3, true);
     }
   }
+  
+  // Create a rect in units of pixels (int) within the bounding area
+  function createRect(x, y, width, height, frame){
+    let rect = {};
+    rect.x = Math.max(0, Math.floor(x-0.5*width));
+    rect.y = Math.max(0, Math.floor(y-0.5*height));
+    rect.width = Math.min( Math.floor(x+0.5*width), frame.cols ) - rect.x ;
+    rect.height= Math.min( Math.floor(y+0.5*height), frame.rows ) - rect.y ;
+    return rect;
+  }
+  
   
   // Automatic analysis
   function templateMatching() {
@@ -1773,7 +1784,12 @@ SOFTWARE.
     let yPos  = trackingBox.top;
     let boxWidth  = trackingBox.width  * trackingBox.scaleX;
     let boxHeight = trackingBox.height * trackingBox.scaleY;
-    let trackWindow = new cv.Rect(xPos- 0.5*boxWidth, yPos-0.5*boxHeight, boxWidth, boxHeight );
+    let trackWindow = createRect( xPos, yPos, boxWidth, boxHeight, frame );
+
+    let trackOffsetX = trackingBox.left - trackWindow.x;
+    let trackOffsetY = trackingBox.top  - trackWindow.y;
+
+    //console.log("Trackoffsets: " + trackOffsetX + "  " + trackOffsetY );
 
     // set up the template for tracking
     let template = frame.roi(trackWindow);
@@ -1796,37 +1812,48 @@ SOFTWARE.
         }
 
         // start processing.
+        frame.delete();
         frame = cv.imread('canvasVideo');
 
         // Setup the region of interest (to narrow down the search)
-        let roiX1 = 0, roiY1 = 0, roiX2 = frame.cols, roiY2 = frame.rows;
-        if( roiScale != 0 ) { 
-          roiX1 = Math.max(0, xPos-0.5*roiScale*boxWidth);
-          roiY1 = Math.max(0, yPos-0.5*roiScale*boxHeight);
-          roiX2 = Math.min( xPos+0.5*roiScale*boxWidth,  frame.cols );
-          roiY2 = Math.min( yPos+0.5*roiScale*boxHeight, frame.rows );
+        let roiWindow = {x: 0, y: 0, width: frame.cols, height: frame.rows };
+        if( roiScale > 1 ) { 
+          roiWindow = createRect( xPos, yPos, roiScale*boxWidth, roiScale*boxHeight, frame);
         }
-        let roiWidth = roiX2 - roiX1;
-        let roiHeight = roiY2 - roiY1;
-        let roiWindow = new cv.Rect(roiX1, roiY1, roiWidth, roiHeight );
+        //console.log(roiWindow);
+      
+        roi.delete();
         roi = frame.roi( roiWindow );
         convertImage( roi );
         cv.matchTemplate( roi, template, dst, mode );
+        //cv.matchTemplate( frame, template, dst, mode );
+        
 
         let result = cv.minMaxLoc(dst);
         let maxPoint = result.maxLoc;
         if( templateMatchMode.startsWith("TM_SQDIFF") ) maxPoint = result.minLoc;
 
+        xPos  = roiWindow.x + maxPoint.x + trackOffsetX ;
+        yPos  = roiWindow.y + maxPoint.y + trackOffsetY ;
+        
+        //console.log(xPos + "  " + yPos );
+
+        //console.log(maxPoint);
+        //console.log(trackingBox.left);
+        //console.log(xPos);
+
         // Adaptive
         if( adaptive ) {
-          let trackWindow2 = new cv.Rect(maxPoint.x, maxPoint.y, template.cols, template.rows);
-          template = frame.roi(trackWindow2);
+          trackWindow.x = maxPoint.x; trackWindow.y = maxPoint.y;
+          template.delete();
+          template = roi.roi(trackWindow);
+          //console.log("TrackWindow");
+          //console.log(trackWindow);
+
         }
-        xPos  = roiWindow.x + maxPoint.x + 0.5*template.cols;
-        yPos  = roiWindow.y + maxPoint.y + 0.5*template.rows;
                 
         // TODO: this is only temporary
-        cv.imshow('tempCanvas', roi );
+        cv.imshow('tempCanvas', template );
         
         // Draw it on image
         trackingBox.set({ left: xPos, top: yPos });
