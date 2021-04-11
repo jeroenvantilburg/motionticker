@@ -352,7 +352,7 @@ SOFTWARE.
     adaptive = $('#adaptive').is(':checked');
   });
   
-  let templateMatchMode = "TM_CCOEFF";
+  let templateMatchMode = "TM_CCOEFF_NORMED";
   $("#templateMatchMode").val( templateMatchMode );
   $("#templateMatchMode").change( function() { 
     templateMatchMode = this.value ;
