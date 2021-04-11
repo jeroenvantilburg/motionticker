@@ -1796,10 +1796,12 @@ SOFTWARE.
     convertImage( template );
     let dst = new cv.Mat();
     let roi = new cv.Mat();
+    frame.delete();
 
     function abortAnalysis() {
       // clean and stop.
-      frame.delete(); dst.delete(); template.delete(); roi.delete();
+      //frame.delete(); 
+      dst.delete(); template.delete(); //roi.delete();
       updatePlots();    
       enableVideoControl();
     } 
@@ -1812,7 +1814,7 @@ SOFTWARE.
         }
 
         // start processing.
-        frame.delete();
+        //frame.delete();
         frame = cv.imread('canvasVideo');
 
         // Setup the region of interest (to narrow down the search)
@@ -1822,8 +1824,9 @@ SOFTWARE.
         }
         //console.log(roiWindow);
       
-        roi.delete();
+        //roi.delete();
         roi = frame.roi( roiWindow );
+        frame.delete();
         convertImage( roi );
         cv.matchTemplate( roi, template, dst, mode );
         //cv.matchTemplate( frame, template, dst, mode );
@@ -1851,6 +1854,7 @@ SOFTWARE.
           //console.log(trackWindow);
 
         }
+        roi.delete();
                 
         // TODO: this is only temporary
         cv.imshow('tempCanvas', template );
