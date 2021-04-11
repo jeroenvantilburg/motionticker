@@ -988,7 +988,7 @@ SOFTWARE.
       
       if( video.src !== "" ) {
         // Update the slider
-        $("#slider").attr("max", Math.floor( ((video.duration-t0) * FPS).toFixed(1) ) - 1 );
+        $("#slider").attr("max", Math.round( ((video.duration-t0) * FPS).toFixed(1) ) - 1 );
     
         // Always reset to first frame
         gotoFrame( 0 );
