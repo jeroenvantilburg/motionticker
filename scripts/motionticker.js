@@ -44,6 +44,7 @@ SOFTWARE.
   let distanceInMeter;
   let originX, originY; // in pixels
   let videoRotation = 0; // in degrees
+  let demoLocation = "videos/demo_bounching_ball.mp4";
 
   // The raw data (all derived data is calculated on the fly)
   let rawData = [];
@@ -201,7 +202,6 @@ SOFTWARE.
     yAxis.setCoords();
   });
   axesOrigin.on("moved", () => {
-    //let zoomLevel = canvas.width / video.videoWidth;
     $("#originXInput").val( axesOrigin.left / zoomLevel );
     $("#originYInput").val( axesOrigin.top / zoomLevel );
     $("#originXInput").change();
@@ -805,6 +805,40 @@ SOFTWARE.
     document.body.removeChild(element);
   }
 
+  
+  /* ============= DEMO SECTION =================
+       Loading the demo video with its settings
+     =========================================== */  
+  
+  $("#demo").click( () => {
+    if( dataCanBeRemoved() ) {
+      clearDataAndVideo();
+
+      // Get the demo-file
+      video.src = demoLocation;
+      
+      //automaticAnalysis = true;
+      //$('#automaticAnalysis').prop('checked',automaticAnalysis);
+      $('#automaticAnalysis').prop('checked', true);
+      $('#automaticAnalysis').change();
+
+      $('#roiScale').val( 5 );
+      $('#roiScale').change();
+      
+      // Move to frame number 5 when video is ready
+      //video.addEventListener('loadeddata', function(e) {
+      //  e.target.removeEventListener(e.type, arguments.callee); // remove the handler
+      //  gotoFrame( 5 );
+      //});
+
+      //$('#statusMsg').html('Click on "Start analysis" ' );
+      //$('#statusMsg').html('Click on Start analysis ' );
+
+      
+    }
+  });
+
+  
 
   /* ============= Video SECTION =================
        Importing a video file
@@ -813,14 +847,12 @@ SOFTWARE.
   $("#videoImport").click( () => {
     if( dataCanBeRemoved() ) {      
       // Progagate to hidden DOM element
-      hideDropdownMenu();
+      //hideDropdownMenu();
       $("#videoInput").click();
     }
   });
   
-  // Add event listener for when file is selected
-  $("#videoInput").change( function() {
-
+  function clearDataAndVideo() {
     // Remove old source
     video.removeAttribute('src'); // empty source
     video.load();
@@ -845,6 +877,13 @@ SOFTWARE.
     disableVideoControl();
     $('#frameNumber').html( "0 / 0" );
     $("#slider").attr("max", 0 );
+  }
+
+  
+  // Add event listener for when file is selected
+  $("#videoInput").change( function() {
+
+    clearDataAndVideo();
 
     // Get the file
     let URL = window.URL || window.webkitURL;
@@ -892,6 +931,28 @@ SOFTWARE.
     // Set the dimensions of the video and prepare the canvas
     setVideoZoom(1.0);
     
+    //console.log( video.src )
+    if( (video.src).endsWith( demoLocation ) ) {
+
+      updateOrigin(32.85, 374.6 );
+      updateRuler( 54.2, 184.7, 51.8, 370.5);
+      updateScale( 185.8155 );      
+      trackingBox.set({left: 42.35, top: 24, 
+                       width: 16.3/trackingBox.scaleX, 
+                       height: 28.0/trackingBox.scaleY });
+      trackingBox.setCoords();
+
+      // Put the graphics back
+      showCalibrationControls();
+
+      // Get the frame rate
+      updateFPS( "29.97" );
+      
+      $('#statusMsg').html('Click on "Start analysis" ' );
+      
+      return;
+    }
+    
     // Set initial position for the origin, scale and trackingBox (relative to video dimensions)
     updateOrigin(0.1*video.videoWidth, 0.9*video.videoHeight);
 
@@ -918,8 +979,10 @@ SOFTWARE.
   });
   
   // Show video when it has been loaded
-  video.addEventListener('loadeddata', () => {
-    gotoFrame( 0 );
+  video.addEventListener('loadeddata', () => {    
+    let firstFrame = 0;
+    if( (video.src).endsWith( demoLocation ) ) firstFrame = 5; // exception for the demo
+    gotoFrame( firstFrame );
   });
   
   function showCalibrationControls() {
@@ -991,7 +1054,7 @@ SOFTWARE.
         $("#slider").attr("max", Math.round( ((video.duration-t0) * FPS).toFixed(1) ) - 1 );
     
         // Always reset to first frame
-        gotoFrame( 0 );
+        if( !(video.src).endsWith( demoLocation ) ) gotoFrame( 0 );
         
         // Video can be enabled
         tryToEnable();
@@ -1255,55 +1318,7 @@ SOFTWARE.
     } catch (error) {
       alert("An error occured. Please set frame rate manually.\n" + error);
       $('#statusMsg').html( "" );
-    }
-    
-    /*MediaInfo({ format: 'object' }, (mediainfo) => {
-      const file = $('#videoInput').prop('files')[0];
-      if (file) {        
-        const getSize = () => file.size;
-
-        const readChunk = (chunkSize, offset) =>
-          new Promise((resolve, reject) => {
-            const reader = new FileReader()
-            reader.onload = (event) => {
-              if (event.target.error) {
-                reject(event.target.error);
-              }
-              resolve(new Uint8Array(event.target.result));
-            }
-            reader.readAsArrayBuffer(file.slice(offset, offset + chunkSize));
-          });
-
-          mediainfo.analyzeData(getSize, readChunk).then((result) => {
-            $("#mediaInfoResult").html( convertToTable(result.media.track) );
-
-            //console.log(result.media.track);
-            result.media.track.forEach(track => {
-              if( track["@type"] === "Video") {                        
-                // Set the new FPS
-                updateFPS( track.FrameRate );
-                //fpsInput.value = track.FrameRate;
-                //fpsInput.onchange();
-                //$("#showMediaInfo").removeAttr("disabled");
-                
-                // Check orientation and set rotation
-                if( iOS() && track.Rotation ) {
-                  //videoImage.set( { angle: track.Rotation, originX: 'center', 
-                  //                  originY: 'center', });
-                  rotationAngle = track.Rotation;
-                  rotateContext();
-                }
-                
-                $('#statusMsg').html( "" );
-              }
-            } );
-        })
-          .catch((error) => {  
-            alert("An error occured. Please set FPS manually.");
-            $('#statusMsg').html( "" );
-        })
-      }
-    })*/
+    }    
   }
   
   function rotateContext() {
@@ -1441,6 +1456,10 @@ SOFTWARE.
       //let zoomLevel = canvas.width / video.videoWidth;
       let scale1 = {x: scaleCircle1.left/zoomLevel, y: scaleCircle1.top/zoomLevel };
       let scale2 = {x: scaleCircle2.left/zoomLevel, y: scaleCircle2.top/zoomLevel };
+      
+      //console.log( scale1 );
+      //console.log( scale2 );
+
 
       // Update scale
       updateScale( Math.sqrt((scale2.x-scale1.x)**2 + (scale2.y-scale1.y)**2) / distanceInMeter );
@@ -1449,6 +1468,7 @@ SOFTWARE.
     
   // update scale
   function updateScale(scale) {
+    //console.log(scale);
     $("#scaleInput").val( scale );
     $("#scaleInput").change();
   }
@@ -1785,6 +1805,10 @@ SOFTWARE.
     let boxWidth  = trackingBox.width  * trackingBox.scaleX;
     let boxHeight = trackingBox.height * trackingBox.scaleY;
     let trackWindow = createRect( xPos, yPos, boxWidth, boxHeight, frame );
+    
+    
+    //console.log("Tracking box: " + xPos + ", " + yPos + ", " + boxWidth + ", " + boxHeight );
+    
 
     let trackOffsetX = trackingBox.left - trackWindow.x;
     let trackOffsetY = trackingBox.top  - trackWindow.y;
