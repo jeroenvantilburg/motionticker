@@ -595,8 +595,8 @@ SOFTWARE.
                   [scaleY2Str]: toCSV( scaleCircle2.top/zoomLevel ),
                   [boxXStr]: toCSV( trackingBox.left/zoomLevel ), 
                   [boxYStr]: toCSV( trackingBox.top/zoomLevel ),
-                  [boxWStr]: toCSV( trackingBox.width/zoomLevel ), 
-                  [boxHStr]: toCSV( trackingBox.height/zoomLevel )
+                  [boxWStr]: toCSV( trackingBox.width*trackingBox.scaleX/zoomLevel ), 
+                  [boxHStr]: toCSV( trackingBox.height*trackingBox.scaleY/zoomLevel )
                  }  );
 
     // Remove velocity and/or acceleration depending on user setting
@@ -745,11 +745,7 @@ SOFTWARE.
           */
           deleteRawData(); // Clear old data
 
-          // Update the header info
           let meta = results.data[0];
-          updateFPS( toNumber( meta[fpsStr] ) );
-          updateOrigin( toNumber( meta[origXStr] ), toNumber( meta[origYStr] ) );
-          updateScale( toNumber( meta[scaleStr] )  );            
 
           // Update the ruler
           if( isNumeric( meta[scaleX1Str] ) && isNumeric( meta[scaleY1Str] ) &&
@@ -757,6 +753,11 @@ SOFTWARE.
             updateRuler( toNumber( meta[scaleX1Str] ), toNumber( meta[scaleY1Str] ),
                          toNumber( meta[scaleX2Str] ), toNumber( meta[scaleY2Str] ) );
           }
+
+          // Update the header info
+          updateFPS( toNumber( meta[fpsStr] ) );
+          updateOrigin( toNumber( meta[origXStr] ), toNumber( meta[origYStr] ) );
+          updateScale( toNumber( meta[scaleStr] ) );
           
           // Update the tracking box
           if( isNumeric( meta[boxXStr] ) && isNumeric( meta[boxYStr] ) &&
@@ -764,8 +765,8 @@ SOFTWARE.
             //let zoomLevel = canvas.width / video.videoWidth;
             trackingBox.set({ left: toNumber( meta[boxXStr] )*zoomLevel, 
                                top: toNumber( meta[boxYStr] )*zoomLevel,
-                             width: toNumber( meta[boxWStr] )*zoomLevel,
-                             height:toNumber( meta[boxHStr] )*zoomLevel });
+                             width: toNumber( meta[boxWStr] )*zoomLevel/trackingBox.scaleX,
+                             height:toNumber( meta[boxHStr] )*zoomLevel/trackingBox.scaleY });
           }
 
           // Add raw data
