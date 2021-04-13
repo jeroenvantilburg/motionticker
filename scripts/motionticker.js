@@ -1012,7 +1012,7 @@ SOFTWARE.
   $("input[type=text]").on("keydown", blurOnEnter );
 
   // Put cursor always at last position when clicking on input text element
-  $(document).on('focus', 'input', function () {    
+  $(document).on('focus', 'input[type=text]', function () {    
     //already focused, return so user can now place cursor at specific point in input.    
     if (focusedElement == this) return; 
     focusedElement = this;
