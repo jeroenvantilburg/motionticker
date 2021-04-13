@@ -823,18 +823,11 @@ SOFTWARE.
       $('#roiScale').val( 5 );
       $('#roiScale').change();
             
-      // Set automatic analysis as soon as openCV is ready
+      // Set automatic analysis if openCV is ready. Otherwise it is set when openCV.load is triggered
       if( openCVReady ) {
         $('#automaticAnalysis').prop('checked', true);
         $('#automaticAnalysis').change();
-      } else {
-        $("#opencv").on("load", () => {
-          cv['onRuntimeInitialized']=()=>{
-            $('#automaticAnalysis').prop('checked', true);
-            $('#automaticAnalysis').change();
-          }
-        });  
-      }      
+      }
     }
   });
 
@@ -1478,7 +1471,15 @@ SOFTWARE.
   $("#opencv").on("load", () => {
     cv['onRuntimeInitialized']=()=>{
       openCVReady = true;
+      
+      // Only enable the automatic analysis when Start analysis button is enabled
       if( !($("#startAnalysis").prop("disabled")) ) $("#automaticAnalysis").removeAttr('disabled');
+      
+      // For the demo: set automatic analysis to true
+      if( (video.src).endsWith( demoLocation ) ) {
+        $('#automaticAnalysis').prop('checked', true);
+        $('#automaticAnalysis').change();
+      }
     }
   });
 
