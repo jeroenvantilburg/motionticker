@@ -3,7 +3,7 @@
 <head>
   <title>Motion Ticker</title>
   <meta charset="UTF-8">  
-  <meta name="description" content="Track moving objects in videos. Educational tool.">
+  <meta name="description" content="Tracking of moving objects in videos. Educational tool.">
   <meta name="keywords" content="video, analysis, tracking, motion, schools, education, classroom, videometen">
   <meta name="author" content="Jeroen van Tilburg">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -132,7 +132,7 @@
           <img id="about-icon" src="mstile-70x70.png"></img><br clear="all"/><br/>
           &copy; 2021 Jeroen van Tilburg, MIT licentie <br/>
           Feedback to <feedback></feedback> <br/> 
-          Source code: <a href="https://github.com/jeroenvantilburg/motionticker">Github</a> <br/>
+          Source code: <a href="https://github.com/jeroenvantilburg/motionticker">GitHub</a> <br/>
       </center>
     </div>
   </div>
@@ -143,63 +143,76 @@
 
       <b>General</b><br/>
       Motion Ticker is a HTML5 javascript-application for analysing the motion of objects in videos.
-      It is primarily intended for use in the classroom to educate people about motion
-      and mechanics. The name is a tribute to the old-fashioned ticker taper timers that were used 
+      It is primarily intended for use in classrooms to teach students about motion
+      and mechanics. The name is a tribute to the old-fashioned 
+      <a href="https://www.youtube.com/watch?v=NX20xE-C1sg">ticker tape</a> timers that were used 
       in the era before computers and smartphones were widespread.        
       <br/><br/>
       
       <b>Getting started</b><br/>
-      You can analyse the motion of an object in 5 simple steps:
+      Check out the demo video to see a working example of the automatic analysis.
+      You can analyse the motion of an object in 4 simple steps:
       <ol>
         <li><b>Upload a new video.</b></li>
         <li><b>Calibrate the scale of the video.</b> 
-          You can either set the right value in the input field or use the scale wizard.</li>
+          You can either set the scale in pixels per meter in the data tab or set the length of 
+          the green ruler in meters in the video tab.</li>
         <li><b>Start the analysis.</b> You can choose between manual or automatic analysis:
           <ul>
             <li>Manual analysis: Click on the object in each frame.</li>
-            <li>Automatic analysis: First define the track window. Then the 
-            program will try to follow its motion by analysing each frame.</li>
+            <li>Automatic analysis: First place the track window (red box) around the object. 
+              Then the program will try to follow its motion by analysing each frame.</li>
           </ul>
         </li>
-        <li><b>Export the data to a csv file</b> such that you can analyse the data at any time in
+        <li><b>Export the data to a CSV file</b> such that you can analyse the data at any time in
         a spreadsheet application.</li>
       </ol>
 
-      <b>Setting up</b><br/>
-      Upload the video that you would like to analyse. The supported video formats are
-      MP4, MOV, WebM and Ogg.
-      After uploading your video, the frame rate is calculated using the mediainfo tool. In
-      the event that this calculation stalls, you can set the frame rate manually. In most cases
+      <b>Video requirements</b><br/>
+      The supported video formats are MP4, MOV, WebM and Ogg.
+      The distance between the camera and the moving object should approximately be constant. 
+      This is the case when the moving object is sufficiently far away from the camera.
+      The camera itself should not move during the video.
+      Place a scale marker (such as a ruler or another object of known dimensions) in the video.
+      <br/><br/>
+
+      <b>Setting up the analysis</b><br/>
+      Upload the video that you would like to analyse. 
+      The frame rate is then automatically obtained from the video meta data 
+      using the MediaInfo tool. 
+      In the event that this calculation stalls, you can set the frame rate manually. In most cases
       a frame rate of 30 or 60 frames per second (fps) is appropriate. The next step is to calibrate
-      the scale of the video in meters per pixel. It is advised to place a scale marker such as a ruler
-      in your video. The scale wizard will ask you to mark the end-points and give the size in meters
-      between them. Alternatively, you can set or change the scale manually in the input field.
-      Optionally, the origin of your coordinate system can be set in the input fields or using the 
-      origin wizard.
+      the scale of the video in meters per pixel, either using the green ruler in the video tab or
+      the input field in the data tab.       
+      Optionally, the origin of your coordinate system can be changed in the video tab or 
+      using the input fields in the data tab.
       <br/><br/>
 
       <b>Analysis</b><br/>
-      In the manual analysis the movement of the object is obtained by clicking in each frame on
-      the position on the object. For larger object one can click on a well-defined spot like an edge,
-      another distinctive feature. After each click the next frame (default) is shown. The number 
-      of frames to skip can be adjusted in the settings.
-      When the automatic box is ticked the object the program tries to track the object automatically.
-      First the track window, where the object is located, needs to be defined. Then the 
-      program will try to follow the motion of this object by analysing each frame. 
-      In the settings it is possible to allow for rotations and changes in the size of the object by
-      selecting the adaptive tracking algorithm. 
+      During the manual analysis the movement of the object is obtained by clicking on 
+      the object in each frame. For larger objects one can click on a well-defined spot like an edge 
+      or another distinctive feature. After each click the next frame is shown (this can be
+      modified in the settings).
+      Zooming in can improve the accuracy of the analysis, but this also requires 
+      more resources on your computer.
+      When the automatic box is checked the program will track the object automatically.
+      Make sure to place the track window (red box) around the object without selecting
+      too much background. The program uses a template matching algorithm to find the object in
+      the other video frames. Please refer to the settings to find the optimal settings for your
+      video.
       <br/><br/>
 
       <b>Derived data: velocity and acceleration</b><br/>
-      The three graphs show the position of the object in meters, the velocity and the acceleration.
-      The acceleration graphs is turned off by default. This can be changed in the settings. Note that
-      changing their display also affects the exported CSV data.
-      
-      The velocity is calculated from two position data points. Likewise, the acceleration is
+      The graphs show the position of the object, its velocity and acceleration.
+      The acceleration graph is turned off by default (can be changed in the settings). 
+      Note that when hiding the velocity and/or acceleration graphs, their data is not exported 
+      to the CSV file either.
+      The velocity is calculated from two positional data points. Likewise, the acceleration is
       calculated from two velocity data points. The corresponding time is the average
-      of these data points. The integration time (settings) is the minimal number of frames between 
-      these points. The default integration time is set to 2 frames. Note that the number of frames 
-      between these points can be larger when frames are skipped during the analysis. Choosing a
+      of these data points. The time between these two points can be changed in the settings.
+      This so-called integration time is the minimal number of frames between these points. 
+      The default integration time is set to two frames. Note that the number of frames 
+      between these points will be larger when frames are skipped during the analysis. Choosing a
       larger integration time results in a smoother velocity/acceleration graph, but a reduced
       sensitivity to (sudden) changes in the velocity or acceleration.
       <br/><br/>
@@ -208,10 +221,10 @@
       After analysis, save your data by exporting it to a CSV file. Then you can continue your
       analysis at a later stage or use your data in a spreadsheet application. In the settings
       you can change the decimal separator and the delimiter in the CSV file to facilitate the 
-      import in your spreadsheet application. Note that the velocity and accelerationfields have 
+      import in your spreadsheet application. Note that the velocity and acceleration fields have 
       their own time stamps, which may not overlap with the time stamps from the positions. 
-      This may cause empty cells in the CSV file. This can be avoided to some extent by checking this
-      option in the settings.
+      This may cause empty cells in the CSV file. This behaviour can be (partially) avoided 
+      in the settings.
       <br/><br/>
 
       <b>Security/privacy</b><br/>
@@ -221,7 +234,7 @@
 
       <b>Compatibility</b><br/>
       Motion Ticker does not work in Internet Explorer. In case you are still using IE, please 
-      consider moving to a modern browser like Chrome, Edge, Firefox of Safari.
+      consider moving to a modern browser like Chrome, Edge, Firefox or Safari.
       <br/><br/>
 
       <b>Embed code</b><br/>
@@ -233,39 +246,41 @@
 
       <b>Source code</b><br>
       The source code from this website is freely available on 
-      <a href="https://github.com/jeroenvantilburg/motionticker">Github</a> under the 
+      <a href="https://github.com/jeroenvantilburg/motionticker">GitHub</a> under the 
       <a href="https://en.wikipedia.org/wiki/MIT_License">MIT license</a>. The source code
       may be freely copied and hosted on every web server. Please make sure to keep the code
       up-to-date since new updates and bug fixes come out regularly.
-      Suggestions for improvements are welcome.
       <br/><br/>
 
       <b>Feedback and questions</b><br/>
-      The keep this website as user-friendly as possible I depend on your feedback. Please send your
+      To keep this website as user-friendly as possible I depend on your feedback. Please send your
       questions, improvements, bug reports, suggestions, comments and compliments 
       to <feedback></feedback>. 
       <br/><br> 
       
       <b>Acknowledgments</b><br/>
-      Motion ticker depends on the following beautiful javascript libraries:
+      Many thanks to <a href="https://github.com">GitHub</a> and 
+      <a href="https://pages.github.com">GitHub Pages</a> for hosting Motion Ticker.
+      Motion Ticker depends on the following useful javascript libraries:
       <ul>
         <li><a href="https://jquery.com">jQuery</a>: DOM manipulation</li>
-        <li><a href="https://mediaarea.net/en/MediaInfo/">Mediainfo.js</a>: extract meta data from video 
-          files.</li>
-        <li><a href="https://www.chartjs.org">Chart.js</a>: charting library</li>
+        <li><a href="https://mediaarea.net/en/MediaInfo/">Mediainfo.js</a>: 
+          extract meta data from video files</li>
+        <li><a href="https://www.chartjs.org">Chart.js</a>: library for creating charts</li>
         <li><a href="https://www.papaparse.com">PapaParse</a>: CSV parser</li>
         <li><a href="http://fabricjs.com">Fabric</a>: HTML5 canvas library</li>
-        <li><a href="">OpenCV</a>: computer vision and machine learning software library.</li>
+        <li><a href="https://opencv.org">OpenCV</a>: computer vision and machine learning 
+          software library</li>
       </ul>
 
       <b>Other applications</b><br/>
-      There are a number of other, third-party applications that can be used to analyse videos. Select
-      the applications that suits your needs.
+      Besides Motion Ticker, there are a number of other, third-party applications that can be used 
+      to analyse videos. Select the application that suits your needs.
       <ul>
-        <li><a href="https://cma-science.nl">Coach7</a> (paid) is a software package for STEM Education.
-        It includes a tool for data video activities.</li>
-        <li><a href="https://www.vernier.com/product/video-analysis/">Vernier Video Analysis</a> (paid)
-        brings video analysis to your students in a dedicated and streamlined application.</li>
+        <li><a href="https://cma-science.nl">Coach7</a> (paid) is a software package for STEM
+          Education. It includes a tool for data video activities.</li>
+        <li><a href="https://www.vernier.com/product/video-analysis/">Vernier Video Analysis</a> 
+          (paid) brings video analysis to your students in a dedicated and streamlined application.</li>
         <li><a href="https://physlets.org/tracker/">Tracker</a> (free) is a video analysis and 
         modeling tool from Open Source Physics. There is also a 
         <a href="https://tracker.physlets.org/trackerJS">javascript version</a> that runs on most 
@@ -283,21 +298,44 @@
       <table>        
         <tr><th colspan="3">Analysis</th></tr>        
         <tr>
-          <td>Draw all points:</td>
+          <td>Draw all markers:</td>
           <td><input id="drawAllPoints" type="checkbox"></input></td>
-          <td>Show all the positions that have been marked.</td>
+          <td>Show the markers of each data point in the video frame. When unchecked only the 
+            data point for the current frame is shown (if there is one).</td>
         </tr>
         <tr>
           <td>Skip frames:</td>
           <td><input id="framesToSkip" type="number" min="-100" step="1" max="100"></input></td>
-          <td>Number of frames to skip during analysis. Negative number reverses the playback.</td>
+          <td>Number of frames to skip during analysis. Larger numbers will speed up the analysis. 
+            Negative number reverses the playback.</td>
         </tr>
+      </table>        
+      <br/>
+      <table>        
+        <tr><th colspan="3">Automatic analysis</th></tr>        
         <tr>
           <td>Adaptive tracking:</td>
           <td><input id="adaptive" type="checkbox"></input></td>
-          <td>Only for the automatic analysis: adapt the track window to allow for small changes of
-            the shape, size or rotation of the object during the analysis.</td>
+          <td>Update the template image in the new track window to allow for 
+            small changes of the shape, size or rotation of the object during the analysis. The
+            dimensions of the track window remain unchanged. This setting may cause some
+            drift between the object and the track window.
+         </td>
         </tr>
+        <tr>
+          <td>ROI scale:</td>
+          <td><input id="roiScale" type="number" min="0" step="1" max="100"></input></td>
+          <td>Restrict the search to within a region of interest (ROI) around the track window 
+            that is <i>n</i> times larger than the track window (each side), where <i>n</i> is 
+            the ROI scale. 
+            This setting avoids that the template matching algorithm finds a best match in the
+            video frame that is (unphysically) far away from the object. 
+            Depending on the speed of the moving object and the frame rate, a setting of 3 or 5 is
+            usually sufficient. A higher speed requires a larger value.
+            A value of 0 (or any value below 1) searches the complete frame.
+          </td>
+        </tr>
+        <!-- advanced settings -->
         <tr>
           <td>Template match mode:</td>
           <td>
@@ -309,7 +347,9 @@
               <option value="TM_CCOEFF">TM_CCOEFF</option>
               <option value="TM_CCOEFF_NORMED">TM_CCOEFF_NORMED</option>
             </select>
-          <td>Only for the automatic analysis: select the matching algorithm.</td>
+          <td>Select the 
+            <a href="https://docs.opencv.org/4.5.2/df/dfb/group__imgproc__object.html">comparison 
+              method</a> for the template matching algorithm.</td>
         </tr>
         <tr>
           <td>Image conversion:</td>
@@ -320,16 +360,10 @@
               <option value="GRAY">Gray-scale</option>
               <option value="CANNY">Edge-detection</option>
             </select>
-          <td>Only for the automatic analysis: Convert the frame image before template matching.</td>
+          <td>Convert the frame image before template matching. RGB means no conversion. 
+            Edge detection uses the Canny algorithm.</td>
         </tr>
-        <tr>
-          <td>ROI scale:</td>
-          <td><input id="roiScale" type="number" min="0" step="1" max="100"></input></td>
-          <td>Restrict the search to within a region of interest that is nxn times larger than the
-              template image, where n is the ROI scale. This also speeds up the matching algorithm. 
-              A value of 0 searches the complete frame.</td>
-        </tr>
-
+        <!-- end of advanced settings -->
       </table>
       <br/>
       <table>
@@ -340,6 +374,7 @@
           <td>When checked, the frame rate (and for iOS the video orientation) is extracted 
             automatically from the video meta data when loading a video.</td>
         </tr>
+        <!-- advanced settings -->
         <tr>
           <td>Video orientation:</td>
           <td>
@@ -352,6 +387,7 @@
           </td>
           <td>Set the orientation of the video in degrees.</td>
         </tr>
+        <!-- end of advanced settings -->
       </table>
       <br/>
       <table>
@@ -359,12 +395,16 @@
         <tr>
           <td>Display velocity:</td>
           <td><input type="checkbox" id="showVelocity"></td>
-          <td>Show or hide the velocity data.</td>
+          <td>Show the velocity graph. 
+            When checked the velocity data is exported to the CSV file. 
+          </td>
         </tr>
         <tr>
           <td>Display acceleration:</td>
           <td><input type="checkbox" id="showAcceleration"></td>
-          <td>Show or hide the acceleration data.</td>
+          <td>Show the acceleration graph. 
+            When checked the acceleration data is exported to the CSV file.
+          </td>
         </tr>
         <tr>
           <td>Integration time:</td>
@@ -402,8 +442,9 @@
         <tr>
           <td>Avoid empty cells:</td>
           <td><input type="checkbox" id="avoidEmptyCells"></td>
-          <td>Adjust the velocity time stamps by at most half a frame. This avoids empty cells, 
-            but slightly reduces the accuracy of the velocity time stamp.</td>
+          <td>Adjust the velocity and acceleration time stamps by at most half a frame. This avoids
+            empty cells, 
+            but slightly reduces the accuracy of the corresponding time stamp.</td>
         </tr>
       </table>
     </div>
@@ -413,26 +454,16 @@
     <div class="modal-content"> <span class="close">&times;</span>
       <h2>Video File Info</h2>      
       <div id="videoInfo"></div>
-      <!--h2>Additional information</h2>      
-      The information below is obtained from the 
-      <a href="https://mediainfo.js.org/">mediainfo.js</a> library. 
-      We only need the FrameRate.
-      <div id="mediaInfoResult"></div-->
-
       Tracking window: <canvas id="tempCanvas"></canvas>
-
     </div>
   </div>
 
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <!--script src="https://unpkg.com/mediainfo.js/dist/mediainfo.min.js" type="text/javascript"></script-->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.3.1/fabric.min.js"></script>
   <script src="scripts/fabric-patch-touch.js"></script>
   <script src="scripts/fabric-patch-arrow.js"></script>
-  <!--script async src="https://docs.opencv.org/3.4.13/opencv.js" id="opencv"></script-->  
   <script async src="https://docs.opencv.org/4.5.1/opencv.js" id="opencv"></script>  
   <script src="scripts/motionticker.js"></script>
   <script data-goatcounter="https://motionticker.goatcounter.com/count"
