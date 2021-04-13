@@ -815,27 +815,24 @@ SOFTWARE.
     if( dataCanBeRemoved() ) {
       clearDataAndVideo();
 
-      // Get the demo-file
+      // Get the demo-file. Triggers loadedmetadata and loadeddata
       video.src = demoLocation;
+            
+      // TODO: put other settings to default values
       
-      //automaticAnalysis = true;
-      //$('#automaticAnalysis').prop('checked',automaticAnalysis);
-      $('#automaticAnalysis').prop('checked', true);
-      $('#automaticAnalysis').change();
-
       $('#roiScale').val( 5 );
       $('#roiScale').change();
-      
-      // Move to frame number 5 when video is ready
-      //video.addEventListener('loadeddata', function(e) {
-      //  e.target.removeEventListener(e.type, arguments.callee); // remove the handler
-      //  gotoFrame( 5 );
-      //});
-
-      //$('#statusMsg').html('Click on "Start analysis" ' );
-      //$('#statusMsg').html('Click on Start analysis ' );
-
-      
+            
+      // Set automatic analysis as soon as openCV is ready
+      if( openCVReady ) {
+        $('#automaticAnalysis').prop('checked', true);
+        $('#automaticAnalysis').change();
+      } else {
+        $("#opencv").on("load", () => {
+          $('#automaticAnalysis').prop('checked', true);
+          $('#automaticAnalysis').change();
+        });  
+      }      
     }
   });
 
@@ -1478,6 +1475,7 @@ SOFTWARE.
   let openCVReady = false;
   $("#opencv").on("load", () => {
     openCVReady = true;
+    if( !($("#startAnalysis").prop("disabled")) ) $("#automaticAnalysis").removeAttr('disabled'); 
   });
 
   // Enable, disable and set "Start/Stop analysis" button
