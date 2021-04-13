@@ -829,8 +829,10 @@ SOFTWARE.
         $('#automaticAnalysis').change();
       } else {
         $("#opencv").on("load", () => {
-          $('#automaticAnalysis').prop('checked', true);
-          $('#automaticAnalysis').change();
+          cv['onRuntimeInitialized']=()=>{
+            $('#automaticAnalysis').prop('checked', true);
+            $('#automaticAnalysis').change();
+          }
         });  
       }      
     }
@@ -1474,8 +1476,10 @@ SOFTWARE.
   // Enable automatic analysis only when openCV is ready
   let openCVReady = false;
   $("#opencv").on("load", () => {
-    openCVReady = true;
-    if( !($("#startAnalysis").prop("disabled")) ) $("#automaticAnalysis").removeAttr('disabled'); 
+    cv['onRuntimeInitialized']=()=>{
+      openCVReady = true;
+      if( !($("#startAnalysis").prop("disabled")) ) $("#automaticAnalysis").removeAttr('disabled');
+    }
   });
 
   // Enable, disable and set "Start/Stop analysis" button
