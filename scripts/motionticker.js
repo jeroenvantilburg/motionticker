@@ -1512,7 +1512,15 @@ SOFTWARE.
   
   // Event listener when clicking "Start/Stop analysis" button
   $("#startAnalysis").click( () => {
+
+    // Stop the player in case it is still playing
+    if( playing ) {
+      $('#play').click();
+      return;
+    }
+
     if( analysisStarted === false ) {
+      
       // Change the button to "Stop analysis"
       setStopAnalysis();
 
