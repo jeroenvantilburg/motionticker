@@ -1,6 +1,5 @@
 var CACHE_NAME = 'motionticker-cache-v1';
 var urlsToCache = [
-  '/motionticker/',
   'index.html',
   'style.css',
   'scripts/MediaInfo.js',
