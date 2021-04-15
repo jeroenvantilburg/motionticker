@@ -14,7 +14,7 @@ var urlsToCache = [
   'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.3.1/fabric.min.js',
-  'https://docs.opencv.org/4.5.1/opencv.js',
+  // 'https://docs.opencv.org/4.5.1/opencv.js',
   'videos/demo_bounching_ball.mp4',
   'img/screenshot.png',
   'apple-touch-icon.png',
@@ -28,12 +28,12 @@ self.addEventListener('install', function(event) {
     caches.open(CACHE_NAME)
       .then(function(cache) {
         console.log('Opened cache');
-        //return cache.addAll(urlsToCache);
-        cache.addAll(urlsToCache.map(function(urlToPrefetch) {
-           return new Request(urlToPrefetch, { mode: 'no-cors' });
-        })).then(function() {
-          console.log('All resources have been fetched and cached.');
-        });
+        return cache.addAll(urlsToCache);
+        //cache.addAll(urlsToCache.map(function(urlToPrefetch) {
+        //   return new Request(urlToPrefetch, { mode: 'no-cors' });
+        //})).then(function() {
+        //  console.log('All resources have been fetched and cached.');
+        //});
 
       })
   );
