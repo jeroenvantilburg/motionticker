@@ -18,8 +18,8 @@ var urlsToCache = [
   'https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.3.1/fabric.min.js',
   // 'https://docs.opencv.org/4.5.1/opencv.js',
-  'videos/demo_bounching_ball.mp4',
-  'img/screenshot.png',
+  //'videos/demo_bounching_ball.mp4',
+  //'img/screenshot.png',
   'apple-touch-icon.png',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css',
   'mstile-70x70.png'
@@ -46,7 +46,13 @@ self.addEventListener('install', function(event) {
   );
 });
 
-/*self.addEventListener('fetch', function(event) {
+self.addEventListener('fetch', function(event) {
+  // Return without calling event.respondWith()
+  // if this is a range request.
+  if (event.request.headers.has('range')) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(function(response) {
@@ -58,10 +64,10 @@ self.addEventListener('install', function(event) {
       }
     )
   );
-});*/
+});
 
 //This code is based on  https://googlechrome.github.io/samples/service-worker/prefetch-video/ 
-self.addEventListener('fetch', function(event) {
+/*self.addEventListener('fetch', function(event) {
   
   headersLog = [];
   for (var pair of event.request.headers.entries()) {
@@ -147,3 +153,4 @@ self.addEventListener('fetch', function(event) {
     );
   }
 });
+*/
