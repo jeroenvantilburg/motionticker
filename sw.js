@@ -29,6 +29,10 @@ self.addEventListener('install', function(event) {
     caches.open(CACHE_NAME)
       .then(function(cache) {
         console.log('Opened cache');
+
+        const requestCV = new Request('https://docs.opencv.org/4.5.1/opencv.js', { mode: 'no-cors' });
+        fetch(requestCV).then(response => cache.put(request, response));
+
         return cache.addAll(urlsToCache);
         //cache.addAll(urlsToCache.map(function(urlToPrefetch) {
         //   return new Request(urlToPrefetch, { mode: 'no-cors' });
