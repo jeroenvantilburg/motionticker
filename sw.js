@@ -3,6 +3,7 @@ var urlsToCache = [
   './',
   'index.html',
   'style.css',
+  'favicon.ico',
   'scripts/MediaInfo.js',
   'scripts/MediaInfoWasm.wasm',
   'scripts/motionticker.js',
