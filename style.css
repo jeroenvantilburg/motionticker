@@ -18,6 +18,7 @@ pre {
   margin: 5px;
   white-space: pre-wrap;
   word-break: break-all;
+  font-size: 75%;
   font-family: "Courier New",Courier,Arial,Verdana;
 }
 
@@ -228,6 +229,8 @@ input:disabled+label {
 
 
 
+
+
 /* Dropdown menu. See
    https://www.w3schools.com/howto/howto_css_dropdown_navbar.asp */
 
@@ -422,6 +425,10 @@ input:disabled+label {
   min-width: 130px;
 }
 
+#settingsModal table td:nth-child(2) {
+  min-width: 72px;
+}
+
 #settingsModal table td:nth-child(3) {
   text-align: left;
   padding-left: 20px;
@@ -433,6 +440,14 @@ input:disabled+label {
 
 #settingsModal select, #settingsModal input[type="number"] {
   width:70px;
+}
+
+.advanced {
+  display: none;
+}
+
+#reload {
+  font-size: 0.7em;
 }
 
 

@@ -364,7 +364,7 @@ SOFTWARE.
     imageConvMode = this.value ;
   });
  
-  let roiScale = 0;
+  let roiScale = 5;
   $("#roiScale").val( roiScale );
   $("#roiScale").change( function() { 
     roiScale = this.value ;
@@ -415,6 +415,15 @@ SOFTWARE.
   $('#avoidEmptyCells').on('change', function(e) {
     avoidEmptyCells = $('#avoidEmptyCells').is(':checked');
   });
+
+  $('#advanced').on('change', function(e) {
+    $('.advanced').toggle();
+  });
+  
+  $('#reload').on('click', function() {
+    location.reload();
+  });
+  
   // END USER SETTINGS
   
   
@@ -820,8 +829,8 @@ SOFTWARE.
             
       // TODO: put other settings to default values
       
-      $('#roiScale').val( 5 );
-      $('#roiScale').change();
+      //$('#roiScale').val( 5 );
+      //$('#roiScale').change();
             
       // Set automatic analysis if openCV is ready. Otherwise it is set when openCV.load is triggered
       if( openCVReady ) {
@@ -1529,7 +1538,11 @@ SOFTWARE.
 
       if( automaticAnalysis ) {
         canvasClick = "";
-        templateMatching();
+        if( templateMatchMode == "MIN_SQDIFF" ) {
+          templateMatching_min();
+        } else {
+          templateMatching();
+        }
       } else {
         $('#statusMsg').html( "Click on the object" );
         canvasClick = "addRawDataPoint";
@@ -1805,9 +1818,6 @@ SOFTWARE.
     // Set the matching mode    
     let mode = cv[ templateMatchMode ];
     
-    // TODO: explain in help that best results are when analysing in original dimensions
-    //setVideoZoom(1.0);
-    
     // take first frame of the video
     let frame = cv.imread('canvasVideo');
     
@@ -1923,8 +1933,137 @@ SOFTWARE.
     // schedule the first one.
     setTimeout(processVideo, 0);
   }
+
   
+  // Create a rect in units of pixels (int) within the bounding area
+  function createRect_min(x, y, width, height){
+    let rect = {};
+    rect.x = Math.max(0, Math.floor(x-0.5*width));
+    rect.y = Math.max(0, Math.floor(y-0.5*height));
+    rect.width = Math.min( Math.floor(x+0.5*width), canvasVideo.width ) - rect.x ;
+    rect.height= Math.min( Math.floor(y+0.5*height), canvasVideo.height ) - rect.y ;
+    return rect;
+  }
+
+  // Automatic analysis (new)
+  function templateMatching_min() {
+    
+    $('#statusMsg').html( "Processing..." );
+    disableVideoControl();
+    
+    // Make sure that the trackingBox is not active anymore (just remove the controls)
+    canvas.discardActiveObject().renderAll();
+    
+    // initial location of window
+    let xPos  = trackingBox.left;
+    let yPos  = trackingBox.top;
+    let boxWidth  = trackingBox.width  * trackingBox.scaleX;
+    let boxHeight = trackingBox.height * trackingBox.scaleY;
+    let trackWindow = createRect_min( xPos, yPos, boxWidth, boxHeight );
+
+    let template = canvasVideoCtx.getImageData(trackWindow.x, trackWindow.y, 
+                                               trackWindow.width, trackWindow.height);
+    let templateData = template.data;
+
+    let trackOffsetX = trackingBox.left - trackWindow.x;
+    let trackOffsetY = trackingBox.top  - trackWindow.y;
+    
+    let templateWidth = template.width;
+    let templateHeight = template.height;
+    
+    function abortAnalysis() {
+      // clean and stop.
+      updatePlots();    
+      enableVideoControl();
+    } 
+    
+    function processVideo() {
+      try {  
+        if (!analysisStarted) {
+          abortAnalysis();
+          return;
+        }
+
+        // Setup the region of interest (to narrow down the search)
+        let roiWindow = {x: 0, y: 0, width: canvasVideo.width, height: canvasVideo.height };
+        if( roiScale > 1 ) { 
+          roiWindow = createRect_min( xPos, yPos, roiScale*boxWidth, roiScale*boxHeight );
+        }
+
+        let roiWidth = roiWindow.width;
+        let roiHeight = roiWindow.height;
+
+        // load image
+        let image = canvasVideoCtx.getImageData( roiWindow.x, roiWindow.y, 
+                                                 roiWindow.width, roiWindow.height);
+        let px = image.data;        
+        
+        // Template matching
+        let bestMatch = {R: -1} ;
+        for(let x=0; x<roiWidth-templateWidth; ++x ) {
+          for(let y=0; y<roiHeight-templateHeight; ++y ) {
+                        
+            let sqdiff = 0.0;
+            for(let j=0; j < templateHeight; ++j ) {
+              for(let i=0; i < templateWidth; ++i ) {
+                let index   = 4*(i + j*templateWidth);
+                let imIndex = 4*(x + i + (y + j)*roiWidth);
+                sqdiff += ( templateData[index]   - px[imIndex] )**2;
+                sqdiff += ( templateData[index+1] - px[imIndex+1] )**2;
+                sqdiff += ( templateData[index+2] - px[imIndex+2] )**2;
+              }
+            }
+            if( bestMatch.R < 0 || sqdiff < bestMatch.R ) {
+              bestMatch.R = sqdiff;
+              bestMatch.x = x;
+              bestMatch.y = y;
+            }
+          } 
+        }
+        
+        xPos  = roiWindow.x + bestMatch.x + trackOffsetX ;
+        yPos  = roiWindow.y + bestMatch.y + trackOffsetY ;
+        
+        // Adaptive: not yet available
+        /*if( adaptive ) {
+          trackWindow.x = maxPoint.x; trackWindow.y = maxPoint.y;
+          template.delete();
+          template = roi.roi(trackWindow);
+        }*/
+                
+        // TODO: not yet available
+        //cv.imshow('tempCanvas', template );
+        
+        // Draw it on image
+        trackingBox.set({ left: xPos, top: yPos });
+        trackingBox.setCoords();
   
+        let rawDataPoint = {t: currentFrame, x: xPos/zoomLevel, y: yPos/zoomLevel };
+        addRawData( rawDataPoint );
+    
+        setTimeout( function() {
+          if( gotoFrame(currentFrame+framesToSkip) ) {
+            video.addEventListener("seeked", function(e) {
+              e.target.removeEventListener(e.type, arguments.callee); 
+              processVideo();
+            });
+          } else {
+            $("#startAnalysis").click();
+            abortAnalysis();
+          }
+        }, 50 );
+      } catch (err) {
+        alert("An error occuring during the automatic analysis: "+err);
+        $("#startAnalysis").click();
+        abortAnalysis();
+      }
+    };
+
+    // schedule the first one.
+    setTimeout(processVideo, 0);
+  }
+
+
   // Plotting stuff
   let options= { scales: { xAxes: [{ scaleLabel:{ labelString: 'time (s)', 
                                                   display: true},

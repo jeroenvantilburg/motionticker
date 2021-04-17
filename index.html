@@ -193,12 +193,24 @@
       the object in each frame. For larger objects one can click on a well-defined spot like an edge 
       or another distinctive feature. After each click the next frame is shown (this can be
       modified in the settings).
+      <br/><br/>
+
+      <b>Automatic analysis</b><br/>      
+      When the automatic box is checked the program will track the object automatically using a
+      template matching algorithm.
+      Make sure to place the track window (red box) around the object without selecting
+      too much background. The location of this track window in the initial frame defines the 
+      template image. 
+      The algorithm will search for this template image in the other video frames.
+      The search region can be narrowed down to a region of interest (ROI) to make the search faster
+      and more reliable.
+      The ROI is always centered around the track window and is by default 5 times larger than
+      track window.
+      Depending on the speed of the moving object and the frame rate, a setting of 3 or 5 is
+      usually sufficient. When the object is moving at higher speeds larger values may be required.
       Zooming in can improve the accuracy of the analysis, but this also requires 
       more resources on your computer.
-      When the automatic box is checked the program will track the object automatically.
-      Make sure to place the track window (red box) around the object without selecting
-      too much background. The program uses a template matching algorithm to find the object in
-      the other video frames. Please refer to the settings to find the optimal settings for your
+      Please refer to the settings to find the optimal settings for your
       video.
       <br/><br/>
 
@@ -327,19 +339,15 @@
           <td><input id="roiScale" type="number" min="0" step="1" max="100"></input></td>
           <td>Restrict the search to within a region of interest (ROI) around the track window 
             that is <i>n</i> times larger than the track window (each side), where <i>n</i> is 
-            the ROI scale. 
-            This setting avoids that the template matching algorithm finds a best match in the
-            video frame that is (unphysically) far away from the object. 
-            Depending on the speed of the moving object and the frame rate, a setting of 3 or 5 is
-            usually sufficient. A higher speed requires a larger value.
-            A value of 0 (or any value below 1) searches the complete frame.
+            the ROI scale. A value of 0 (or any value below 1) searches the complete frame.
           </td>
         </tr>
         <!-- advanced settings -->
-        <tr>
+        <tr class="advanced">
           <td>Template match mode:</td>
           <td>
             <select id="templateMatchMode">
+              <option value="MIN_SQDIFF">MIN_SQDIFF</option>
               <option value="TM_SQDIFF">TM_SQDIFF</option>
               <option value="TM_SQDIFF_NORMED">TM_SQDIFF_NORMED</option>
               <option value="TM_CCORR">TM_CCORR</option>
@@ -351,7 +359,7 @@
             <a href="https://docs.opencv.org/4.5.2/df/dfb/group__imgproc__object.html">comparison 
               method</a> for the template matching algorithm.</td>
         </tr>
-        <tr>
+        <tr class="advanced">
           <td>Image conversion:</td>
           <td>
             <select id="imageConvMode">
@@ -375,7 +383,7 @@
             automatically from the video meta data when loading a video.</td>
         </tr>
         <!-- advanced settings -->
-        <tr>
+        <tr class="advanced">
           <td>Video orientation:</td>
           <td>
             <select id="orientationInput">
@@ -447,6 +455,20 @@
             but slightly reduces the accuracy of the corresponding time stamp.</td>
         </tr>
       </table>
+      <br/>
+      <table>
+        <tr>
+          <th colspan="2">Advanced</th>
+          <th style="text-align: right;">
+            <button id="reload"><i class="fa fa-repeat"></i> Reset all setting and reload page</button></div>
+          </th>
+        </tr>
+        <tr>
+          <td></td>
+          <td><input type="checkbox" id="advanced"></td>
+          <td>Show advanced settings.</td>
+        </tr>
+      </table>
     </div>
   </div>
 
@@ -454,7 +476,9 @@
     <div class="modal-content"> <span class="close">&times;</span>
       <h2>Video File Info</h2>      
       <div id="videoInfo"></div>
-      Tracking window: <canvas id="tempCanvas"></canvas>
+      <div class="advanced">
+        Template image: <canvas id="tempCanvas"></canvas>
+      </div>
     </div>
   </div>
 
