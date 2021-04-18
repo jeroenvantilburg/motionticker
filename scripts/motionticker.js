@@ -1687,7 +1687,7 @@ SOFTWARE.
         roi.delete();
                 
         // For debugging: show template image in advanced mode
-        cv.imshow('templateCanvas', template );
+        if( $('#advanced').prop('checked') ) cv.imshow('templateCanvas', template );
         
         // Draw it on image
         trackingBox.set({ left: xPos, top: yPos });
