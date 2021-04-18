@@ -1582,7 +1582,7 @@ SOFTWARE.
   /* ======= AUTOMATIC ANALYSIS SECTION ========
      Two implementations of template matching:
      1. from OpenCV (select TM_XXX in mode)
-     2. from own implementation (select MIN_XXX)
+     2. in pure JS (select MIN_XXX)
      =========================================== */  
 
   // Convert image before template matching using the cvtColor mode
@@ -1731,7 +1731,7 @@ SOFTWARE.
     return rect;
   }
 
-  // Automatic analysis (new)
+  // Automatic analysis: template matching in pure JS. Keep in mind that this is slow!
   function templateMatching_min() {
     
     $('#statusMsg').html( "Processing..." );
@@ -1793,6 +1793,7 @@ SOFTWARE.
         for(let x=0; x<roiWidth-templateWidth; ++x ) {
           for(let y=0; y<roiHeight-templateHeight; ++y ) {
                         
+            // Only SQDIFF is implemented for now
             let sqdiff = 0.0;
             for(let j=0; j < templateHeight; ++j ) {
               for(let i=0; i < templateWidth; ++i ) {
