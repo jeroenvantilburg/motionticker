@@ -22,9 +22,9 @@ pre {
   font-family: "Courier New",Courier,Arial,Verdana;
 }
 
+/* Input and select boxes */
 input, select {
   text-align: right;
-  /*background-color: rgba(255,255,255,0.2);*/
   margin-top: 0px;
   margin-bottom: 0px;
   padding: 1px;
@@ -42,11 +42,13 @@ input:disabled+label {
   color: #bbb;
 }
 
+/* General styling */
 .center {
   text-align: center;
   margin: 2px;
 }
 
+/* Styling for Chartjs charts */
 .chart {
   border:1px solid #ccc;
 }
@@ -56,12 +58,14 @@ input:disabled+label {
   height: 250px;
 }
 
+/* Video and its canvas */
 .container video, .container canvas {
   position:absolute;
   top:  0px;
   border: 0px solid #ccc;
 }
 
+/* Video controls */
 .player {
   width: 35px;
   background: #666666;
@@ -81,6 +85,7 @@ input:disabled+label {
   vertical-align: middle;
 }
 
+/* Text inside the video (for displaying zoom and time) */
 #videoText{
   position: absolute;
   top: 3px;
@@ -89,13 +94,13 @@ input:disabled+label {
   text-shadow: 1px 0px 1px white, 0px 1px 1px white, 0px -1px 1px white, -1px 1px 1px white;
 }
 
+/* Input box for the ruler */
 #distanceInput {
   position: absolute;
   width: 50px;
   margin: 0px;
   padding: 0px;
   padding-right: 2px;
-  /*font-size: 14px;*/
   background-color: rgba(255,255,255,0.0);
   border: none;
 }
@@ -202,7 +207,7 @@ input:disabled+label {
 }
 
 
-/* Layout for the main button */
+/* Layout for the start and stop button */
 .main-button {
   background-color: #4CAF50;
   border: none;
@@ -226,8 +231,6 @@ input:disabled+label {
 .button-off {
   background-color: rgb(182, 0, 0);
 }
-
-
 
 
 
@@ -274,11 +277,6 @@ input:disabled+label {
   font-family: inherit; /* Important for vertical align on mobile phones */
   margin: 0; /* Important for vertical align on mobile phones */
 }
-
-/* Add a grey background color to menu bars on hover */
-/*.dropdown:hover .dropbtn {
-  background-color: #aaa;
-}*/
 
 /* Dropdown content (hidden by default) */
 .dropdown-content {
@@ -373,6 +371,7 @@ input:disabled+label {
   height: 80vh;
 }
 
+/* Table inside the mediaInfo modal */
 #mediaInfoModal table {
   border-collapse: collapse;
   margin-bottom: 20px;
@@ -401,6 +400,7 @@ input:disabled+label {
 }
 
 
+/* Table in the Settings modal */
 #settingsModal table {
   border: 1px solid #ddd;
   border-radius: 10px;

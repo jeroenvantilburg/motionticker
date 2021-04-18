@@ -29,17 +29,16 @@ SOFTWARE.
      =========================================== */
   
   // HTML elements
-  let video              = document.getElementById('video');
-  //let videoImage; // canvas of video
-  let canvasVideo = document.getElementById('canvasVideo');
-  let canvasVideoCtx = canvasVideo.getContext('2d');
+  let video           = document.getElementById('video');
+  let canvasVideo     = document.getElementById('canvasVideo');
+  let canvasVideoCtx  = canvasVideo.getContext('2d');
   canvasVideoCtx.save();
   
   // Global video parameters
   let currentFrame = 0;
   let t0 = 0;
   let zoomLevel = 1;
-  let FPS;
+  let FPS; // Frame rate
   let pixelsPerMeter;
   let distanceInMeter;
   let originX, originY; // in pixels
@@ -89,6 +88,97 @@ SOFTWARE.
     }
   }
 
+  // load all code after the document
+  $("document").ready( () => {
+    $("#videoImport").removeAttr('disabled'); // Videos can now be imported
+    resizeWindow(); // Trigger resize for responsive effect
+    setFeedback();
+  });
+  
+  // set the feedback tag
+  function setFeedback() {
+    var name = "smackjvantilburgsmack"; // add salt
+    name = name.substr(5,11); // remove salt
+    $("feedback").html(name+"@gmail.com");  
+  }
+
+  /* ======= DROPDOWN MENU SECTION =============
+     Hovering, clicking on dropdown menu
+     =========================================== */  
+
+  // Event listeners for the dropdown menu
+  function showDropdownMenu() { 
+    $(".dropbtn").css("background-color","#aaa");
+    $(".dropdown-content").show();}
+  function hideDropdownMenu() {
+    $(".dropbtn").css("background-color","inherit");
+    $(".dropdown-content").hide();
+  }
+  $(".dropdown").hover( showDropdownMenu, hideDropdownMenu );
+  $(".dropdown-content").on("click", hideDropdownMenu );
+  $(".dropbtn").on("click touchend", (e) => { 
+    // prevent touch event from propagating and showing dropdown via onmouseenter + click method
+    if( e.type == "touchend" ) e.preventDefault();    
+    if( $(".dropdown-content").is(":visible") ) hideDropdownMenu() ;
+    else if( $(".dropdown-content").is(":hidden") ) showDropdownMenu() ;
+  } );
+  // Close the dropdown menu when user touches anywhere outside the menu
+  $(window).on("touchend", (e) => {
+    if( $(".dropdown-content").is(":visible") &&
+        $(".dropdown").has(e.target).length == 0 ) hideDropdownMenu();
+  });
+
+  
+  /* ============= MODAL SECTION =================
+     Define functions for the modal boxes.
+     Shows and hides the modal boxes.
+     =========================================== */    
+
+  // Event listener for the different modal boxes
+  $("#showMediaInfo").click( evt => { writeVideoInfo(); showModal("mediaInfoModal"); });
+  $("#showAbout").click( evt => { showModal("aboutModal"); } );
+  $("#showHelp").click( evt => { showModal("helpModal");} );
+  $("#showSettings").click( evt => { showModal("settingsModal");} );
+  $(".chart").click( function() { showModalChart( this ); showModal("graphModal"); });
+  
+  // Showing modal box
+  function showModal(name) { $("#"+name).toggle(); }
+
+  // When the user clicks on <span> (x), close the current modal
+  $(".close").on("click", function() { $(this).parent().parent().toggle(); });
+  
+  // When the user clicks anywhere outside of the modal, close it
+  $(window).on("click", function(event) {
+    if( event.target.className === "modal" ) event.target.style.display = "none";
+  });
+
+  
+  /* ===== INPUT TEXT ELEMENTS SECTION =========
+     Define functions for the modal boxes.
+     Shows and hides the modal boxes.
+     =========================================== */    
+
+  // Remove focus after enter for all input text elements
+  let focusedElement;
+  function blurOnEnter(e){ 
+    if(e.keyCode===13){ 
+      e.target.blur();
+      focusedElement = null;
+    } 
+  }
+  $("input[type=text]").on("keydown", blurOnEnter );
+
+  // Put cursor always at last position when clicking on input text element
+  $(document).on('focus', 'input[type=text]', function () {    
+    //already focused, return so user can now place cursor at specific point in input.    
+    if (focusedElement == this) return; 
+    focusedElement = this;
+    // select all text in any field on focus for easy re-entry. 
+    // Delay sightly to allow focus to "stick" before selecting.
+    setTimeout(function () {focusedElement.setSelectionRange(9999,9999);}, 0);
+  });
+
+  
   /* ========== General functions ====================
       Useful functions to check/convert numbers
      ================================================= */
@@ -110,12 +200,6 @@ SOFTWARE.
       || (navigator.userAgent.includes("Mac") && "ontouchend" in document);  // iPad on iOS 13 detection
   }
 
-  /*function isQuicktime() {
-    let videoFile = $('#videoInput').prop('files')[0];
-    let videoType = (typeof videoFile === "undefined" ) ? "" : videoFile.type;
-    return videoType.toLowerCase() === ("video/quicktime").toLowerCase();
-  }*/
-
   function formatBytes(bytes, decimals = 2) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -124,7 +208,6 @@ SOFTWARE.
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   }
-
 
   /* ========= Load the MediaInfo library ============
        Dynamically choose between Wasm and 
@@ -211,7 +294,6 @@ SOFTWARE.
     axesOrigin.set({top: xAxis.top});
   });
   xAxis.on("moved", () => {
-    //let zoomLevel = canvas.width / video.videoWidth;
     $("#originYInput").val( xAxis.top / zoomLevel );
     $("#originYInput").change();
   });
@@ -219,7 +301,6 @@ SOFTWARE.
     axesOrigin.set({left: yAxis.left});
   });
   yAxis.on("moved", () => {
-    //let zoomLevel = canvas.width / video.videoWidth;
     $("#originXInput").val( yAxis.left / zoomLevel );
     $("#originXInput").change();
   });
@@ -244,25 +325,14 @@ SOFTWARE.
   let scaleBox = new fabric.Group( [ scaleRect, scaleTxt], 
                                    {left: 110, top: 50, selectable: false, evented: false}  );
   
+  // Set/update the position of the input box
   function setScaleBox() {    
     let length = Math.sqrt((scaleLine.x1-scaleLine.x2)**2 + (scaleLine.y1-scaleLine.y2)**2 );
     let xPos = scaleLine.left + (0.5*scaleBox.width+10)*(scaleLine.y2-scaleLine.y1)/length;
     let yPos = scaleLine.top + (0.5*scaleBox.height+10)*(scaleLine.x1-scaleLine.x2)/length;
     scaleBox.set({left: xPos, top: yPos });
-    
-    /*console.log("scalelin x,y = " +scaleLine.left+ ", "+ scaleLine.top )
-    console.log("scaleBox x,y = " + xPos + ", " +yPos );
-    console.log(scaleBox);
-    */
     scaleBox.setCoords();
-
-
-    
-    //let zoomLevel = 1; //canvas.width / video.videoWidth;                               
-    //$("#distanceInput").css({ transform: "scale("+ zoomLevel +")" });
-    //console.log(distHeight);
-    $("#distanceInput").css({ left: (xPos-6) + 8 - 0.5*scaleBox.width,
-                               top: yPos - 0.5*distHeight });
+    $("#distanceInput").css({ left: xPos + 2 - 0.5*scaleBox.width, top: yPos - 0.5*distHeight });
   }
   
   // Event listeners for ruler
@@ -394,7 +464,6 @@ SOFTWARE.
     $('#accelerationChart').toggle();
   });
   
-  
   let decimalSeparator = getDecimalSeparator();
   $("#decimalSeparatorInput").val( decimalSeparator );
   $("decimalSep").html( decimalSeparator );
@@ -423,15 +492,19 @@ SOFTWARE.
   $('#reload').on('click', function() {
     location.reload();
   });
-  
   // END USER SETTINGS
   
   
-  /* ==========  ====================
-     
+  /* ========== DELETE DATA SECTION ==================
+     Delete all data and update plots and buttons.
+     Check for unsaved changes when closing window.
      ================================================= */
 
-  
+  function dataCanBeRemoved() {
+    return (rawData.length == 0 || dataIsSaved ||
+           confirm("This will clear your current data. Are you sure?") );
+  }
+
   $("#deleteData").click( () => { 
     if( dataCanBeRemoved() ) { deleteRawData(); }
   });
@@ -459,78 +532,6 @@ SOFTWARE.
     return "You have unsaved changes.";
   });
   
-    
-  $("#zoomOut").click( () => {
-    if( canvas.width > 200 ) { // minimum 200 px should be small enough
-      setVideoZoom( 0.5*canvas.width / video.videoWidth );
-      $("#zoomIn").removeAttr('disabled');
-      if( canvas.width <= 200 ) $("#zoomOut").attr('disabled', '');
-    }
-  });
-
-  $("#zoomIn").click( () => {
-    if( canvas.width*canvas.height < 4e6 ) { // Maximum canvas size: 16 Mpx
-      setVideoZoom( 2*canvas.width / video.videoWidth );
-      $("#zoomOut").removeAttr('disabled');
-      if( canvas.width*canvas.height >= 4e6 ) $("#zoomIn").attr('disabled', '');
-    }
-  });
-  
-  // 
-  function setVideoZoom( newZoom ) {
-    // Calculate the relative zoom and save the previous zoom level
-    let relZoom = newZoom / zoomLevel;
-    let prevZoom = zoomLevel;
-        
-    // Update to new zoom level
-    zoomLevel = newZoom;
-
-    // Update the drawing canvas
-    canvas.setDimensions({ width: video.videoWidth * newZoom, 
-                           height: video.videoHeight * newZoom })
-
-    // Update axes
-    axesOrigin.set({ left: newZoom * $("#originXInput").val(), 
-                     top:  newZoom * $("#originYInput").val() });
-    axesOrigin.setCoords();
-    xAxis.set({x2: canvas.width, y1: axesOrigin.top, y2: axesOrigin.top} );
-    yAxis.set({x1: axesOrigin.left, x2: axesOrigin.left, y2: canvas.height } );  
-    xAxis.setCoords();
-    yAxis.setCoords();
-
-    // Update ruler
-    updateRuler( scaleCircle1.left/prevZoom, scaleCircle1.top/prevZoom,
-                 scaleCircle2.left/prevZoom, scaleCircle2.top/prevZoom );
-
-    // Update tracking box
-    trackingBox.set({ left: trackingBox.left * relZoom,
-                       top: trackingBox.top * relZoom, 
-                     width: trackingBox.width * relZoom, 
-                    height: trackingBox.height * relZoom });
-    trackingBox.setCoords();
-    
-    // Update the data markers
-    rawData.forEach( function (item) {
-      item.marker.set({ left: item.marker.left * relZoom,
-                         top: item.marker.top * relZoom});
-      item.marker.setCoords();
-    } );
-
-    // Finally update the calibration canvas
-    canvas.renderAll();
-    
-    // Update the video canvas
-    canvasVideo.width = video.videoWidth * newZoom;
-    canvasVideo.height = video.videoHeight * newZoom;
-    canvasVideoCtx.scale(newZoom,newZoom);
-    canvasVideoCtx.save(); // save unrotated state
-    rotateContext(); // rotate context due to bug/feature in iOS    
-    canvasVideoCtx.drawImage(video,0,0);
-    
-    // Show the current zoom level
-    flashTextOnVideo( zoomLevel + "x" );
-
-  }
   
   /* ============= CSV SECTION =================
        Import and export a csv file
@@ -548,49 +549,41 @@ SOFTWARE.
 
     const numberWithDecimalSeparator = 1.1;
     return numberWithDecimalSeparator.toLocaleString(locale).substring(1, 2);
-
-    // Format a number to get the decimal separator
-    //const numberWithDecimalSeparator = 1.1;
-    //return Intl.NumberFormat(locale)
-    //    .formatToParts(numberWithDecimalSeparator)
-    //    .find(part => part.type === 'decimal')
-    //    .value;
   }
   
-  function toCSV(number, precision = 6) {
+  function toCSV(number, precision = 6) { // precision=6 is maximum to be recognised as number
     // Store numbers to 6 digits precision
     return number.toPrecision(precision).toString().replace('.',decimalSeparator);
   }
 
-  // Settings for CSV
-  let timeStr  = "time [s]";
-  let posXStr  = "x position [m]";
-  let posYStr  = "y position [m]";
-  let velXStr  = "x velocity [m/s]";
-  let velYStr  = "y velocity [m/s]";
-  let accXStr  = "x acceleration [m/s²]";
-  let accYStr  = "y acceleration [m/s²]";
-  let fpsStr   = "Frame rate [Hz]";
-  let origXStr = "x origin [px]";
-  let origYStr = "y origin [px]";
-  let scaleStr = "Scale [px/m]";
+  // Text strings for the colums in the CSV file
+  let timeStr    = "time [s]";
+  let posXStr    = "x position [m]";
+  let posYStr    = "y position [m]";
+  let velXStr    = "x velocity [m/s]";
+  let velYStr    = "y velocity [m/s]";
+  let accXStr    = "x acceleration [m/s²]";
+  let accYStr    = "y acceleration [m/s²]";
+  let fpsStr     = "Frame rate [Hz]";
+  let origXStr   = "x origin [px]";
+  let origYStr   = "y origin [px]";
+  let scaleStr   = "Scale [px/m]";
   let scaleX1Str = "Scale Point1 x [px]";
   let scaleY1Str = "Scale Point1 y [px]";
   let scaleX2Str = "Scale Point2 x [px]";
   let scaleY2Str = "Scale Point2 y [px]";
-  let boxXStr  = "Tracking Box x [px]";
-  let boxYStr  = "Tracking Box y [px]";
-  let boxWStr  = "Tracking Box width [px]";
-  let boxHStr  = "Tracking Box height [px]";
+  let boxXStr    = "Tracking Box x [px]";
+  let boxYStr    = "Tracking Box y [px]";
+  let boxWStr    = "Tracking Box width [px]";
+  let boxHStr    = "Tracking Box height [px]";
   
-  // Event listener for export button
+  // Export the data to CSV file after clicking on menu item
   $("#csvExport").click( () => {
     
     // Check if there is data to be written
     if( rawData.length === 0 ) return;
     
-    // First line contains headers and meta data
-    //let zoomLevel = canvas.width / video.videoWidth;
+    // First line of CSV file contains headers and meta data
     let csvData = [];
     csvData.push({[timeStr]: "", [posXStr]: "", [posYStr]: "", 
                   [velXStr]: "", [velYStr]: "", [accXStr]: "", [accYStr]: "",
@@ -606,7 +599,7 @@ SOFTWARE.
                   [boxYStr]: toCSV( trackingBox.top/zoomLevel ),
                   [boxWStr]: toCSV( trackingBox.width*trackingBox.scaleX/zoomLevel ), 
                   [boxHStr]: toCSV( trackingBox.height*trackingBox.scaleY/zoomLevel )
-                 }  );
+                 } );
 
     // Remove velocity and/or acceleration depending on user setting
     if( showVelocity == false ) {
@@ -719,8 +712,18 @@ SOFTWARE.
     
     // Set the "data is saved" flag to true
     dataIsSaved = true;
-
   });
+
+  // Create an invisible download element
+  function download(filename, text) {
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  }
   
   // When cvsImport is clicked (dummy button) ask if data can be removed and trigger csvInput  
   $("#csvImport").click( () => {
@@ -731,7 +734,7 @@ SOFTWARE.
     }
   });
   
-  // Add event listener for when csv-file is selected
+  // Importing a CSV file into Motion Ticker
   $("#csvInput").change( function() {
     // Get the file
     let file = this.files[0];    
@@ -746,14 +749,9 @@ SOFTWARE.
             isNumeric( results.data[0][scaleStr] ) 
           ) {
 
-          // Remove the marker from the canvas
-          /*rawData.forEach(function (item) {
-            canvas.remove( item.marker );
-          });
-          rawData = []; // Clear old data
-          */
           deleteRawData(); // Clear old data
 
+          // Shortcut for the first line which contains the meta data
           let meta = results.data[0];
 
           // Update the ruler
@@ -771,7 +769,6 @@ SOFTWARE.
           // Update the tracking box
           if( isNumeric( meta[boxXStr] ) && isNumeric( meta[boxYStr] ) &&
               isNumeric( meta[boxWStr] ) && isNumeric( meta[boxHStr] ) ) {
-            //let zoomLevel = canvas.width / video.videoWidth;
             trackingBox.set({ left: toNumber( meta[boxXStr] )*zoomLevel, 
                                top: toNumber( meta[boxYStr] )*zoomLevel,
                              width: toNumber( meta[boxWStr] )*zoomLevel/trackingBox.scaleX,
@@ -784,10 +781,10 @@ SOFTWARE.
 
             // check not empty
             if( isNumeric(item[timeStr]) && isNumeric(item[posXStr]) && isNumeric(item[posYStr]) ) {
-              let time = Math.floor( toNumber(item[timeStr])*FPS );
-              let xPos = originX + toNumber(item[posXStr])*pixelsPerMeter;
-              let yPos = originY - toNumber(item[posYStr])*pixelsPerMeter;
-              let rawDataPoint = {t: time, x: xPos, y: yPos };  
+              let frame = Math.floor( toNumber(item[timeStr])*FPS );
+              let xPos  = originX + toNumber(item[posXStr])*pixelsPerMeter;
+              let yPos  = originY - toNumber(item[posYStr])*pixelsPerMeter;
+              let rawDataPoint = {t: frame, x: xPos, y: yPos };  
 
               addRawData( rawDataPoint );
             }
@@ -803,18 +800,6 @@ SOFTWARE.
     });
     
   });
-
-  // Create an invisible download element
-  function download(filename, text) {
-    var element = document.createElement('a');
-    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-    element.setAttribute('download', filename);
-    element.style.display = 'none';
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-  }
-
   
   /* ============= DEMO SECTION =================
        Loading the demo video with its settings
@@ -826,12 +811,7 @@ SOFTWARE.
 
       // Get the demo-file. Triggers loadedmetadata and loadeddata
       video.src = demoLocation;
-            
-      // TODO: put other settings to default values
-      
-      //$('#roiScale').val( 5 );
-      //$('#roiScale').change();
-            
+                  
       // Set automatic analysis if openCV is ready. Otherwise it is set when openCV.load is triggered
       if( openCVReady ) {
         $('#automaticAnalysis').prop('checked', true);
@@ -840,22 +820,21 @@ SOFTWARE.
     }
   });
 
-  
-
-  /* ============= Video SECTION =================
-       Importing a video file
+  /* ============= VIDEO SECTION =================
+     Importing a video file
      =========================================== */  
   
+  // Trigger click on videoInput when user clicks on menu item
   $("#videoImport").click( () => {
     if( dataCanBeRemoved() ) {      
-      // Progagate to hidden DOM element
-      //hideDropdownMenu();
+      // Progagate to (hidden) DOM element
       $("#videoInput").click();
     }
   });
   
+  // Clear old data and video stuff
   function clearDataAndVideo() {
-    // Remove old source
+    // Remove old video source
     video.removeAttribute('src'); // empty source
     video.load();
 
@@ -870,7 +849,7 @@ SOFTWARE.
     updateOrigin();
     canvas.clear();
     
-    canvasVideoCtx.restore(); // TODO: clear?
+    canvasVideoCtx.restore(); // Go back to original state
     $("#orientationInput").val("0"); 
     videoRotation = 0;
     
@@ -885,14 +864,13 @@ SOFTWARE.
   // Add event listener for when file is selected
   $("#videoInput").change( function() {
 
+    // Remove old data and video elements
     clearDataAndVideo();
 
     // Get the file
     let URL = window.URL || window.webkitURL;
     let file = this.files[0];
     video.src = URL.createObjectURL(file);
-    //console.log("video src=" + video.src);
-    
   });
   
   // video playback failed - show a message saying why
@@ -914,13 +892,8 @@ SOFTWARE.
         alert('An unknown error occurred.');
         break;
     }
-    disableAnalysis();
-    disableVideoControl();
-    $('#frameNumber').html( "0 / 0" );
-
-    // Remove old source
-    video.removeAttribute('src'); // empty source
-    video.load();
+    // Remove old data and video elements
+    clearDataAndVideo();
   });
   
   
@@ -933,9 +906,10 @@ SOFTWARE.
     // Set the dimensions of the video and prepare the canvas
     setVideoZoom(1.0);
     
-    //console.log( video.src )
+    // Prepare analysis for the demo video
     if( (video.src).endsWith( demoLocation ) ) {
 
+      // Set the origin, ruler and tracking box for the DEMO VIDEO (hardcoded)
       updateOrigin(32.85, 374.6 );
       updateRuler( 54.2, 184.7, 51.8, 370.5);
       updateScale( 185.8155 );      
@@ -951,22 +925,23 @@ SOFTWARE.
       updateFPS( "29.97" );
       
       $('#statusMsg').html('Click on "Start analysis" ' );
-      
       return;
     }
     
-    // Set initial position for the origin, scale and trackingBox (relative to video dimensions)
+    // Set initial position for the origin (relative to video dimensions)
     updateOrigin(0.1*video.videoWidth, 0.9*video.videoHeight);
 
-    // TODO: This should get a better name
+    // Set initial position for the scale/ruler (relative to video dimensions)
     updateRuler( 0.2*video.videoWidth, 0.3*video.videoHeight,
                  0.2*video.videoWidth, 0.7*video.videoHeight );
+
+    // Set initial position for the trackingBox (relative to video dimensions)
     trackingBox.set({left: 0.5*video.videoWidth, top: 0.3*video.videoHeight,
                      width: 0.1*video.videoWidth/trackingBox.scaleX, 
                      height: 0.1*video.videoHeight/trackingBox.scaleY });
     trackingBox.setCoords();
     
-    // Highlight fields that need to be filled
+    // Highlight fields that still need to be filled
     $("#scaleInput").css( "background", "pink");
     $("#fpsInput").css("background", "pink");
     
@@ -977,16 +952,16 @@ SOFTWARE.
     // Get the frame rate
     if( getMediaInfo ) getFPS();
     else $('#statusMsg').html("Set the frame rate manually");
-
   });
   
-  // Show video when it has been loaded
+  // Show the video when it has been loaded
   video.addEventListener('loadeddata', () => {    
     let firstFrame = 0;
     if( (video.src).endsWith( demoLocation ) ) firstFrame = 5; // exception for the demo
     gotoFrame( firstFrame );
   });
   
+  // Show the calibration controls (axes, origin, ruler, track box)
   function showCalibrationControls() {
     canvas.add( xAxis );
     canvas.add( yAxis );
@@ -998,6 +973,7 @@ SOFTWARE.
     $("#distanceInput").show();
   }
 
+  // Hide the calibration controls (axes, origin, ruler, track box)
   function hideCalibrationControls() {
     canvas.remove( xAxis );
     canvas.remove( yAxis );
@@ -1007,275 +983,14 @@ SOFTWARE.
     canvas.remove( scaleCircle2 );
     canvas.remove( scaleBox );
     $("#distanceInput").hide();
-  }
-    
-  
-  // Remove focus after enter for all input text elements
-  let focusedElement;
-  function blurOnEnter(e){ 
-    if(e.keyCode===13){ 
-      e.target.blur();
-      focusedElement = null;
-    } 
-  }
-  $("input[type=text]").on("keydown", blurOnEnter );
+  }  
 
-  // Put cursor always at last position when clicking on input text element
-  $(document).on('focus', 'input[type=text]', function () {    
-    //already focused, return so user can now place cursor at specific point in input.    
-    if (focusedElement == this) return; 
-    focusedElement = this;
-    // select all text in any field on focus for easy re-entry. 
-    // Delay sightly to allow focus to "stick" before selecting.
-    setTimeout(function () {focusedElement.setSelectionRange(9999,9999);}, 0);
-  });
+  /* ====== MEDIAINFO (FPS) SECTION ============
+     Get the frame rate (fps) and rotation
+     from the MediaInfo library
+     =========================================== */    
 
-  
-  function dataCanBeRemoved() {
-    return (rawData.length == 0 || dataIsSaved ||
-           confirm("This will clear your current data. Are you sure?") );
-  }
-  
-  // Update the frame rate (fps) when user gives input or when calculated
-  $("#fpsInput").change( function() {
-
-    if( isNumeric(this.value) && toNumber(this.value) > 0 && dataCanBeRemoved() ) {
-
-      // Remove status message
-      $('#statusMsg').html( "" );   
-      this.style.background = ""; // remove pink alert
-
-      // Set the new FPS
-      FPS = toNumber(this.value);
-
-      // Clear raw data
-      deleteRawData();
-      
-      if( video.src !== "" ) {
-        // Update the slider
-        $("#slider").attr("max", Math.round( ((video.duration-t0) * FPS).toFixed(1) ) - 1 );
-    
-        // Always reset to first frame
-        if( !(video.src).endsWith( demoLocation ) ) gotoFrame( 0 );
-        
-        // Video can be enabled
-        tryToEnable();
-      }
-    } //else {
-    this.value = FPS || "";
-    //}
-  });
-
-  function updateFPS( rate ) {
-    $("#fpsInput").val( rate );
-    $("#fpsInput").change();
-  }
-  
-  
-  // Update the origin when user gives input or when calculated
-  $("#originXInput").change( function() {
-    if( isNumeric(this.value) ) {
-      originX = toNumber( this.value );
-      
-      // Update the y-axis on the canvas
-      //let zoomLevel = canvas.width / video.videoWidth;
-      yAxis.set({x1: originX*zoomLevel, y1: 0, 
-                 x2: originX*zoomLevel, y2: canvas.height} );
-      yAxis.setCoords();
-      axesOrigin.set({left: originX*zoomLevel });
-      axesOrigin.setCoords();
-      canvas.requestRenderAll();
-      
-      // Update plots
-      updatePlots();
-    } //else {
-    this.value = (typeof originX !== "undefined" ) ? originX : "";
-    //}
-  });
-  $("#originYInput").change( function() {
-    if( isNumeric(this.value) ) {
-      originY = toNumber( this.value ) ;
-      
-      // Update the x-axis on the canvas
-      //let zoomLevel = canvas.width / video.videoWidth;
-      xAxis.set({x1: 0, y1: originY*zoomLevel, 
-                 x2: canvas.width, y2: originY*zoomLevel} );
-      xAxis.setCoords();
-      axesOrigin.set({top: originY*zoomLevel });
-      axesOrigin.setCoords();
-      canvas.requestRenderAll();
-
-      // Update plots
-      updatePlots();
-    } //else {
-    this.value = (typeof originY !== "undefined" ) ? originY : "";
-    //}
-  });
-  
-  
-  // Update the scale when user gives input
-  $("#distanceInput").change( function() {
-    if( isNumeric(this.value) && toNumber(this.value) > 0 ) {
-      distanceInMeter = toNumber( this.value );
-      setScale();
-    } //else {
-    this.value = distanceInMeter || "";
-    //}
-
-  });
-  
-  
-  // Update the scale when user gives input or when calculated
-  $("#scaleInput").change( function() {
-    if( isNumeric(this.value) && toNumber(this.value) > 0 ) {
-      pixelsPerMeter = toNumber( this.value );   
-      this.style.background = '';
-      // Enable video analysis
-      tryToEnable() ;
-      // Set the distanceInMeter
-      //let zoomLevel = canvas.width / video.videoWidth;
-      let scale1 = {x: scaleCircle1.left/zoomLevel, y: scaleCircle1.top/zoomLevel };
-      let scale2 = {x: scaleCircle2.left/zoomLevel, y: scaleCircle2.top/zoomLevel };
-      let dist = Math.sqrt((scale2.x-scale1.x)**2 + (scale2.y-scale1.y)**2);
-      distanceInMeter = parseFloat( (dist / pixelsPerMeter).toPrecision(6) ) ;
-      $("#distanceInput").val( distanceInMeter );
-      // Update plots
-      updatePlots();
-    } //else {
-    this.value = pixelsPerMeter || "";
-    //}
-  });
-  
-  function tryToEnable() {
-    if( video.src !== "" ) {
-      if( $("#fpsInput").val() !== "" ) enableVideoControl();
-      if( $("#fpsInput").val() !== "" && $("#scaleInput").val() !== "" ) enableAnalysis();
-    }
-  }
-  
-  // Enable the video control buttons
-  function enableVideoControl() {
-    $('#prev').removeAttr('disabled');
-    $('#play').removeAttr('disabled');
-    $('#next').removeAttr('disabled');
-    $('#slider').removeAttr('disabled');
-    $("#zoomIn").removeAttr('disabled');
-    $("#zoomOut").removeAttr('disabled');
-    $('#showMediaInfo').removeAttr('disabled');
-  }
-
-  // Disable the video control buttons
-  function disableVideoControl() {
-    $('#prev').attr('disabled', '');
-    $('#play').attr('disabled', '');
-    $('#next').attr('disabled', '');
-    $('#slider').attr('disabled', '');  
-    $("#zoomIn").attr('disabled', '');
-    $("#zoomOut").attr('disabled', '');
-    $("#showMediaInfo").attr('disabled', '');
-  }
-  
-  // load all code after the document
-  $("document").ready( () => {
-    $("#videoImport").removeAttr('disabled');
-    resizeWindow();
-  });
-  
-
-  // Event listeners for the dropdown menu
-  function showDropdownMenu() { 
-    $(".dropbtn").css("background-color","#aaa");
-    $(".dropdown-content").show();}
-  function hideDropdownMenu() {
-    $(".dropbtn").css("background-color","inherit");
-    $(".dropdown-content").hide();
-  }
-  $(".dropdown").hover( showDropdownMenu, hideDropdownMenu );
-  $(".dropdown-content").on("click", hideDropdownMenu );
-  $(".dropbtn").on("click touchend", (e) => { 
-    // prevent touch event from propagating and showing dropdown via onmouseenter + click method
-    if( e.type == "touchend" ) e.preventDefault();    
-    if( $(".dropdown-content").is(":visible") ) hideDropdownMenu() ;
-    else if( $(".dropdown-content").is(":hidden") ) showDropdownMenu() ;
-  } );
-  // Close the dropdown menu when user touches anywhere outside the menu
-  $(window).on("touchend", (e) => {
-    if( $(".dropdown-content").is(":visible") &&
-        $(".dropdown").has(e.target).length == 0 ) hideDropdownMenu();
-  });
-
-
-  
-
-  // Event listener for the modal boxes
-  $("#showMediaInfo").click( evt => { writeVideoInfo(); showModal("mediaInfoModal"); });
-  $("#showAbout").click( evt => { showModal("aboutModal");} );
-  $("#showHelp").click( evt => { showModal("helpModal");} );
-  $("#showSettings").click( evt => { showModal("settingsModal");} );
-  $(".chart").click( function() { showModalChart( this ); showModal("graphModal"); });
-  
-  /* Define functions for the modal box */
-  let currentModal = "";
-
-  // Showing modal box
-  function showModal(name) {
-    // Set the feedback tag
-    setFeedback();
-
-    let text = document.getElementById(name);
-    text.style.display = "block";
-    currentModal = name;
-  }
-
-  // When the user clicks on <span> (x), close the current modal
-  let closeButtons = document.getElementsByClassName("close");
-  for( var i=0; i < closeButtons.length; ++i) {
-    closeButtons[i].onclick = function() {
-      document.getElementById(currentModal).style.display = "none"; 
-      currentModal = "";
-    }
-  }
-
-  // When the user clicks anywhere outside of the modal, close it
-  window.onclick = function(event) {
-    if (event.target == document.getElementById(currentModal) ) {
-      document.getElementById(currentModal).style.display = "none";
-    }
-  }
-
-  // set the feedback tag
-  function setFeedback() {
-    var name = "smackjvantilburgsmack"; // add salt
-    name = name.substr(5,11); // remove salt
-    $("feedback").html(name+"@gmail.com");  
-  }
-  
-  // Draw and/or update the chart in the modal box
-  let modalChart;
-  function showModalChart( thisCanvas ) { 
-
-    // Get the right chart
-    let chart;
-    Chart.helpers.each(Chart.instances, function(instance){
-      if( instance.canvas == thisCanvas ) chart = instance;
-    });
-    if( !chart ) return;
-    
-    // create a new chart or just update
-    if( (typeof modalChart === "undefined" ) ) {
-      ctx = document.getElementById("modalChart").getContext('2d') ;
-      modalChart = new Chart(ctx, {
-        type: chart.config.type,
-        data: chart.config.data, 
-        options: chart.config.options
-      });
-    } else { // update
-      modalChart.data = chart.config.data;
-      modalChart.options = chart.config.options;
-      modalChart.update();   
-    } 
-  } 
-    
+  // Get the frame rate and the rotation from the MediaInfo library 
   function getFPS() {
     $('#statusMsg').html( "Calculating frame rate... <i class='fa fa-spinner fa-spin fa-fw'></i>" );
        
@@ -1288,13 +1003,10 @@ SOFTWARE.
       if( iOS() && videoRotation ) {        
         if( Math.abs(90 - videoRotation) < 1 ) {
           $("#orientationInput").val( "90" );
-          //console.log("found 90 cw");
         } else if( Math.abs(180 - videoRotation ) < 1 ) {
           $("#orientationInput").val( "180" );
-          //console.log("found 180 cw");
         } else if( Math.abs(270 - videoRotation ) < 1 ) { 
           $("#orientationInput").val( "270" );
-          //console.log("found 90 ccw");
         }
         canvasVideoCtx.save(); // save unrotated state
         rotateContext();
@@ -1323,8 +1035,42 @@ SOFTWARE.
     }    
   }
   
-  function rotateContext() {
+  // Update the frame rate (fps)
+  function updateFPS( rate ) {
+    $("#fpsInput").val( rate );
+    $("#fpsInput").change();
+  }
+
+  // Update the frame rate (fps) when user gives input or when calculated
+  $("#fpsInput").change( function() {
+    if( isNumeric(this.value) && toNumber(this.value) > 0 && dataCanBeRemoved() ) {
+
+      // Remove status message
+      $('#statusMsg').html( "" );   
+      this.style.background = ""; // remove pink alert
+
+      // Set the new FPS
+      FPS = toNumber(this.value);
+
+      // Clear raw data
+      deleteRawData();
+      
+      if( video.src !== "" ) {
+        // Update the slider
+        $("#slider").attr("max", Math.round( ((video.duration-t0) * FPS).toFixed(1) ) - 1 );
     
+        // Always reset to first frame
+        if( !(video.src).endsWith( demoLocation ) ) gotoFrame( 0 );
+        
+        // Video can be enabled
+        tryToEnable();
+      }
+    }
+    this.value = FPS || "";
+  });
+
+  // Rotate the video context (only needed for iOS due to bug)
+  function rotateContext() {
     canvasVideoCtx.restore(); // remove old rotation
     canvasVideoCtx.save();    // save for next time
     if( $("#orientationInput").val() == "0" ) return;
@@ -1344,55 +1090,160 @@ SOFTWARE.
       if( aspectRatio < 1 ) canvasVideoCtx.scale( 1/aspectRatio, 1);
       else canvasVideoCtx.scale( 1/aspectRatio, aspectRatio );
     }
+  }
 
-  } 
-
-  function writeVideoInfo() {
-    // Show video info
-    let videoFile = $('#videoInput').prop('files')[0];
-    let videoName = "", videoType = "", videoSize = "";
-    if( typeof videoFile !== "undefined" ) {
-      videoName = videoFile.name;
-      videoType = videoFile.type;
-      videoSize = formatBytes(videoFile.size);
+  /* ========= CALIBRATION SECTION ============
+     Calibration controls for the video analysis:
+     - setting origin
+     - setting scale with ruler or directly
+     =========================================== */    
+  
+  // Update the origin when user gives input or when calculated
+  $("#originXInput").change( function() {
+    if( isNumeric(this.value) ) {
+      originX = toNumber( this.value );
+      
+      // Update the y-axis on the canvas
+      yAxis.set({x1: originX*zoomLevel, y1: 0, 
+                 x2: originX*zoomLevel, y2: canvas.height} );
+      yAxis.setCoords();
+      axesOrigin.set({left: originX*zoomLevel });
+      axesOrigin.setCoords();
+      canvas.requestRenderAll();
+      
+      // Update plots
+      updatePlots();
     }
-    let videoInfo = [{ "@type": videoName, "Duration": toCSV(video.duration)+" s", 
-                       "Width": video.videoWidth + " px", "Height": video.videoHeight + " px",
-                       "Rotation": videoRotation + "&deg;", "MIME type": videoType,
-                       "File size": videoSize }];
+    this.value = (typeof originX !== "undefined" ) ? originX : "";
+  });
+  $("#originYInput").change( function() {
+    if( isNumeric(this.value) ) {
+      originY = toNumber( this.value ) ;
+      
+      // Update the x-axis on the canvas
+      xAxis.set({x1: 0, y1: originY*zoomLevel, 
+                 x2: canvas.width, y2: originY*zoomLevel} );
+      xAxis.setCoords();
+      axesOrigin.set({top: originY*zoomLevel });
+      axesOrigin.setCoords();
+      canvas.requestRenderAll();
 
-    $("#videoInfo").html( convertToTable( videoInfo )  );
+      // Update plots
+      updatePlots();
+    }
+    this.value = (typeof originY !== "undefined" ) ? originY : "";
+  });
+  
+  // update origin
+  function updateOrigin(x,y) {
+    $("#originXInput").val( x );
+    $("#originYInput").val( y );
+    $("#originXInput").change();
+    $("#originYInput").change();
+  }
+
+  // Update the ruler's distanceInMeter when user gives input
+  $("#distanceInput").change( function() {
+    if( isNumeric(this.value) && toNumber(this.value) > 0 ) {
+      distanceInMeter = toNumber( this.value );
+      setScale();
+    }
+    this.value = distanceInMeter || "";
+  });
+  
+  // update scale directly (in pixels per meter)
+  function updateScale(scale) {
+    $("#scaleInput").val( scale );
+    $("#scaleInput").change();
+  }
+
+  // Update the scale when user gives input or when calculated
+  $("#scaleInput").change( function() {
+    if( isNumeric(this.value) && toNumber(this.value) > 0 ) {
+      pixelsPerMeter = toNumber( this.value );   
+      this.style.background = '';
+      // Enable video analysis
+      tryToEnable() ;
+      // Set the distanceInMeter
+      let scale1 = {x: scaleCircle1.left/zoomLevel, y: scaleCircle1.top/zoomLevel };
+      let scale2 = {x: scaleCircle2.left/zoomLevel, y: scaleCircle2.top/zoomLevel };
+      let dist = Math.sqrt((scale2.x-scale1.x)**2 + (scale2.y-scale1.y)**2);
+      distanceInMeter = parseFloat( (dist / pixelsPerMeter).toPrecision(6) ) ;
+      $("#distanceInput").val( distanceInMeter );
+      // Update plots
+      updatePlots();
+    }
+    this.value = pixelsPerMeter || "";
+  });
+
+  function tryToEnable() {
+    if( video.src !== "" ) {
+      if( $("#fpsInput").val() !== "" ) enableVideoControl();
+      if( $("#fpsInput").val() !== "" && $("#scaleInput").val() !== "" ) enableAnalysis();
+    }
   }
   
-  function convertToTable(tracks) {
-    let output = "\n <table>";
-    tracks.forEach(track => {
-      //if( track["@type"] === "Video") {
-      for (const [key, value] of Object.entries(track)) {
-        if( key === "@type" ) {
-          output += `<tr class="table-header"><th colspan=2>${value}</th></tr>\n`;
-        } else {
-          output += `<tr><td>${key}</td><td>${value}</td></tr>\n`;
-        }
-      }
-    } );
-    output += "</table>";
+  function updateRuler( scaleX1, scaleY1, scaleX2, scaleY2 ) {
+    scaleLine.set({x1: scaleX1*zoomLevel, y1: scaleY1*zoomLevel, 
+                   x2: scaleX2*zoomLevel, y2: scaleY2*zoomLevel });
+    scaleCircle1.set({left: scaleLine.x1, top: scaleLine.y1});
+    scaleCircle2.set({left: scaleLine.x2, top: scaleLine.y2});
+    scaleLine.setCoords();
+    scaleCircle1.setCoords();
+    scaleCircle2.setCoords();
+    setScaleBox();
+  }
+  
+  // Set the scale 
+  function setScale() {    
+    // Check if distanceInMeter is set
+    if( distanceInMeter ) {
+      // Get the scale points
+      let scale1 = {x: scaleCircle1.left/zoomLevel, y: scaleCircle1.top/zoomLevel };
+      let scale2 = {x: scaleCircle2.left/zoomLevel, y: scaleCircle2.top/zoomLevel };
+
+      // Update scale
+      updateScale( Math.sqrt((scale2.x-scale1.x)**2 + (scale2.y-scale1.y)**2) / distanceInMeter );
+    }
+  }
     
-    return output;
+  /* ======== VIDEO CONTROL SECTION ============
+     Control the video with play/stop, next and
+     prev functions
+     =========================================== */    
+
+  // Enable the video control buttons
+  function enableVideoControl() {
+    $('#prev').removeAttr('disabled');
+    $('#play').removeAttr('disabled');
+    $('#next').removeAttr('disabled');
+    $('#slider').removeAttr('disabled');
+    $("#zoomIn").removeAttr('disabled');
+    $("#zoomOut").removeAttr('disabled');
+    $('#showMediaInfo').removeAttr('disabled');
   }
-  
-  
-  $('#prev').click(function() {
-    // Go to next frame
-    gotoFrame(currentFrame-1);
-  });
 
-  $('#next').click(function() {
-    // Go to next frame
-    gotoFrame(currentFrame+1);
-  });
+  // Disable the video control buttons
+  function disableVideoControl() {
+    $('#prev').attr('disabled', '');
+    $('#play').attr('disabled', '');
+    $('#next').attr('disabled', '');
+    $('#slider').attr('disabled', '');  
+    $("#zoomIn").attr('disabled', '');
+    $("#zoomOut").attr('disabled', '');
+    $("#showMediaInfo").attr('disabled', '');
+  }
 
-  
+  // Go to the previous frame
+  $('#prev').click(function() { gotoFrame(currentFrame-1); });
+
+  // Go to the next frame
+  $('#next').click(function() { gotoFrame(currentFrame+1); });
+
+  // Update the frame when slider changes
+  $("#slider").change( function() { gotoFrame(Math.floor(this.value)); });
+
+  // Play the video (not an essential functio, just to give the user a play button)
   let playIntervalID=0;
   let playing = false;
   $('#play').click(function() {
@@ -1413,67 +1264,174 @@ SOFTWARE.
       window.clearInterval( playIntervalID );    
     }
   });
-  
-  $("#slider").change( function() {
-    // Go to next frame
-    gotoFrame(Math.floor(this.value));
-  });
 
-
-  let canvasClick = "";
-    
-  canvas.on('mouse:up', (evt) => {
-    if( canvasClick === "addRawDataPoint" ) {
-      addRawDataPoint(evt);
-    } 
-  });
-        
-  // update origin
-  function updateOrigin(x,y) {
-    $("#originXInput").val( x );
-    $("#originYInput").val( y );
-    $("#originXInput").change();
-    $("#originYInput").change();
+  // Show the text on the video and remove it after 1 s
+  let videoTimeoutID = 0;
+  function flashTextOnVideo( text ) {
+    $("#videoText").html( text );
+    clearTimeout( videoTimeoutID ); // remove previous timeout
+    videoTimeoutID = setTimeout( () =>{ $("#videoText").html( "" ); }, 1000 );
   }
   
-  function updateRuler( scaleX1, scaleY1, scaleX2, scaleY2 ) {
-    //let zoomLevel = canvas.width / video.videoWidth;
-    scaleLine.set({x1: scaleX1*zoomLevel, y1: scaleY1*zoomLevel, 
-                   x2: scaleX2*zoomLevel, y2: scaleY2*zoomLevel });
-    scaleCircle1.set({left: scaleLine.x1, top: scaleLine.y1});
-    scaleCircle2.set({left: scaleLine.x2, top: scaleLine.y2});
-    scaleLine.setCoords();
-    scaleCircle1.setCoords();
-    scaleCircle2.setCoords();
-    setScaleBox();
-    //updateScale(scale);
+  // Get the time from a frame number
+  function getTime(targetFrame) {
+    return FPS ? (t0 + (targetFrame + 0.5)/FPS) : 0 ;
   }
-  
-  // Set the scale 
-  function setScale() {
-    
-    // Check if distanceInMeter is set
-    if( distanceInMeter ) {
-      // Get the scale points
-      //let zoomLevel = canvas.width / video.videoWidth;
-      let scale1 = {x: scaleCircle1.left/zoomLevel, y: scaleCircle1.top/zoomLevel };
-      let scale2 = {x: scaleCircle2.left/zoomLevel, y: scaleCircle2.top/zoomLevel };
+
+  // Move the video to the given target frame
+  function gotoFrame(targetFrame) {
+    let newTime = getTime( targetFrame );     
+    if( newTime < t0 ) {
+      return false;
+    } else if( newTime > video.duration ) {
+      return false;
+    } else {
+      // Draw the current time and remove it after 1 s
+      flashTextOnVideo( newTime.toFixed(2) + " s" );
       
-      //console.log( scale1 );
-      //console.log( scale2 );
-
-
-      // Update scale
-      updateScale( Math.sqrt((scale2.x-scale1.x)**2 + (scale2.y-scale1.y)**2) / distanceInMeter );
+      // Highlight the new marker
+      let currentDataPoint = rawData.find(entry => entry.t === currentFrame );
+      if( currentDataPoint ) {
+        unHighlightMarker( currentDataPoint.marker );
+        if ( !drawAllPoints ) canvas.remove( currentDataPoint.marker );
+      }
+      let nextDataPoint = rawData.find(entry => entry.t === targetFrame );
+      if( nextDataPoint ) {
+        let nextMarker = nextDataPoint.marker;
+        highlightMarker( nextMarker );
+        if( !analysisStarted && automaticAnalysis ) {  // Also update tracking box
+          trackingBox.set({ left: nextMarker.left, top: nextMarker.top });
+          trackingBox.setCoords();
+        }
+      }
+      canvas.requestRenderAll();
+    
+      currentFrame = targetFrame;
+      video.currentTime = newTime;
+      video.addEventListener("seeked", function(e) {
+        // remove the handler or else it will draw another frame on the same canvas in next seek
+        e.target.removeEventListener(e.type, arguments.callee); 
+        
+        canvasVideoCtx.drawImage(video,0,0);
+        $('#frameNumber').html( currentFrame + " / " + $("#slider").attr("max") );
+        $("#slider").val( currentFrame );
+      });
+      return true;
     }
   }
-    
-  // update scale
-  function updateScale(scale) {
-    //console.log(scale);
-    $("#scaleInput").val( scale );
-    $("#scaleInput").change();
+  
+  // Show the video information in the video info modal
+  function writeVideoInfo() {
+    // Show video info
+    let videoFile = $('#videoInput').prop('files')[0];
+    let videoName = "", videoType = "", videoSize = "";
+    if( typeof videoFile !== "undefined" ) {
+      videoName = videoFile.name;
+      videoType = videoFile.type;
+      videoSize = formatBytes(videoFile.size);
+    }
+    let videoInfo = [{ "Name": videoName, "Duration": toCSV(video.duration)+" s", 
+                       "Width": video.videoWidth + " px", "Height": video.videoHeight + " px",
+                       "Rotation": videoRotation + "&deg;", "MIME type": videoType,
+                       "File size": videoSize }];
+    $("#videoInfo").html( convertToTable( videoInfo )  );
   }
+  
+  // Make a nice looking table from the video info object
+  function convertToTable(tracks) {
+    let output = "\n <table>";
+    tracks.forEach(track => {
+      for (const [key, value] of Object.entries(track)) {
+        if( key === "Name" ) {
+          output += `<tr class="table-header"><th colspan=2>${value}</th></tr>\n`;
+        } else {
+          output += `<tr><td>${key}</td><td>${value}</td></tr>\n`;
+        }
+      }
+    } );
+    output += "</table>";  
+    return output;
+  }
+
+  /* ============ ZOOMING SECTION ====================
+     Zooming in and out on the video
+     ================================================= */
+
+  $("#zoomOut").click( () => {
+    if( canvas.width > 200 ) { // minimum 200 px should be small enough
+      setVideoZoom( 0.5*canvas.width / video.videoWidth );
+      $("#zoomIn").removeAttr('disabled');
+      if( canvas.width <= 200 ) $("#zoomOut").attr('disabled', '');
+    }
+  });
+
+  $("#zoomIn").click( () => {
+    if( canvas.width*canvas.height < 4e6 ) { // Maximum canvas size: 16 Mpx
+      setVideoZoom( 2*canvas.width / video.videoWidth );
+      $("#zoomOut").removeAttr('disabled');
+      if( canvas.width*canvas.height >= 4e6 ) $("#zoomIn").attr('disabled', '');
+    }
+  });
+  
+  // The actual zooming function
+  function setVideoZoom( newZoom ) {
+    // Calculate the relative zoom and save the previous zoom level
+    let relZoom = newZoom / zoomLevel;
+    let prevZoom = zoomLevel;
+        
+    // Update to new zoom level
+    zoomLevel = newZoom;
+
+    // Update the drawing canvas
+    canvas.setDimensions({ width: video.videoWidth * newZoom, 
+                           height: video.videoHeight * newZoom })
+
+    // Update axes
+    axesOrigin.set({ left: newZoom * $("#originXInput").val(), 
+                     top:  newZoom * $("#originYInput").val() });
+    axesOrigin.setCoords();
+    xAxis.set({x2: canvas.width, y1: axesOrigin.top, y2: axesOrigin.top} );
+    yAxis.set({x1: axesOrigin.left, x2: axesOrigin.left, y2: canvas.height } );  
+    xAxis.setCoords();
+    yAxis.setCoords();
+
+    // Update ruler
+    updateRuler( scaleCircle1.left/prevZoom, scaleCircle1.top/prevZoom,
+                 scaleCircle2.left/prevZoom, scaleCircle2.top/prevZoom );
+
+    // Update tracking box
+    trackingBox.set({ left: trackingBox.left * relZoom,
+                       top: trackingBox.top * relZoom, 
+                     width: trackingBox.width * relZoom, 
+                    height: trackingBox.height * relZoom });
+    trackingBox.setCoords();
+    
+    // Update the data markers
+    rawData.forEach( function (item) {
+      item.marker.set({ left: item.marker.left * relZoom,
+                         top: item.marker.top * relZoom});
+      item.marker.setCoords();
+    } );
+
+    // Finally update the calibration canvas
+    canvas.renderAll();
+    
+    // Update the video canvas
+    canvasVideo.width = video.videoWidth * newZoom;
+    canvasVideo.height = video.videoHeight * newZoom;
+    canvasVideoCtx.scale(newZoom,newZoom);
+    canvasVideoCtx.save(); // save unrotated state
+    rotateContext(); // rotate context due to bug/feature in iOS    
+    canvasVideoCtx.drawImage(video,0,0);
+    
+    // Show the current zoom level
+    flashTextOnVideo( zoomLevel + "x" );
+  }
+  
+  
+  /* =========== ANALYSIS SECTION =============
+     Enable/disable button
+     =========================================== */    
 
   // Enable automatic analysis only when openCV is ready
   let openCVReady = false;
@@ -1516,7 +1474,6 @@ SOFTWARE.
     $("#startAnalysis").attr('disabled', '');    
     setStartAnalysis();
     $('#statusMsg').html("");
-    canvasClick = "";
   }
   
   // Event listener when clicking "Start/Stop analysis" button
@@ -1537,7 +1494,6 @@ SOFTWARE.
       hideCalibrationControls();
 
       if( automaticAnalysis ) {
-        canvasClick = "";
         if( templateMatchMode == "MIN_SQDIFF" ) {
           templateMatching_min();
         } else {
@@ -1545,7 +1501,6 @@ SOFTWARE.
         }
       } else {
         $('#statusMsg').html( "Click on the object" );
-        canvasClick = "addRawDataPoint";
       }
     } else {
       // Change the button to "Start analysis"
@@ -1555,26 +1510,10 @@ SOFTWARE.
       showCalibrationControls();
 
       $('#statusMsg').html( "" );
-      canvasClick = "";
     }    
   });
 
-  
-  function addRawDataPoint(evt) {
-    // Get mouse position in pixels
-    let posPx = canvas.getPointer( evt );
-
-    // Add raw data
-    let rawDataPoint = {t: currentFrame, x: posPx.x/zoomLevel, y: posPx.y/zoomLevel};
-    addRawData( rawDataPoint );
-    
-    // Update plots
-    updatePlots();
-    
-    // Go to next frame with a small delay
-    setTimeout(function() { gotoFrame(currentFrame+framesToSkip); }, 200);
-  }
-
+  // General function to add new data point
   function addRawData( rawDataPoint ) {
     
     // First data point: enable export-csv-data button and delete-data button
@@ -1607,169 +1546,8 @@ SOFTWARE.
       rawData.splice(thisIndex, 0, rawDataPoint );
     }
   }
-
-  function updatePlots() {
-    updatePositionPlot();
-    updateVelocityPlot();
-    updateAccelerationPlot();
-  }
   
-  function updatePositionPlot() { 
-    let xPositions = [];
-    let yPositions = [];
-    rawData.forEach(function (item, index) {
-      //console.log(item, index);
-      let time = getTime( item.t );
-      let pos = getXYposition( item );
-      xPositions.push( {x: time, y: pos.x} );
-      yPositions.push( {x: time, y: pos.y} );
-    });
-    positionChart.data.datasets[0].data = xPositions;
-    positionChart.data.datasets[1].data = yPositions;
-    positionChart.update();  
-  }
-
-  function updateVelocityPlot() { 
-    let xVelocities = [];
-    let yVelocities = [];
-    rawData.forEach(function (item, index) {
-      if( index > integrationTime-1 ) {
-        let velocity = getVelocity(index - integrationTime, index);
-        xVelocities.push( {x: velocity.t, y: velocity.x} );
-        yVelocities.push( {x: velocity.t, y: velocity.y} );
-      }
-    });
-    velocityChart.data.datasets[0].data = xVelocities;
-    velocityChart.data.datasets[1].data = yVelocities;
-    
-    //console.log( positionChart.scales["x-axis-0"].max );
-    //velocityChart.options.scales.yAxes[0].scaleLabel.labelString
-    
-    // Set the time axis to be the same as the position chart
-    velocityChart.options.scales.xAxes[0].ticks.suggestedMin = 
-      positionChart.scales["x-axis-0"].min;
-    velocityChart.options.scales.xAxes[0].ticks.suggestedMax = 
-      positionChart.scales["x-axis-0"].max;
-    
-    velocityChart.update();  
-  }
-
-  function getVelocity(index1, index2){
-    let pos2 = getXYposition( rawData[index2] );    
-    let pos1 = getXYposition( rawData[index1] );
-    let t2 = getTime( rawData[index2].t );
-    let t1 = getTime( rawData[index1].t );
-    let dt = t2 - t1;
-    let meanT = 0.5*( t1 + t2 );
-    let velocityX = (pos2.x - pos1.x ) / dt;
-    let velocityY = (pos2.y - pos1.y ) / dt;
-    return { t: meanT, x : velocityX, y : velocityY }; 
-  }
-
-  function updateAccelerationPlot() { 
-    let xAcceleration = [];
-    let xVelocities = velocityChart.data.datasets[0].data;
-    xVelocities.forEach(function (item, index) {
-      if( index > integrationTime-1 ) {
-        let acceleration = getAcceleration( xVelocities[index - integrationTime], item);
-        xAcceleration.push( {x: acceleration.t, y: acceleration.a} );
-      }
-    });
-    let yAcceleration = [];
-    let yVelocities = velocityChart.data.datasets[1].data;
-    yVelocities.forEach(function (item, index) {
-      if( index > integrationTime-1 ) {
-        let acceleration = getAcceleration( yVelocities[index - integrationTime], item);
-        yAcceleration.push( {x: acceleration.t, y: acceleration.a} );
-      }
-    });
-    accelerationChart.data.datasets[0].data = xAcceleration;
-    accelerationChart.data.datasets[1].data = yAcceleration;
-    
-    // Set the time axis to be the same as the position chart
-    accelerationChart.options.scales.xAxes[0].ticks.suggestedMin =
-      positionChart.scales["x-axis-0"].min;
-    accelerationChart.options.scales.xAxes[0].ticks.suggestedMax = 
-      positionChart.scales["x-axis-0"].max;
-
-
-    accelerationChart.update();  
-  }
-
-  function getAcceleration(velocity1, velocity2){
-    let dt = velocity2.x - velocity1.x;
-    let meanT = 0.5*( velocity1.x + velocity2.x );
-    let acceleration = (velocity2.y - velocity1.y ) / dt;
-    return { t: meanT, a : acceleration }; 
-  }
-  
-  function getTime(targetFrame) {
-    return t0 + (targetFrame + 0.5)/FPS;
-  }
-
-  // Show the text on the video and remove it after 1 s
-  let videoTimeoutID = 0;
-  function flashTextOnVideo( text ) {
-    $("#videoText").html( text );
-    clearTimeout( videoTimeoutID ); // remove previous timeout
-    videoTimeoutID = setTimeout( () =>{ $("#videoText").html( "" ); }, 1000 );
-  }
-  
-  function gotoFrame(targetFrame) {
-    let newTime = 0;
-    if( FPS ) newTime = (targetFrame + 0.5)/FPS;
-    
-    if( newTime < t0 ) {
-      return false;
-    } else if( newTime > video.duration ) {
-      return false;
-    } else {
-      // Draw the current time and remove it after 1 s
-      flashTextOnVideo( newTime.toFixed(2) + " s" );
-      
-      // Highlight the new marker
-      let currentDataPoint = rawData.find(entry => entry.t === currentFrame );
-      if( currentDataPoint ) {
-        unHighlightMarker( currentDataPoint.marker );
-        if ( !drawAllPoints ) canvas.remove( currentDataPoint.marker );
-      }
-      let nextDataPoint = rawData.find(entry => entry.t === targetFrame );
-      if( nextDataPoint ) {
-        let nextMarker = nextDataPoint.marker;
-        highlightMarker( nextMarker );
-        if( !analysisStarted && automaticAnalysis ) {  // Also update tracking box
-          trackingBox.set({ left: nextMarker.left, top: nextMarker.top });
-          trackingBox.setCoords();
-        }
-      }
-      canvas.requestRenderAll();
-    
-      currentFrame = targetFrame;
-      video.currentTime = newTime;
-      video.addEventListener("seeked", function(e) {
-        e.target.removeEventListener(e.type, arguments.callee); // remove the handler or else it will draw another frame on the same canvas, when the next seek happens
-        canvasVideoCtx.drawImage(video,0,0);
-        $('#frameNumber').html( currentFrame + " / " + $("#slider").attr("max") );
-        $("#slider").val( currentFrame );
-      });
-      return true;
-    }
-  }
-
-  function getMousePos( evt ) {        
-
-    //console.log(canvas);
-    
-    let rect = canvas.lowerCanvasEl.getBoundingClientRect();
-    let scaleX = canvas.width / video.videoWidth;    // relationship bitmap vs. element for X
-    let scaleY = canvas.height / video.videoHeight;  // relationship bitmap vs. element for Y
-    
-    return {
-      x: (evt.clientX - rect.left)/scaleX,
-      y: (evt.clientY - rect.top)/scaleY
-    };
-  }
-
+  // Get the physical position from the pixel-coordinate
   function getXYposition(posPx) {
     return {
       x: (posPx.x-originX)/pixelsPerMeter,       
@@ -1777,12 +1555,37 @@ SOFTWARE.
     };
   }  
     
+  /* ========= MANUAL ANALYSIS SECTION =========
+     Add a new data point on each click
+     =========================================== */  
+  
+  // Add a data point when clicking on the canvas 
+  canvas.on('mouse:up', (evt) => {
+    if( analysisStarted && !automaticAnalysis ) addRawDataPoint(evt);
+  });
+  
+  function addRawDataPoint(evt) {
+    // Get mouse position in pixels
+    let posPx = canvas.getPointer( evt );
 
-  // TODO: temporarily add a canvas to display tracking window
-  let tempCanvas = document.getElementById("tempCanvas");
-  let canvasContext = tempCanvas.getContext('2d');
+    // Add raw data
+    let rawDataPoint = {t: currentFrame, x: posPx.x/zoomLevel, y: posPx.y/zoomLevel};
+    addRawData( rawDataPoint );
+    
+    // Update plots
+    updatePlots();
+    
+    // Go to next frame with a small delay
+    setTimeout(function() { gotoFrame(currentFrame+framesToSkip); }, 200);
+  }
+ 
+  /* ======= AUTOMATIC ANALYSIS SECTION ========
+     Two implementations of template matching:
+     1. from OpenCV (select TM_XXX in mode)
+     2. from own implementation (select MIN_XXX)
+     =========================================== */  
 
-  // Convert image before template matching
+  // Convert image before template matching using the cvtColor mode
   function convertImage( image ) {
     if( imageConvMode == "HSV" ) {
       cv.cvtColor(image, image, cv.COLOR_RGBA2RGB);
@@ -1828,14 +1631,9 @@ SOFTWARE.
     let boxHeight = trackingBox.height * trackingBox.scaleY;
     let trackWindow = createRect( xPos, yPos, boxWidth, boxHeight, frame );
     
-    
-    //console.log("Tracking box: " + xPos + ", " + yPos + ", " + boxWidth + ", " + boxHeight );
-    
-
+    // Define offsets between trackingBox (centered) and trackWindow (upperleft, top corner)
     let trackOffsetX = trackingBox.left - trackWindow.x;
     let trackOffsetY = trackingBox.top  - trackWindow.y;
-
-    //console.log("Trackoffsets: " + trackOffsetX + "  " + trackOffsetY );
 
     // set up the template for tracking
     let template = frame.roi(trackWindow);
@@ -1846,8 +1644,7 @@ SOFTWARE.
 
     function abortAnalysis() {
       // clean and stop.
-      //frame.delete(); 
-      dst.delete(); template.delete(); //roi.delete();
+      dst.delete(); template.delete();
       updatePlots();    
       enableVideoControl();
     } 
@@ -1860,7 +1657,6 @@ SOFTWARE.
         }
 
         // start processing.
-        //frame.delete();
         frame = cv.imread('canvasVideo');
 
         // Setup the region of interest (to narrow down the search)
@@ -1868,50 +1664,40 @@ SOFTWARE.
         if( roiScale > 1 ) { 
           roiWindow = createRect( xPos, yPos, roiScale*boxWidth, roiScale*boxHeight, frame);
         }
-        //console.log(roiWindow);
       
-        //roi.delete();
+        // Convert the ROI and call the OpenCV template matching 
         roi = frame.roi( roiWindow );
         frame.delete();
         convertImage( roi );
         cv.matchTemplate( roi, template, dst, mode );
-        //cv.matchTemplate( frame, template, dst, mode );
         
-
+        // Get the position for the best match
         let result = cv.minMaxLoc(dst);
         let maxPoint = result.maxLoc;
         if( templateMatchMode.startsWith("TM_SQDIFF") ) maxPoint = result.minLoc;
-
         xPos  = roiWindow.x + maxPoint.x + trackOffsetX ;
         yPos  = roiWindow.y + maxPoint.y + trackOffsetY ;
         
-        //console.log(xPos + "  " + yPos );
-
-        //console.log(maxPoint);
-        //console.log(trackingBox.left);
-        //console.log(xPos);
-
-        // Adaptive
+        // Adaptive: update the template image from the new video frame
         if( adaptive ) {
           trackWindow.x = maxPoint.x; trackWindow.y = maxPoint.y;
           template.delete();
           template = roi.roi(trackWindow);
-          //console.log("TrackWindow");
-          //console.log(trackWindow);
-
         }
         roi.delete();
                 
-        // TODO: this is only temporary
-        cv.imshow('tempCanvas', template );
+        // For debugging: show template image in advanced mode
+        cv.imshow('templateCanvas', template );
         
         // Draw it on image
         trackingBox.set({ left: xPos, top: yPos });
         trackingBox.setCoords();
   
+        // Add the data point
         let rawDataPoint = {t: currentFrame, x: xPos/zoomLevel, y: yPos/zoomLevel };
         addRawData( rawDataPoint );
     
+        // Call the next processVideo as soon as video arrives to the new time
         setTimeout( function() {
           if( gotoFrame(currentFrame+framesToSkip) ) {
             video.addEventListener("seeked", function(e) {
@@ -1922,7 +1708,7 @@ SOFTWARE.
             $("#startAnalysis").click();
             abortAnalysis();
           }
-        }, 50 );
+        }, 50 ); // small delay such that users see the new result
       } catch (err) {
         alert("An error occuring during the automatic analysis: "+err);
         $("#startAnalysis").click();
@@ -1961,13 +1747,16 @@ SOFTWARE.
     let boxHeight = trackingBox.height * trackingBox.scaleY;
     let trackWindow = createRect_min( xPos, yPos, boxWidth, boxHeight );
 
+    // Get the template image from the current frame
     let template = canvasVideoCtx.getImageData(trackWindow.x, trackWindow.y, 
                                                trackWindow.width, trackWindow.height);
     let templateData = template.data;
 
+    // Define offsets between trackingBox (centered) and trackWindow (upperleft, top corner)
     let trackOffsetX = trackingBox.left - trackWindow.x;
     let trackOffsetY = trackingBox.top  - trackWindow.y;
     
+    // Store the width and height of the template image
     let templateWidth = template.width;
     let templateHeight = template.height;
     
@@ -1990,10 +1779,11 @@ SOFTWARE.
           roiWindow = createRect_min( xPos, yPos, roiScale*boxWidth, roiScale*boxHeight );
         }
 
+        // Store the width and height of the ROI image
         let roiWidth = roiWindow.width;
         let roiHeight = roiWindow.height;
 
-        // load image
+        // Get the ROI image from the current video frame
         let image = canvasVideoCtx.getImageData( roiWindow.x, roiWindow.y, 
                                                  roiWindow.width, roiWindow.height);
         let px = image.data;        
@@ -2032,7 +1822,9 @@ SOFTWARE.
         }*/
                 
         // TODO: not yet available
-        //cv.imshow('tempCanvas', template );
+        //let tempCanvas = document.getElementById("templateCanvas");
+        //let canvasContext = tempCanvas.getContext('2d');
+        //cv.imshow('templateCanvas', template );
         
         // Draw it on image
         trackingBox.set({ left: xPos, top: yPos });
@@ -2063,27 +1855,28 @@ SOFTWARE.
     setTimeout(processVideo, 0);
   }
 
+  /* ======== CHARTS PLOTTING SECTION ==========
+     - Create graphs using Chart.js library
+     - Update plots
+     =========================================== */  
 
-  // Plotting stuff
-  let options= { scales: { xAxes: [{ scaleLabel:{ labelString: 'time (s)', 
-                                                  display: true},
-                                    type: 'linear', position: 'bottom'}],
-                           yAxes: [{ scaleLabel:{ labelString: 'Position (m)', 
-                                                  display: true} }] },
-                legend: { align: "end", 
-                          labels: { boxWidth: 6, usePointStyle: true } } };
+  // Options for the charts
+  Chart.defaults.global.maintainAspectRatio = false;
+  Chart.defaults.global.defaultFontSize = 12;   
+  let options= { scales: { xAxes: [{ scaleLabel:{ labelString: 'time (s)', display: true},
+                                     type: 'linear', position: 'bottom'}],
+                           yAxes: [{ scaleLabel:{ labelString: 'Position (m)', display: true} }] },
+                legend: { align: "end", labels: { boxWidth: 6, usePointStyle: true } } };
 
+  // Position data
   let pData = { datasets: [{ label: 'x', fill: 'false', pointStyle: 'rect',
                              pointBackgroundColor: 'crimson', pointBorderColor: 'crimson',
-                             borderColor: 'firebrick', borderWidth: 1  },
+                             borderColor: 'firebrick', borderWidth: 1 },
                            { label: 'y', fill: 'false', 
                              pointBackgroundColor: 'royalblue', pointBorderColor: 'royalblue',
                              borderColor: 'mediumblue', borderWidth: 1 }] };
 
-  //Chart.defaults.global.responsive = false;
-  Chart.defaults.global.maintainAspectRatio = false;
-  Chart.defaults.global.defaultFontSize = 12;
-  
+  // Create the position chart
   let posCtx = document.getElementById('positionChart').getContext('2d');
   let positionChart = new Chart(posCtx, {
     type: 'line',
@@ -2091,6 +1884,7 @@ SOFTWARE.
     options: options
   });
 
+  // Create the velocity chart
   let vData = { datasets: [{ label: 'x', fill: 'false', pointStyle: 'rect',
                              pointBackgroundColor: 'crimson', pointBorderColor: 'crimson',
                              borderColor: 'firebrick', borderWidth: 1  },
@@ -2106,6 +1900,7 @@ SOFTWARE.
   });
   velocityChart.options.scales.yAxes[0].scaleLabel.labelString = "Velocity (m/s)";
 
+  // Create the acceleraion chart
   let aData = { datasets: [{ label: 'x', fill: 'false', pointStyle: 'rect',
                              pointBackgroundColor: 'crimson', pointBorderColor: 'crimson',
                              borderColor: 'firebrick', borderWidth: 1  },
@@ -2121,7 +1916,129 @@ SOFTWARE.
   });
   accelerationChart.options.scales.yAxes[0].scaleLabel.labelString = "Acceleration (m/s²)";
 
+  // Update all plots
+  function updatePlots() {
+    updatePositionPlot();
+    updateVelocityPlot();
+    updateAccelerationPlot();
+  }
   
+  // Update the position plot
+  function updatePositionPlot() { 
+    let xPositions = [];
+    let yPositions = [];
+    rawData.forEach(function (item, index) {
+      let time = getTime( item.t );
+      let pos = getXYposition( item );
+      xPositions.push( {x: time, y: pos.x} );
+      yPositions.push( {x: time, y: pos.y} );
+    });
+    positionChart.data.datasets[0].data = xPositions;
+    positionChart.data.datasets[1].data = yPositions;
+    positionChart.update();  
+  }
+
+  // Update the velocity plot
+  function updateVelocityPlot() { 
+    let xVelocities = [];
+    let yVelocities = [];
+    rawData.forEach(function (item, index) {
+      if( index > integrationTime-1 ) {
+        let velocity = getVelocity(index - integrationTime, index);
+        xVelocities.push( {x: velocity.t, y: velocity.x} );
+        yVelocities.push( {x: velocity.t, y: velocity.y} );
+      }
+    });
+    velocityChart.data.datasets[0].data = xVelocities;
+    velocityChart.data.datasets[1].data = yVelocities;
+        
+    // Set the time axis to be the same as the position chart
+    velocityChart.options.scales.xAxes[0].ticks.suggestedMin = 
+      positionChart.scales["x-axis-0"].min;
+    velocityChart.options.scales.xAxes[0].ticks.suggestedMax = 
+      positionChart.scales["x-axis-0"].max;
+    
+    velocityChart.update();  
+  }
+
+  // Calcuate the velocity from indeces of two raw data points
+  function getVelocity(index1, index2){
+    let pos2 = getXYposition( rawData[index2] );    
+    let pos1 = getXYposition( rawData[index1] );
+    let t2 = getTime( rawData[index2].t );
+    let t1 = getTime( rawData[index1].t );
+    let dt = t2 - t1;
+    let meanT = 0.5*( t1 + t2 );
+    let velocityX = (pos2.x - pos1.x ) / dt;
+    let velocityY = (pos2.y - pos1.y ) / dt;
+    return { t: meanT, x : velocityX, y : velocityY }; 
+  }
+
+  // Update the acceletion plot
+  function updateAccelerationPlot() { 
+    let xAcceleration = [];
+    let xVelocities = velocityChart.data.datasets[0].data;
+    xVelocities.forEach(function (item, index) {
+      if( index > integrationTime-1 ) {
+        let acceleration = getAcceleration( xVelocities[index - integrationTime], item);
+        xAcceleration.push( {x: acceleration.t, y: acceleration.a} );
+      }
+    });
+    let yAcceleration = [];
+    let yVelocities = velocityChart.data.datasets[1].data;
+    yVelocities.forEach(function (item, index) {
+      if( index > integrationTime-1 ) {
+        let acceleration = getAcceleration( yVelocities[index - integrationTime], item);
+        yAcceleration.push( {x: acceleration.t, y: acceleration.a} );
+      }
+    });
+    accelerationChart.data.datasets[0].data = xAcceleration;
+    accelerationChart.data.datasets[1].data = yAcceleration;
+    
+    // Set the time axis to be the same as the position chart
+    accelerationChart.options.scales.xAxes[0].ticks.suggestedMin =
+      positionChart.scales["x-axis-0"].min;
+    accelerationChart.options.scales.xAxes[0].ticks.suggestedMax = 
+      positionChart.scales["x-axis-0"].max;
+
+
+    accelerationChart.update();  
+  }
+
+  // Calcuate the acceleration from velocity objects
+  function getAcceleration(velocity1, velocity2){
+    let dt = velocity2.x - velocity1.x;
+    let meanT = 0.5*( velocity1.x + velocity2.x );
+    let acceleration = (velocity2.y - velocity1.y ) / dt;
+    return { t: meanT, a : acceleration }; 
+  }
+  
+  // Draw and/or update the chart in the modal box
+  let modalChart;
+  function showModalChart( thisCanvas ) { 
+
+    // Get the right chart
+    let chart;
+    Chart.helpers.each(Chart.instances, function(instance){
+      if( instance.canvas == thisCanvas ) chart = instance;
+    });
+    if( !chart ) return;
+    
+    // create a new chart (only on first click) or just update
+    if( (typeof modalChart === "undefined" ) ) {
+      ctx = document.getElementById("modalChart").getContext('2d') ;
+      modalChart = new Chart(ctx, {
+        type: chart.config.type,
+        data: chart.config.data, 
+        options: chart.config.options
+      });
+    } else { // update
+      modalChart.data = chart.config.data;
+      modalChart.options = chart.config.options;
+      modalChart.update();   
+    } 
+  } 
+
   
 })();
 
