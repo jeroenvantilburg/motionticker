@@ -1494,8 +1494,8 @@ SOFTWARE.
       hideCalibrationControls();
 
       if( automaticAnalysis ) {
-        if( templateMatchMode == "MIN_SQDIFF" ) {
-          templateMatching_min();
+        if( templateMatchMode == "JS_SQDIFF" ) {
+          templateMatching_js();
         } else {
           templateMatching();
         }
@@ -1582,7 +1582,7 @@ SOFTWARE.
   /* ======= AUTOMATIC ANALYSIS SECTION ========
      Two implementations of template matching:
      1. from OpenCV (select TM_XXX in mode)
-     2. in pure JS (select MIN_XXX)
+     2. in pure JS (select JS_XXX)
      =========================================== */  
 
   // Convert image before template matching using the cvtColor mode
@@ -1649,10 +1649,15 @@ SOFTWARE.
       enableVideoControl();
     } 
     
+    let t0 = performance.now();
+    let firstFrame = currentFrame;
+
     function processVideo() {
       try {  
         if (!analysisStarted) {
           abortAnalysis();
+          console.log("OpenCV algorithm: mean time per frame = " + 
+                      (performance.now() - t0)/(currentFrame-firstFrame) +" ms" );
           return;
         }
 
@@ -1722,7 +1727,7 @@ SOFTWARE.
 
   
   // Create a rect in units of pixels (int) within the bounding area
-  function createRect_min(x, y, width, height){
+  function createRect_js(x, y, width, height){
     let rect = {};
     rect.x = Math.max(0, Math.floor(x-0.5*width));
     rect.y = Math.max(0, Math.floor(y-0.5*height));
@@ -1732,7 +1737,7 @@ SOFTWARE.
   }
 
   // Automatic analysis: template matching in pure JS. Keep in mind that this is slow!
-  function templateMatching_min() {
+  function templateMatching_js() {
     
     $('#statusMsg').html( "Processing..." );
     disableVideoControl();
@@ -1745,7 +1750,7 @@ SOFTWARE.
     let yPos  = trackingBox.top;
     let boxWidth  = trackingBox.width  * trackingBox.scaleX;
     let boxHeight = trackingBox.height * trackingBox.scaleY;
-    let trackWindow = createRect_min( xPos, yPos, boxWidth, boxHeight );
+    let trackWindow = createRect_js( xPos, yPos, boxWidth, boxHeight );
 
     // Get the template image from the current frame
     let template = canvasVideoCtx.getImageData(trackWindow.x, trackWindow.y, 
@@ -1766,17 +1771,23 @@ SOFTWARE.
       enableVideoControl();
     } 
     
+    let t0 = performance.now();
+    let firstFrame = currentFrame;
+
     function processVideo() {
       try {  
         if (!analysisStarted) {
           abortAnalysis();
+          console.log("Pure JS algorithm: mean time per frame = " + 
+                      (performance.now() - t0)/(currentFrame-firstFrame) +" ms" );
+
           return;
         }
 
         // Setup the region of interest (to narrow down the search)
         let roiWindow = {x: 0, y: 0, width: canvasVideo.width, height: canvasVideo.height };
         if( roiScale > 1 ) { 
-          roiWindow = createRect_min( xPos, yPos, roiScale*boxWidth, roiScale*boxHeight );
+          roiWindow = createRect_js( xPos, yPos, roiScale*boxWidth, roiScale*boxHeight );
         }
 
         // Store the width and height of the ROI image
@@ -1787,18 +1798,21 @@ SOFTWARE.
         let image = canvasVideoCtx.getImageData( roiWindow.x, roiWindow.y, 
                                                  roiWindow.width, roiWindow.height);
         let px = image.data;        
-        
+
         // Template matching
         let bestMatch = {R: -1} ;
-        for(let x=0; x<roiWidth-templateWidth; ++x ) {
-          for(let y=0; y<roiHeight-templateHeight; ++y ) {
-                        
+        let x = roiWidth-templateWidth;
+        while( x-- ) {
+          let y = roiHeight-templateHeight;
+          while( y-- ) {    
             // Only SQDIFF is implemented for now
             let sqdiff = 0.0;
-            for(let j=0; j < templateHeight; ++j ) {
-              for(let i=0; i < templateWidth; ++i ) {
-                let index   = 4*(i + j*templateWidth);
-                let imIndex = 4*(x + i + (y + j)*roiWidth);
+            let j = templateHeight;
+            while( j-- ) {
+              let i = templateWidth;
+              while( i-- ) {
+                const index   = 4*(i + j*templateWidth);
+                const imIndex = 4*(x + i + (y + j)*roiWidth);
                 sqdiff += ( templateData[index]   - px[imIndex] )**2;
                 sqdiff += ( templateData[index+1] - px[imIndex+1] )**2;
                 sqdiff += ( templateData[index+2] - px[imIndex+2] )**2;
@@ -1811,7 +1825,7 @@ SOFTWARE.
             }
           } 
         }
-        
+
         xPos  = roiWindow.x + bestMatch.x + trackOffsetX ;
         yPos  = roiWindow.y + bestMatch.y + trackOffsetY ;
         
@@ -1832,8 +1846,8 @@ SOFTWARE.
         trackingBox.setCoords();
   
         let rawDataPoint = {t: currentFrame, x: xPos/zoomLevel, y: yPos/zoomLevel };
-        addRawData( rawDataPoint );
-    
+        addRawData( rawDataPoint );    
+
         setTimeout( function() {
           if( gotoFrame(currentFrame+framesToSkip) ) {
             video.addEventListener("seeked", function(e) {
