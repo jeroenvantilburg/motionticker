@@ -1567,9 +1567,23 @@ SOFTWARE.
      Add a new data point on each click
      =========================================== */  
   
+  // Detect when mouse is down (or when touchstart)
+  let mouseIsDown = false;
+  canvas.on('mouse:down', (evt) => {
+    if( analysisStarted && !automaticAnalysis ) mouseIsDown = true;
+  });
+
+  // Reset mouseIsDown when mouse or touch moves (it could be a touch scrolling event)
+  canvas.on('mouse:move', () => {
+    if( analysisStarted && !automaticAnalysis && mouseIsDown) mouseIsDown = false;
+  });
+
   // Add a data point when clicking on the canvas 
   canvas.on('mouse:up', (evt) => {
-    if( analysisStarted && !automaticAnalysis ) addRawDataPoint(evt);
+    if( analysisStarted && !automaticAnalysis && mouseIsDown) {
+      mouseIsDown = false;
+      addRawDataPoint(evt);
+    }
   });
   
   function addRawDataPoint(evt) {
