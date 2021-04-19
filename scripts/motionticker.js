@@ -826,7 +826,10 @@ SOFTWARE.
   
   // Trigger click on videoInput when user clicks on menu item
   $("#videoImport").click( () => {
-    if( dataCanBeRemoved() ) {      
+    if( dataCanBeRemoved() ) {       
+      // Reset the file input such that it triggers any change
+      $("#videoInput").val('');
+
       // Progagate to (hidden) DOM element
       $("#videoInput").click();
     }
@@ -860,7 +863,6 @@ SOFTWARE.
     $('#frameNumber').html( "0 / 0" );
     $("#slider").attr("max", 0 );
   }
-
   
   // Add event listener for when file is selected
   $("#videoInput").change( function() {
@@ -995,7 +997,7 @@ SOFTWARE.
   function getFPS() {
     $('#statusMsg').html( "Calculating frame rate... <i class='fa fa-spinner fa-spin fa-fw'></i>" );
        
-    // Examples about how to get results
+    // Callback function to get the results back from MediaInfo
     let MI;
     let getResults = function() {
 
@@ -1018,7 +1020,6 @@ SOFTWARE.
       updateFPS( frameRate );
 
       // Finalize
-      $('#statusMsg').html( "" );
       MI.Close();
       MI.delete();
     }
@@ -1178,9 +1179,15 @@ SOFTWARE.
   });
 
   function tryToEnable() {
-    if( video.src !== "" ) {
-      if( $("#fpsInput").val() !== "" ) enableVideoControl();
-      if( $("#fpsInput").val() !== "" && $("#scaleInput").val() !== "" ) enableAnalysis();
+    if( video.src === "" ) return;
+    if( $("#fpsInput").val() !== "" ) {
+      enableVideoControl();
+      if( $("#scaleInput").val() !== "" ) {
+        $('#statusMsg').html("");
+        enableAnalysis();
+      } else {
+        $('#statusMsg').html("Set the scale or the ruler length");        
+      }
     }
   }
   
