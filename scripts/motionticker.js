@@ -844,6 +844,7 @@ SOFTWARE.
     updateFPS();
     pixelsPerMeter = undefined;
     updateScale();
+    distanceInMeter = undefined;
     $("#distanceInput").val("");
     originX = originY = undefined;
     updateOrigin();
@@ -1195,7 +1196,7 @@ SOFTWARE.
   }
   
   // Set the scale 
-  function setScale() {    
+  function setScale() {
     // Check if distanceInMeter is set
     if( distanceInMeter ) {
       // Get the scale points
