@@ -516,10 +516,9 @@ SOFTWARE.
   $('#drawAllPoints').on('change', function(e) {
     drawAllPoints = $('#drawAllPoints').is(':checked');
     rawData.forEach(function (item) {
-      if( drawAllPoints ) {
-        canvas.add( item.marker );
-      } else if ( item.t !== currentFrame ) {
-        canvas.remove( item.marker );
+      if( item.t !== currentFrame ) {
+        if( drawAllPoints ) canvas.add( item.marker );
+        else canvas.remove( item.marker );
       }
     });
   });
@@ -1473,6 +1472,7 @@ SOFTWARE.
       if( nextDataPoint ) {
         let nextMarker = nextDataPoint.marker;
         highlightMarker( nextMarker );
+        if( !drawAllPoints ) canvas.add( nextMarker );
         if( !analysisStarted && automaticAnalysis ) {  // Also update track box
           trackBox.set({ left: nextMarker.left, top: nextMarker.top });
           trackBox.setCoords();
