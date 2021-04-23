@@ -202,16 +202,14 @@
       too much background. The location of this track window in the initial frame defines the 
       template image. 
       The algorithm will search for this template image in the other video frames.
-      The search region can be narrowed down to a region of interest (ROI) to make the search faster
-      and more reliable.
-      The ROI is always centered around the track window and is by default 5 times larger than
-      track window.
-      Depending on the speed of the moving object and the frame rate, a setting of 3 or 5 is
+      To make the search faster and more reliable the search region is 
+      narrowed down to a region of interest (ROI). In the default setting the ROI is 4 
+      times larger than track window.
+      Depending on the speed of the moving object and the frame rate, a setting between 2 and 5 is
       usually sufficient. When the object is moving at higher speeds larger values may be required.
       Zooming in can improve the accuracy of the analysis, but this also requires 
       more resources on your computer.
-      Please refer to the settings to find the optimal settings for your
-      video.
+      Please refer to the settings to find the optimal settings for your video.
       <br/><br/>
 
       <b>Derived data: velocity and acceleration</b><br/>
@@ -230,7 +228,7 @@
       <br/><br/>
 
       <b>CSV files</b><br/>
-      After analysis, save your data by exporting it to a CSV file. Then you can continue your
+      After analysis, save your data by exporting it to a CSV file such that you can continue your
       analysis at a later stage or use your data in a spreadsheet application. In the settings
       you can change the decimal separator and the delimiter in the CSV file to facilitate the 
       import in your spreadsheet application. Note that the velocity and acceleration fields have 
