@@ -1414,25 +1414,28 @@ SOFTWARE.
   // Update the frame when slider changes
   $("#slider").change( function() { gotoFrame(Math.floor(this.value)); });
 
-  // Play the video (not an essential functio, just to give the user a play button)
-  let playIntervalID=0;
+  // Play the video (not an essential function, just to give the user a play button)
   let playing = false;
   $('#play').click(function() {
     $(this).find('.fa-play,.fa-pause').toggleClass('fa-pause').toggleClass('fa-play');
     if ( playing === false ) {
       playing = true;
       let that = this;
-      playIntervalID = window.setInterval( function() {
-        // Go to next frame until the end (when gotoFrame returns false)
-        if( gotoFrame(currentFrame+1) == false ) {
-          window.clearInterval( playIntervalID );
+      // Recursively calling next frame
+      function playNextFrame() {
+        if( playing && gotoFrame(currentFrame+1) ) {
+          video.addEventListener("seeked", function(e) {
+            e.target.removeEventListener(e.type, arguments.callee);
+            window.setTimeout( playNextFrame, 1000/FPS );
+          });
+        } else if( playing ) {
           playing = false;
-          $(that).find('.fa-play,.fa-pause').toggleClass('fa-pause').toggleClass('fa-play');
-        } 
-      }, 1000/FPS );
+          $(that).find('.fa-play,.fa-pause').toggleClass('fa-pause').toggleClass('fa-play');         
+        }
+      }
+      playNextFrame();      
     } else {
       playing = false;
-      window.clearInterval( playIntervalID );    
     }
   });
 
