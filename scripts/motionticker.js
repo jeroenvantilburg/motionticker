@@ -170,7 +170,7 @@ SOFTWARE.
   $("input[type=number]").on("keydown", blurOnEnter );
 
   // Put cursor always at last position when clicking on input text element
-  $(document).on('focus', 'input[type=text]', function () {    
+  $(document).on('focus', 'input[type=text], input[type=number]', function () {    
     //already focused, return so user can now place cursor at specific point in input.    
     if (focusedElement == this) return; 
     focusedElement = this;
@@ -528,9 +528,8 @@ SOFTWARE.
   $("#framesToSkip").change( function() {
     if( isNumeric(this.value) ) {
       framesToSkip = Math.round( toNumber(this.value) );
-    } else {
-      this.value = framesToSkip || "";      
     }
+    this.value = framesToSkip || "";
   });
   
   let adaptive = false;
@@ -566,13 +565,16 @@ SOFTWARE.
 
   $("#roiScale").val( roiScaleX );
   $("#roiScale").change( function() { 
-    roiScaleX = roiScaleY = this.value ;    
-    roiOffsetX = roiOffsetY = 0; // always center around trackBox after update
-    roiBox.set({ left: trackBox.left, top: trackBox.top, 
-                 scaleX: roiScaleX * trackBox.scaleX, 
-                 scaleY: roiScaleY * trackBox.scaleY });
-    roiBox.setCoords();
-    canvas.requestRenderAll();
+    if( isNumeric(this.value) && toNumber(this.value) >= 1.1 ) {    
+      roiScaleX = roiScaleY = this.value ;    
+      roiOffsetX = roiOffsetY = 0; // always center around trackBox after update
+      roiBox.set({ left: trackBox.left, top: trackBox.top, 
+                   scaleX: roiScaleX * trackBox.scaleX, 
+                   scaleY: roiScaleY * trackBox.scaleY });
+      roiBox.setCoords();
+      canvas.requestRenderAll();      
+    } 
+    this.value = roiScaleX || "";
   });
   
   let showROI = false;
@@ -590,6 +592,7 @@ SOFTWARE.
   let integrationTime = 2;
   $("#integrationTimeInput").val( integrationTime );
   $("#integrationTimeInput").change( function() {
+        console.log( this.value );
     if( isNumeric(this.value) && toNumber(this.value) > 0.5) {
       integrationTime = Math.round( toNumber(this.value) );
       updatePlots(); 
@@ -634,11 +637,24 @@ SOFTWARE.
 
   $('#advanced').on('change', function(e) {
     $('.advanced').toggle();
+    if( expert ) {
+      expert = false;
+      $('.expert').hide();
+    }
   });
   
   $('#reload').on('click', function() {
     location.reload();
   });
+  
+  let expert = false;
+  function setExpert( ) {
+    expert = true;
+    $('.expert').show();
+    $('#advanced').prop('checked', true);
+    $('.advanced').show();
+  }
+  
   // END USER SETTINGS
   
   
@@ -1212,6 +1228,8 @@ SOFTWARE.
         // Video can be enabled
         tryToEnable();
       }
+    } else if (this.value == "expert") {
+      setExpert();
     }
     this.value = FPS || "";
   });
@@ -1871,8 +1889,8 @@ SOFTWARE.
         }
         roi.delete();
                 
-        // For debugging: show template image in advanced mode
-        if( $('#advanced').prop('checked') ) cv.imshow('templateCanvas', template );
+        // For debugging: show template image in expert mode
+        if( expert ) cv.imshow('templateCanvas', template );
         
         // Draw it on image
         trackBox.set({ left: xPos, top: yPos });

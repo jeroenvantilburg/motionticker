@@ -354,8 +354,8 @@
             the ROI scale.
           </td>
         </tr>
-        <!-- advanced settings -->
-        <tr class="advanced">
+        <!-- advanced/expert settings -->
+        <tr class="expert">
           <td>Template match mode:</td>
           <td>
             <select id="templateMatchMode">
@@ -378,10 +378,10 @@
               <option value="">RGB (original)</option>
               <option value="HSV">HSV colors</option>
               <option value="GRAY">Gray-scale</option>
-              <option value="CANNY">Edge-detection</option>
+              <option hidden value="CANNY">Edge-detection</option>
             </select>
-          <td>Convert the frame image before template matching. RGB means no conversion. 
-            Edge detection uses the Canny algorithm.</td>
+          <td>Convert the colors of the frame image before template matching. 
+            RGB means no conversion.</td>
         </tr>
         <!-- end of advanced settings -->
       </table>
@@ -395,7 +395,7 @@
             automatically from the video meta data when loading a video.</td>
         </tr>
         <!-- advanced settings -->
-        <tr class="advanced">
+        <tr class="expert">
           <td>Video orientation:</td>
           <td>
             <select id="orientationInput">
@@ -488,7 +488,7 @@
     <div class="modal-content"> <span class="close">&times;</span>
       <h2>Video File Info</h2>      
       <div id="videoInfo"></div>
-      <div class="advanced">
+      <div class="expert">
         Template image: <canvas id="templateCanvas"></canvas>
       </div>
     </div>

@@ -446,6 +446,10 @@ input:disabled+label {
   display: none;
 }
 
+.expert {
+  display: none;
+}
+
 #reload {
   font-size: 0.7em;
 }
