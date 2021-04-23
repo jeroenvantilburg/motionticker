@@ -261,83 +261,83 @@ SOFTWARE.
   function highlightMarker( markerP ) { markerP.set({stroke: 'red', strokeWidth: 2}); }
   function unHighlightMarker( markerP ) { markerP.set({stroke: 'rgba(220,0,0)', strokeWidth: 1}); }
   
-  // Define track box for automatic analysis
-  let trackBox = new fabric.Rect({left: -100, top: -100, height: 150, width: 150, 
+  // Define tracking box for automatic analysis
+  let trackingBox = new fabric.Rect({left: -100, top: -100, height: 150, width: 150, 
                                      fill: 'rgba(0,0,0,0)', stroke: 'red', strokeWidth: 2,
                                      lockRotation: true, strokeUniform: true, noScaleCache: false,
                                      cornerSize: 8, cornerStyle: 'circle', 
                                      cornerColor: 'rgba(35,118,200)', shadow: shadow,
                                      hasBorders: false, selectable: true, evented: true, 
                                      lockScalingFlip: true });  
-  trackBox.setControlsVisibility({ mtr: false }); // Hide rotating point
+  trackingBox.setControlsVisibility({ mtr: false }); // Hide rotating point
   
   // Define the region of interest (ROI) as an orange box
-  let roiBox = fabric.util.object.clone( trackBox ) ;
+  let roiBox = fabric.util.object.clone( trackingBox ) ;
   let roiScaleX = 4, roiScaleY = 4;
   let roiOffsetX = 0, roiOffsetY = 0;
   roiBox.set({stroke: 'orange', scaleX: roiScaleX, scaleY: roiScaleY });
   
-  // When moving the trackBox update the position/scale of the ROI
-  trackBox.on("moving", () => {
-    roiBox.set({ left: roiOffsetX*zoomLevel + trackBox.left, 
-                  top: roiOffsetY*zoomLevel + trackBox.top });
+  // When moving the trackingBox update the position/scale of the ROI
+  trackingBox.on("moving", () => {
+    roiBox.set({ left: roiOffsetX*zoomLevel + trackingBox.left, 
+                  top: roiOffsetY*zoomLevel + trackingBox.top });
     roiBox.setCoords();
   });
 
-  // When scaling the trackBox update the scale of the ROI
-  trackBox.on("scaling", (e) => {
-    roiOffsetX *= roiScaleX * trackBox.scaleX / roiBox.scaleX;
-    roiOffsetY *= roiScaleY * trackBox.scaleY / roiBox.scaleY; 
+  // When scaling the trackingBox update the scale of the ROI
+  trackingBox.on("scaling", (e) => {
+    roiOffsetX *= roiScaleX * trackingBox.scaleX / roiBox.scaleX;
+    roiOffsetY *= roiScaleY * trackingBox.scaleY / roiBox.scaleY; 
 
-    // Update trackBox.left/top with new scale
+    // Update trackingBox.left/top with new scale
     let orig = e.transform.original; // Get the original positions 
-    let trackLeft = trackBox.left;
+    let trackLeft = trackingBox.left;
     if( e.transform.originX === "left" ){ // Scaling from the right corners
-      trackLeft = orig.left + 0.5*trackBox.width*(trackBox.scaleX-orig.scaleX);
+      trackLeft = orig.left + 0.5*trackingBox.width*(trackingBox.scaleX-orig.scaleX);
     } else {                              // Scaling from the right corners
-      trackLeft = orig.left + 0.5*trackBox.width*(orig.scaleX-trackBox.scaleX);      
+      trackLeft = orig.left + 0.5*trackingBox.width*(orig.scaleX-trackingBox.scaleX);      
     }
-    let trackTop = trackBox.top;
+    let trackTop = trackingBox.top;
     if( e.transform.originY === "top" ){ // Scaling from the bottom corners
-      trackTop = orig.top + 0.5*trackBox.height*(trackBox.scaleY-orig.scaleY);
+      trackTop = orig.top + 0.5*trackingBox.height*(trackingBox.scaleY-orig.scaleY);
     } else {                              // Scaling from the top corners
-      trackTop = orig.top + 0.5*trackBox.height*(orig.scaleY-trackBox.scaleY);      
+      trackTop = orig.top + 0.5*trackingBox.height*(orig.scaleY-trackingBox.scaleY);      
     }
 
     roiBox.set({ left: roiOffsetX*zoomLevel + trackLeft, 
                   top: roiOffsetY*zoomLevel + trackTop, 
-                 scaleX: roiScaleX * trackBox.scaleX, 
-                 scaleY: roiScaleY * trackBox.scaleY });
+                 scaleX: roiScaleX * trackingBox.scaleX, 
+                 scaleY: roiScaleY * trackingBox.scaleY });
     roiBox.setCoords();
   });
   
-  // When moving the ROI, the trackBox should stay within the ROI
+  // When moving the ROI, the trackingBox should stay within the ROI
   roiBox.on("moving", () => {
     roiBox.setCoords();
-    trackBox.setCoords();
+    trackingBox.setCoords();
     let tolerance = 3;
-    if( roiBox.oCoords.tl.x - trackBox.oCoords.tl.x > -tolerance ) {
-      roiBox.set({left: trackBox.oCoords.tl.x + 0.5*roiBox.width*roiBox.scaleX - tolerance });
+    if( roiBox.oCoords.tl.x - trackingBox.oCoords.tl.x > -tolerance ) {
+      roiBox.set({left: trackingBox.oCoords.tl.x + 0.5*roiBox.width*roiBox.scaleX - tolerance });
     }
-    else if( roiBox.oCoords.br.x - trackBox.oCoords.br.x < tolerance ) {
-      roiBox.set({left: trackBox.oCoords.tr.x - 0.5*roiBox.width*roiBox.scaleX + tolerance });
+    else if( roiBox.oCoords.br.x - trackingBox.oCoords.br.x < tolerance ) {
+      roiBox.set({left: trackingBox.oCoords.tr.x - 0.5*roiBox.width*roiBox.scaleX + tolerance });
     }
-    if( roiBox.oCoords.tl.y - trackBox.oCoords.tl.y > -tolerance ) {
-      roiBox.set({top: trackBox.oCoords.tl.y + 0.5*roiBox.height*roiBox.scaleY - tolerance });
+    if( roiBox.oCoords.tl.y - trackingBox.oCoords.tl.y > -tolerance ) {
+      roiBox.set({top: trackingBox.oCoords.tl.y + 0.5*roiBox.height*roiBox.scaleY - tolerance });
     }
-    else if( roiBox.oCoords.br.y - trackBox.oCoords.br.y < tolerance ) {
-      roiBox.set({top: trackBox.oCoords.br.y - 0.5*roiBox.height*roiBox.scaleY + tolerance });
+    else if( roiBox.oCoords.br.y - trackingBox.oCoords.br.y < tolerance ) {
+      roiBox.set({top: trackingBox.oCoords.br.y - 0.5*roiBox.height*roiBox.scaleY + tolerance });
     }
 
-    // Update the offset of the ROI with respect to the trackBox
-    roiOffsetX = (roiBox.left - trackBox.left)/zoomLevel;
-    roiOffsetY = (roiBox.top  - trackBox.top)/zoomLevel;      
+    // Update the offset of the ROI with respect to the trackingBox
+    roiOffsetX = (roiBox.left - trackingBox.left)/zoomLevel;
+    roiOffsetY = (roiBox.top  - trackingBox.top)/zoomLevel;      
   });
 
-  // When scaling the ROI, the trackBox should stay within the ROI
+  // When scaling the ROI, the trackingBox should stay within the ROI
   roiBox.on("scaling", (e) => {
     let orig = e.transform.original; // Get the original positions 
-    let trackRect = trackBox.getBoundingRect(); // Get the trackBox boundaries
+    let trackRect = trackingBox.getBoundingRect(); // Get the trackingBox boundaries
     let tolerance = 3;
     if( e.transform.originX === "left" ){ // Scaling from the right corners
       let roiX1 = orig.left - 0.5*roiBox.width*orig.scaleX;
@@ -370,11 +370,11 @@ SOFTWARE.
       }
     }
 
-    // Update the scale and the offset of the ROI wrt the trackBox
-    roiScaleX = roiBox.scaleX / trackBox.scaleX; 
-    roiScaleY = roiBox.scaleY / trackBox.scaleY;
-    roiOffsetX = (roiBox.left - trackBox.left)/zoomLevel;  
-    roiOffsetY = (roiBox.top  - trackBox.top )/zoomLevel;
+    // Update the scale and the offset of the ROI wrt the trackingBox
+    roiScaleX = roiBox.scaleX / trackingBox.scaleX; 
+    roiScaleY = roiBox.scaleY / trackingBox.scaleY;
+    roiOffsetX = (roiBox.left - trackingBox.left)/zoomLevel;  
+    roiOffsetY = (roiBox.top  - trackingBox.top )/zoomLevel;
   });
   
   
@@ -486,14 +486,14 @@ SOFTWARE.
   $('#automaticAnalysis').on('change', function(e) {
     automaticAnalysis = $('#automaticAnalysis').is(':checked');
     if( automaticAnalysis ) {
-      canvas.add( trackBox );
-      canvas.sendToBack( trackBox )
+      canvas.add( trackingBox );
+      canvas.sendToBack( trackingBox )
       if( showROI ) {
         canvas.add( roiBox );
         canvas.sendToBack( roiBox );
       }
     } else {
-      canvas.remove( trackBox );      
+      canvas.remove( trackingBox );      
       if( showROI ) canvas.remove( roiBox );
     }   
   });  
@@ -567,10 +567,10 @@ SOFTWARE.
   $("#roiScale").val( roiScaleX );
   $("#roiScale").change( function() { 
     roiScaleX = roiScaleY = this.value ;    
-    roiOffsetX = roiOffsetY = 0; // always center around trackBox after update
-    roiBox.set({ left: trackBox.left, top: trackBox.top, 
-                 scaleX: roiScaleX * trackBox.scaleX, 
-                 scaleY: roiScaleY * trackBox.scaleY });
+    roiOffsetX = roiOffsetY = 0; // always center around trackingBox after update
+    roiBox.set({ left: trackingBox.left, top: trackingBox.top, 
+                 scaleX: roiScaleX * trackingBox.scaleX, 
+                 scaleY: roiScaleY * trackingBox.scaleY });
     roiBox.setCoords();
     canvas.requestRenderAll();
   });
@@ -719,10 +719,10 @@ SOFTWARE.
   let scaleY1Str = "Scale Point1 y [px]";
   let scaleX2Str = "Scale Point2 x [px]";
   let scaleY2Str = "Scale Point2 y [px]";
-  let boxXStr    = "Track Box x [px]";
-  let boxYStr    = "Track Box y [px]";
-  let boxWStr    = "Track Box width [px]";
-  let boxHStr    = "Track Box height [px]";
+  let boxXStr    = "Tracking Box x [px]";
+  let boxYStr    = "Tracking Box y [px]";
+  let boxWStr    = "Tracking Box width [px]";
+  let boxHStr    = "Tracking Box height [px]";
   
   // Export the data to CSV file after clicking on menu item
   $("#csvExport").click( () => {
@@ -742,10 +742,10 @@ SOFTWARE.
                   [scaleY1Str]: toCSV( scaleCircle1.top/zoomLevel ),
                   [scaleX2Str]: toCSV( scaleCircle2.left/zoomLevel ), 
                   [scaleY2Str]: toCSV( scaleCircle2.top/zoomLevel ),
-                  [boxXStr]: toCSV( trackBox.left/zoomLevel ), 
-                  [boxYStr]: toCSV( trackBox.top/zoomLevel ),
-                  [boxWStr]: toCSV( trackBox.width*trackBox.scaleX/zoomLevel ), 
-                  [boxHStr]: toCSV( trackBox.height*trackBox.scaleY/zoomLevel )
+                  [boxXStr]: toCSV( trackingBox.left/zoomLevel ), 
+                  [boxYStr]: toCSV( trackingBox.top/zoomLevel ),
+                  [boxWStr]: toCSV( trackingBox.width*trackingBox.scaleX/zoomLevel ), 
+                  [boxHStr]: toCSV( trackingBox.height*trackingBox.scaleY/zoomLevel )
                  } );
 
     // Remove velocity and/or acceleration depending on user setting
@@ -913,13 +913,13 @@ SOFTWARE.
           updateOrigin( toNumber( meta[origXStr] ), toNumber( meta[origYStr] ) );
           updateScale( toNumber( meta[scaleStr] ) );
           
-          // Update the track box
+          // Update the tracking box
           if( isNumeric( meta[boxXStr] ) && isNumeric( meta[boxYStr] ) &&
               isNumeric( meta[boxWStr] ) && isNumeric( meta[boxHStr] ) ) {
-            trackBox.set({ left: toNumber( meta[boxXStr] )*zoomLevel, 
+            trackingBox.set({ left: toNumber( meta[boxXStr] )*zoomLevel, 
                                top: toNumber( meta[boxYStr] )*zoomLevel,
-                             width: toNumber( meta[boxWStr] )*zoomLevel/trackBox.scaleX,
-                             height:toNumber( meta[boxHStr] )*zoomLevel/trackBox.scaleY });
+                             width: toNumber( meta[boxWStr] )*zoomLevel/trackingBox.scaleX,
+                             height:toNumber( meta[boxHStr] )*zoomLevel/trackingBox.scaleY });
           }
 
           // Add raw data
@@ -1059,16 +1059,16 @@ SOFTWARE.
     // Prepare analysis for the demo video
     if( (video.src).endsWith( demoLocation ) ) {
 
-      // Set the origin, ruler and track box for the DEMO VIDEO (hardcoded)
+      // Set the origin, ruler and tracking box for the DEMO VIDEO (hardcoded)
       updateOrigin(32.85, 374.6 );
       updateRuler( 54.2, 184.7, 51.8, 370.5);
       updateScale( 185.8155 );
-      trackBox.set({left: 42.35, top: 24, 
-                       width: 16.3/trackBox.scaleX, 
-                       height: 28.0/trackBox.scaleY });
-      trackBox.setCoords();
-      roiBox.set({left: trackBox.left, top: trackBox.top, 
-                  width: trackBox.width, height: trackBox.height });
+      trackingBox.set({left: 42.35, top: 24, 
+                       width: 16.3/trackingBox.scaleX, 
+                       height: 28.0/trackingBox.scaleY });
+      trackingBox.setCoords();
+      roiBox.set({left: trackingBox.left, top: trackingBox.top, 
+                  width: trackingBox.width, height: trackingBox.height });
       roiBox.setCoords();
 
       // Put the graphics back
@@ -1088,15 +1088,15 @@ SOFTWARE.
     updateRuler( 0.2*video.videoWidth, 0.3*video.videoHeight,
                  0.2*video.videoWidth, 0.7*video.videoHeight );
 
-    // Set initial position for the trackBox (relative to video dimensions)
-    trackBox.set({left: 0.5*video.videoWidth, top: 0.3*video.videoHeight,
-                     width: 0.1*video.videoWidth/trackBox.scaleX, 
-                     height: 0.1*video.videoHeight/trackBox.scaleY });
-    trackBox.setCoords();
+    // Set initial position for the trackingBox (relative to video dimensions)
+    trackingBox.set({left: 0.5*video.videoWidth, top: 0.3*video.videoHeight,
+                     width: 0.1*video.videoWidth/trackingBox.scaleX, 
+                     height: 0.1*video.videoHeight/trackingBox.scaleY });
+    trackingBox.setCoords();
     
     roiBox.set({left: 0.5*video.videoWidth, top: 0.3*video.videoHeight,
-                width: 0.1*video.videoWidth/trackBox.scaleX, 
-                height: 0.1*video.videoHeight/trackBox.scaleY });
+                width: 0.1*video.videoWidth/trackingBox.scaleX, 
+                height: 0.1*video.videoHeight/trackingBox.scaleY });
     roiBox.setCoords();
 
     // Highlight fields that still need to be filled
@@ -1106,8 +1106,8 @@ SOFTWARE.
     // Put the graphics back
     showCalibrationControls();
     if( automaticAnalysis ) {
-      canvas.add( trackBox );
-      canvas.sendToBack( trackBox );
+      canvas.add( trackingBox );
+      canvas.sendToBack( trackingBox );
       if( useROI && showROI) {
         canvas.add( roiBox );
         canvas.sendToBack( roiBox );
@@ -1469,9 +1469,9 @@ SOFTWARE.
       if( nextDataPoint ) {
         let nextMarker = nextDataPoint.marker;
         highlightMarker( nextMarker );
-        if( !analysisStarted && automaticAnalysis ) {  // Also update track box
-          trackBox.set({ left: nextMarker.left, top: nextMarker.top });
-          trackBox.setCoords();
+        if( !analysisStarted && automaticAnalysis ) {  // Also update tracking box
+          trackingBox.set({ left: nextMarker.left, top: nextMarker.top });
+          trackingBox.setCoords();
           roiBox.set({ left: roiOffsetX*zoomLevel + nextMarker.left, 
                         top: roiOffsetY*zoomLevel + nextMarker.top });
           roiBox.setCoords();
@@ -1572,12 +1572,12 @@ SOFTWARE.
     updateRuler( scaleCircle1.left/prevZoom, scaleCircle1.top/prevZoom,
                  scaleCircle2.left/prevZoom, scaleCircle2.top/prevZoom );
 
-    // Update track box
-    trackBox.set({ left: trackBox.left * relZoom,
-                       top: trackBox.top * relZoom, 
-                     width: trackBox.width * relZoom, 
-                    height: trackBox.height * relZoom });
-    trackBox.setCoords();
+    // Update tracking box
+    trackingBox.set({ left: trackingBox.left * relZoom,
+                       top: trackingBox.top * relZoom, 
+                     width: trackingBox.width * relZoom, 
+                    height: trackingBox.height * relZoom });
+    trackingBox.setCoords();
     roiBox.set({ left: roiBox.left * relZoom,
                   top: roiBox.top * relZoom, 
                 width: roiBox.width * relZoom, 
@@ -1807,7 +1807,7 @@ SOFTWARE.
     $('#statusMsg').html( "Processing..." );
     disableVideoControl();
     
-    // Make sure that the trackBox is not active anymore (just remove the controls)
+    // Make sure that the trackingBox is not active anymore (just remove the controls)
     canvas.discardActiveObject().renderAll();
     
     // Set the matching mode    
@@ -1817,15 +1817,15 @@ SOFTWARE.
     let frame = cv.imread('canvasVideo');
     
     // initial location of window
-    let xPos  = trackBox.left;
-    let yPos  = trackBox.top;
-    let boxWidth  = trackBox.width  * trackBox.scaleX;
-    let boxHeight = trackBox.height * trackBox.scaleY;
+    let xPos  = trackingBox.left;
+    let yPos  = trackingBox.top;
+    let boxWidth  = trackingBox.width  * trackingBox.scaleX;
+    let boxHeight = trackingBox.height * trackingBox.scaleY;
     let trackWindow = createRect( xPos, yPos, boxWidth, boxHeight, frame );
     
-    // Define offsets between trackBox (centered) and trackWindow (upperleft, top corner)
-    let trackOffsetX = trackBox.left - trackWindow.x;
-    let trackOffsetY = trackBox.top  - trackWindow.y;
+    // Define offsets between trackingBox (centered) and trackWindow (upperleft, top corner)
+    let trackOffsetX = trackingBox.left - trackWindow.x;
+    let trackOffsetY = trackingBox.top  - trackWindow.y;
 
     // set up the template for tracking
     let template = frame.roi(trackWindow);
@@ -1888,8 +1888,8 @@ SOFTWARE.
         if( $('#advanced').prop('checked') ) cv.imshow('templateCanvas', template );
         
         // Draw it on image
-        trackBox.set({ left: xPos, top: yPos });
-        trackBox.setCoords();
+        trackingBox.set({ left: xPos, top: yPos });
+        trackingBox.setCoords();
         roiBox.set({ left: xPos + roiOffsetX*zoomLevel , top: yPos + roiOffsetY*zoomLevel });
         roiBox.setCoords();
 
@@ -1937,14 +1937,14 @@ SOFTWARE.
     $('#statusMsg').html( "Processing..." );
     disableVideoControl();
     
-    // Make sure that the trackBox is not active anymore (just remove the controls)
+    // Make sure that the trackingBox is not active anymore (just remove the controls)
     canvas.discardActiveObject().renderAll();
     
     // initial location of window
-    let xPos  = trackBox.left;
-    let yPos  = trackBox.top;
-    let boxWidth  = trackBox.width  * trackBox.scaleX;
-    let boxHeight = trackBox.height * trackBox.scaleY;
+    let xPos  = trackingBox.left;
+    let yPos  = trackingBox.top;
+    let boxWidth  = trackingBox.width  * trackingBox.scaleX;
+    let boxHeight = trackingBox.height * trackingBox.scaleY;
     let trackWindow = createRect_js( xPos, yPos, boxWidth, boxHeight );
 
     // Get the template image from the current frame
@@ -1952,9 +1952,9 @@ SOFTWARE.
                                                trackWindow.width, trackWindow.height);
     let templateData = template.data;
 
-    // Define offsets between trackBox (centered) and trackWindow (upperleft, top corner)
-    let trackOffsetX = trackBox.left - trackWindow.x;
-    let trackOffsetY = trackBox.top  - trackWindow.y;
+    // Define offsets between trackingBox (centered) and trackWindow (upperleft, top corner)
+    let trackOffsetX = trackingBox.left - trackWindow.x;
+    let trackOffsetY = trackingBox.top  - trackWindow.y;
     
     // Store the width and height of the template image
     let templateWidth = template.width;
@@ -2038,8 +2038,8 @@ SOFTWARE.
         //cv.imshow('templateCanvas', template );
         
         // Draw it on image
-        trackBox.set({ left: xPos, top: yPos });
-        trackBox.setCoords();
+        trackingBox.set({ left: xPos, top: yPos });
+        trackingBox.setCoords();
         roiBox.set({ left: xPos + roiOffsetX*zoomLevel , top: yPos + roiOffsetY*zoomLevel });
         roiBox.setCoords();
   

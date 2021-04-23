@@ -335,11 +335,25 @@
          </td>
         </tr>
         <tr>
+          <td>Use ROI:</td>
+          <td><input id="useROI" type="checkbox"></input></td>
+          <td>Restrict the search to within a region of interest (ROI). Otherwise the complete
+            frame is searched.
+          </td>
+        </tr>
+        <!-- advanced settings -->
+        <tr class="advanced">
+          <td>Show/set ROI:</td>
+          <td><input id="showROI" type="checkbox"></input></td>
+          <td>Show and manually adjust the region of interest (ROI).</td>
+        </tr>
+        <!-- end of advanced settings -->
+        <tr>
           <td>ROI scale:</td>
-          <td><input id="roiScale" type="number" min="0" step="1" max="100"></input></td>
+          <td><input id="roiScale" type="number" min="1" step="1" max="100"></input></td>
           <td>Restrict the search to within a region of interest (ROI) around the track window 
             that is <i>n</i> times larger than the track window (each side), where <i>n</i> is 
-            the ROI scale. A value of 0 (or any value below 1) searches the complete frame.
+            the ROI scale.
           </td>
         </tr>
         <!-- advanced settings -->
