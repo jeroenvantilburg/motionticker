@@ -719,10 +719,6 @@ SOFTWARE.
   let scaleY1Str = "Scale Point1 y [px]";
   let scaleX2Str = "Scale Point2 x [px]";
   let scaleY2Str = "Scale Point2 y [px]";
-  let boxXStr    = "Track Box x [px]";
-  let boxYStr    = "Track Box y [px]";
-  let boxWStr    = "Track Box width [px]";
-  let boxHStr    = "Track Box height [px]";
   
   // Export the data to CSV file after clicking on menu item
   $("#csvExport").click( () => {
@@ -741,11 +737,7 @@ SOFTWARE.
                   [scaleX1Str]: toCSV( scaleCircle1.left/zoomLevel ), 
                   [scaleY1Str]: toCSV( scaleCircle1.top/zoomLevel ),
                   [scaleX2Str]: toCSV( scaleCircle2.left/zoomLevel ), 
-                  [scaleY2Str]: toCSV( scaleCircle2.top/zoomLevel ),
-                  [boxXStr]: toCSV( trackBox.left/zoomLevel ), 
-                  [boxYStr]: toCSV( trackBox.top/zoomLevel ),
-                  [boxWStr]: toCSV( trackBox.width*trackBox.scaleX/zoomLevel ), 
-                  [boxHStr]: toCSV( trackBox.height*trackBox.scaleY/zoomLevel )
+                  [scaleY2Str]: toCSV( scaleCircle2.top/zoomLevel )
                  } );
 
     // Remove velocity and/or acceleration depending on user setting
@@ -851,7 +843,7 @@ SOFTWARE.
     
     // Create a download file based on the video name
     let videoFile = $('#videoInput').prop('files')[0];
-    let videoName = (typeof videoFile === "undefined" ) ? "data" : videoFile.name;
+    let videoName = (typeof videoFile === "undefined" ) ? "data." : videoFile.name;
     let filename = prompt("Save as...", videoName.substr(0, videoName.lastIndexOf('.'))+".csv");
     if (filename != null && filename != "") {
       download( filename, csv);
@@ -913,15 +905,6 @@ SOFTWARE.
           updateOrigin( toNumber( meta[origXStr] ), toNumber( meta[origYStr] ) );
           updateScale( toNumber( meta[scaleStr] ) );
           
-          // Update the track box
-          if( isNumeric( meta[boxXStr] ) && isNumeric( meta[boxYStr] ) &&
-              isNumeric( meta[boxWStr] ) && isNumeric( meta[boxHStr] ) ) {
-            trackBox.set({ left: toNumber( meta[boxXStr] )*zoomLevel, 
-                               top: toNumber( meta[boxYStr] )*zoomLevel,
-                             width: toNumber( meta[boxWStr] )*zoomLevel/trackBox.scaleX,
-                             height:toNumber( meta[boxHStr] )*zoomLevel/trackBox.scaleY });
-          }
-
           // Add raw data
           for(let i=1; i<results.data.length; ++i ){
             let item = results.data[i];
