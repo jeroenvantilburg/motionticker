@@ -167,6 +167,7 @@ SOFTWARE.
     } 
   }
   $("input[type=text]").on("keydown", blurOnEnter );
+  $("input[type=number]").on("keydown", blurOnEnter );
 
   // Put cursor always at last position when clicking on input text element
   $(document).on('focus', 'input[type=text]', function () {    
