@@ -17,7 +17,7 @@ var urlsToCache = [
   'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.3.1/fabric.min.js',
-  // 'https://docs.opencv.org/4.5.1/opencv.js',
+  'scripts/opencv.js',
   //'videos/demo_bounching_ball.mp4',
   'apple-touch-icon.png',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css',
@@ -32,8 +32,8 @@ self.addEventListener('install', function(event) {
         console.log('Opened cache');
 
         // Add manually due to CORS restriction on opencv.org
-        const requestCV = new Request('https://docs.opencv.org/4.5.1/opencv.js', { mode: 'no-cors' });
-        fetch(requestCV).then(response => cache.put(requestCV, response));
+        //const requestCV = new Request('https://docs.opencv.org/4.5.1/opencv.js', { mode: 'no-cors' });
+        //fetch(requestCV).then(response => cache.put(requestCV, response));
 
         return cache.addAll(urlsToCache);
       })
