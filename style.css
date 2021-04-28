@@ -22,6 +22,10 @@ pre {
   font-family: "Courier New",Courier,Arial,Verdana;
 }
 
+ul, ol {
+  margin: 0px;
+}
+
 /* Input and select boxes */
 input, select {
   text-align: right;
