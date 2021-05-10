@@ -5,6 +5,8 @@ var urlsToCache = [
   'index.html',
   'style.css',
   'favicon.ico',
+  'site.webmanifest',
+  'sw.js',
   'scripts/MediaInfo.js',
   'scripts/MediaInfoWasm.wasm',
   'scripts/motionticker.js',
