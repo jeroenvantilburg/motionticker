@@ -54,22 +54,22 @@
     <div class="page">  
 	  	<div class="page-header">               
         <div class="center">
-          <button id="startAnalysis" class="main-button button-on" disabled>Start analysis</button>
-          <input id="automaticAnalysis" name="automaticAnalysis" type="checkbox" disabled></input>
-          <label for="automaticAnalysis">automatic</label>
+          <button title="Start/Stop the video analysis" id="startAnalysis" class="main-button button-on" disabled>Start analysis</button>
+          <input title="Automatically track the object in the selection window" id="automaticAnalysis" name="automaticAnalysis" type="checkbox" disabled></input>
+          <label title="Automatically track the object in the selection window" for="automaticAnalysis">automatic</label>
         </div>
         <div class="center">
            <nobr id="statusMsg"></nobr>
         </div>
         <div class="center">
-          <button id="prev" class="player" disabled><i class="fa fa-step-backward"></i></button>
-          <button id="play" class="player" disabled><i class="fa fa-play"></i></button>
-          <button id="next" class="player" disabled><i class="fa fa-step-forward"></i></button>
+          <button title="Go to previous frame" id="prev" class="player" disabled><i class="fa fa-step-backward"></i></button>
+          <button title="Play / Pause" id="play" class="player" disabled><i class="fa fa-play"></i></button>
+          <button title="Go to next frame" id="next" class="player" disabled><i class="fa fa-step-forward"></i></button>
           <input id="slider" type="range" min="0" max="0" step=1 value="0" disabled>
           <nobr id="frameNumber">0 / 0</nobr>
-          <button id="zoomOut" class="player" disabled><i class="fa fa-search-minus"></i></button>
-          <button id="zoomIn" class="player" disabled><i class="fa fa-search-plus"></i></button>
-          <button id="showMediaInfo" class="player" disabled><i class="fa fa-info"></i></button>
+          <button title="Zoom out" id="zoomOut" class="player" disabled><i class="fa fa-search-minus"></i></button>
+          <button title="Zoom in" id="zoomIn" class="player" disabled><i class="fa fa-search-plus"></i></button>
+          <button title="Show video file info" id="showMediaInfo" class="player" disabled><i class="fa fa-info"></i></button>
       </div>
       </div>
       <div class="page-content">
@@ -90,16 +90,17 @@
       <div class="side-content">
         <table style="border-spacing: 0;">
           <tr>
-            <td>Frame rate:</td>
-            <td><input id="fpsInput" type="text" style="width:80px"></input> fps</td>
+            <td title="Set the frame rate (frames per second) manually">Frame rate:</td>
+            <td title="Set the frame rate (frames per second) manually"><input id="fpsInput" type="text" style="width:80px"></input> fps</td>
           </tr>
           <tr>
-            <td>Scale:</td>
-            <td><input id="scaleInput" type="text" style="width:80px"></input> px/m</td>
+            <td title="Set the scale in pixels per meter">Scale:</td>
+            <td title="Set the scale in pixels per meter"><input id="scaleInput" type="text" style="width:80px"></input> px/m</td>
           </tr>
           <tr>
-            <td>Origin (x,y): (</td>
-            <td><input id="originXInput" type="text" style="width:60px"></input>,
+            <td title="Set the origin of your coordinate system in pixel units">Origin (x,y): (</td>
+            <td title="Set the origin of your coordinate system in pixel units">
+                <input id="originXInput" type="text" style="width:60px"></input>,
                 <input id="originYInput" type="text" style="width:60px"></input>) px</td>
           </tr>
         </table>
@@ -118,7 +119,7 @@
   
   <!-- The Modal boxes -->
   <div id="graphModal" class="modal">
-    <div class="modal-content modal-large"> <span class="close">&times;</span>
+    <div class="modal-content modal-large"> <span title="Close window" class="close">&times;</span>
       <div class="chart-container-modal">
         <canvas id="modalChart" class="chart"></canvas>
       </div>
@@ -126,7 +127,7 @@
   </div>
 
   <div id="aboutModal" class="modal">
-    <div class="modal-content modal-small"> <span class="close">&times;</span>
+    <div class="modal-content modal-small"> <span title="Close window" class="close">&times;</span>
       <center>
         <h3>Motion Ticker</h3>
           <img id="about-icon" src="mstile-70x70.png"></img><br clear="all"/><br/>
@@ -138,7 +139,7 @@
   </div>
 
   <div id="helpModal" class="modal">
-    <div class="modal-content"> <span class="close">&times;</span>
+    <div class="modal-content"> <span title="Close window" class="close">&times;</span>
       <h2>Help</h2>
 
       <b>General</b><br/>
@@ -312,7 +313,7 @@
   </div>
 
   <div id="settingsModal" class="modal">
-    <div class="modal-content"> <span class="close">&times;</span>
+    <div class="modal-content"> <span title="Close window" class="close">&times;</span>
       <h2>Settings</h2>
       <table>        
         <tr><th colspan="3">Analysis</th></tr>        
@@ -494,7 +495,7 @@
   </div>
 
   <div id="mediaInfoModal" class="modal">
-    <div class="modal-content"> <span class="close">&times;</span>
+    <div class="modal-content"> <span title="Close window" class="close">&times;</span>
       <h2>Video File Info</h2>      
       <div id="videoInfo"></div>
       <div class="expert">
