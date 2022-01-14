@@ -44,6 +44,7 @@ SOFTWARE.
   let originX, originY; // in pixels
   let videoRotation = 0; // in degrees
   let demoLocation = "videos/demo_bounching_ball.mp4";
+  let videoFormat = "";
 
   // The raw data (all derived data is calculated on the fly)
   let rawData = [];
@@ -1180,6 +1181,9 @@ SOFTWARE.
       let frameRate = MI.Get(MediaInfoModule.Stream.Video, 0, 'FrameRate');
       updateFPS( frameRate );
 
+      // Get the video format
+      videoFormat = MI.Get(MediaInfoModule.Stream.Video, 0, 'Format');
+
       // Finalize
       MI.Close();
       MI.delete();
@@ -1511,7 +1515,7 @@ SOFTWARE.
     let videoInfo = [{ "Name": videoName, "Duration": toCSV(video.duration)+" s", 
                        "Width": video.videoWidth + " px", "Height": video.videoHeight + " px",
                        "Rotation": videoRotation + "&deg;", "MIME type": videoType,
-                       "File size": videoSize }];
+                       "Format": videoFormat, "File size": videoSize }];
     $("#videoInfo").html( convertToTable( videoInfo )  );
   }
   
