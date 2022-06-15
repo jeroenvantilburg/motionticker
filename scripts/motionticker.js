@@ -623,7 +623,7 @@ SOFTWARE.
     $("decimalSep").html( decimalSeparator );
   });
   
-  let delimiter = ",";
+  let delimiter = getDelimiter();
   $("#delimiterInput").val( delimiter );
   $("delimiter").html( delimiter );
   $("#delimiterInput").change( function() { 
@@ -713,6 +713,13 @@ SOFTWARE.
 
     const numberWithDecimalSeparator = 1.1;
     return numberWithDecimalSeparator.toLocaleString(locale).substring(1, 2);
+  }
+
+  function getDelimiter() {
+    // Check if the operating system is Chrome os. If true, then delimiter is ,
+    let chromeOS = (navigator.userAgent.indexOf("CrOS") != -1 );
+    console.log("ChromeOS detected: " + chromeOS);
+    return chromeOS ? "," : ";";
   }
   
   function toCSV(number, precision = 6) { // precision=6 is maximum to be recognised as number
