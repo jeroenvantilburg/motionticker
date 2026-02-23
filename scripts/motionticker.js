@@ -601,6 +601,26 @@ SOFTWARE.
     this.value = integrationTime || "";
   });
 
+  let showTotalPosVelAcc = false;
+  $('#showTotalPosVelAcc').prop('checked',showTotalPosVelAcc);
+  $('#showTotalPosVelAcc').on('change', function(e) {
+    showTotalPosVelAcc = $('#showTotalPosVelAcc').is(':checked');
+    if( showTotalPosVelAcc ){
+      let labelDict = { label: 'tot', fill: 'false', 
+                        pointBackgroundColor: 'black', pointBorderColor: 'black',
+                        borderColor: 'gray', borderWidth: 1 };
+      positionChart.data.datasets.push( labelDict );
+      velocityChart.data.datasets.push( labelDict );
+      accelerationChart.data.datasets.push( labelDict );
+
+    } else {
+      positionChart.data.datasets.pop();
+      velocityChart.data.datasets.pop();
+      accelerationChart.data.datasets.pop();
+    }
+    updatePlots();
+  });
+
   let showVelocity = ($('#velocityChart').css('display') != 'none' );
   $('#showVelocity').prop('checked',showVelocity);
   $('#showVelocity').on('change', function(e) {
@@ -731,10 +751,13 @@ SOFTWARE.
   let timeStr    = "time [s]";
   let posXStr    = "x position [m]";
   let posYStr    = "y position [m]";
+  let posTotStr  = "total position [m]";
   let velXStr    = "x velocity [m/s]";
   let velYStr    = "y velocity [m/s]";
+  let velTotStr  = "total velocity [m/s]";
   let accXStr    = "x acceleration [m/s²]";
   let accYStr    = "y acceleration [m/s²]";
+  let accTotStr  = "total acceleration [m/s²]";
   let fpsStr     = "Frame rate [Hz]";
   let origXStr   = "x origin [px]";
   let origYStr   = "y origin [px]";
@@ -752,8 +775,9 @@ SOFTWARE.
     
     // First line of CSV file contains headers and meta data
     let csvData = [];
-    csvData.push({[timeStr]: "", [posXStr]: "", [posYStr]: "", 
-                  [velXStr]: "", [velYStr]: "", [accXStr]: "", [accYStr]: "",
+    csvData.push({[timeStr]: "", [posXStr]: "", [posYStr]: "", [posTotStr]: "", 
+                  [velXStr]: "", [velYStr]: "", [velTotStr]: "", 
+                  [accXStr]: "", [accYStr]: "", [accTotStr]: "",
                   [fpsStr]: toCSV(FPS), 
                   [origXStr]: toCSV(originX), 
                   [origYStr]: toCSV(originY), 
@@ -765,22 +789,31 @@ SOFTWARE.
                  } );
 
     // Remove velocity and/or acceleration depending on user setting
+    if( showTotalPosVelAcc == false ) {
+      delete csvData[0][posTotStr];      
+    }
     if( showVelocity == false ) {
       delete csvData[0][velXStr];
-      delete csvData[0][velYStr];      
+      delete csvData[0][velYStr];
+    }
+    if( showVelocity == false || showTotalPosVelAcc == false ) {
+      delete csvData[0][velTotStr];
     }
     if( showAcceleration == false ) {
       delete csvData[0][accXStr];
-      delete csvData[0][accYStr];      
+      delete csvData[0][accYStr];
     }
-
+    if( showAcceleration == false || showTotalPosVelAcc == false ) {
+      delete csvData[0][accTotStr];
+    }
     // Fill list with velocities and times
     let velocities = [];
     rawData.forEach(function (item, index) {
       if( index > integrationTime-1 ) {
         let velocity = getVelocity(index - integrationTime, index);
         let frame = (item.t + rawData[index-integrationTime].t)/2;
-        velocities.push({frame: frame, t: velocity.t, x: velocity.x, y: velocity.y});
+        velocities.push({frame: frame, t: velocity.t, x: velocity.x, y: velocity.y, 
+                         tot: Math.sqrt( velocity.x**2 + velocity.y**2) });
       }
     });
     
@@ -794,7 +827,8 @@ SOFTWARE.
         let dt = item.t - prevItem.t;
         let accelX = (item.x - prevItem.x) / dt;
         let accelY = (item.y - prevItem.y) / dt;
-        accelerations.push({frame: frame, t: meanT, x: accelX, y: accelY});
+        accelerations.push({frame: frame, t: meanT, x: accelX, y: accelY,
+                           tot: Math.sqrt(accelX**2 + accelY**2) });
       }
     });
     
@@ -816,7 +850,8 @@ SOFTWARE.
         tempData.push({ frame    : velocities[vIndex].frame,
                         [timeStr]: toCSV( velocities[vIndex].t ), 
                         [velXStr]: toCSV( velocities[vIndex].x ), 
-                        [velYStr]: toCSV( velocities[vIndex].y )}  );
+                        [velYStr]: toCSV( velocities[vIndex].y ),
+                        [velTotStr]: toCSV( velocities[vIndex].tot ) });
         ++vIndex;
       }
       
@@ -824,13 +859,15 @@ SOFTWARE.
       let n = tempData.push({ frame    : thisFrame,
                               [timeStr]: toCSV(time), 
                               [posXStr]: toCSV(pos.x), 
-                              [posYStr]: toCSV(pos.y)}  );        
+                              [posYStr]: toCSV(pos.y),
+                              [posTotStr]: toCSV(Math.sqrt(pos.x**2 + pos.y**2)) });
 
       // if velocity has same frame number merge it with this entry
       if( vIndex < velocities.length && velocities[vIndex].frame - thisFrame < frameTolerance ) { 
         // combine items
         tempData[n-1][velXStr] = toCSV(velocities[vIndex].x);
         tempData[n-1][velYStr] = toCSV(velocities[vIndex].y);
+        tempData[n-1][velTotStr] = toCSV(velocities[vIndex].tot);
         ++vIndex;
       }
     });
@@ -844,7 +881,8 @@ SOFTWARE.
              accelerations[aIndex].frame < thisFrame - frameTolerance ) {
         csvData.push({[timeStr]: toCSV( accelerations[aIndex].t ), 
                       [accXStr]: toCSV( accelerations[aIndex].x ), 
-                      [accYStr]: toCSV( accelerations[aIndex].y )}  );
+                      [accYStr]: toCSV( accelerations[aIndex].y ),
+                      [accTotStr]: toCSV( accelerations[aIndex].tot ) }  );
         ++aIndex;
       }
       // Copy the temporary data to csvData
@@ -856,6 +894,7 @@ SOFTWARE.
         // combine items
         csvData[n-1][accXStr] = toCSV(accelerations[aIndex].x);
         csvData[n-1][accYStr] = toCSV(accelerations[aIndex].y);
+        csvData[n-1][accTotStr] = toCSV(accelerations[aIndex].tot);
         ++aIndex;
       }       
     });
@@ -2112,6 +2151,7 @@ SOFTWARE.
     data: pData,
     options: options
   });
+  positionChart.update();
 
   // Create the velocity chart
   let vData = { datasets: [{ label: 'x', fill: 'false', pointStyle: 'rect',
@@ -2156,14 +2196,17 @@ SOFTWARE.
   function updatePositionPlot() { 
     let xPositions = [];
     let yPositions = [];
+    let totPositions = [];
     rawData.forEach(function (item, index) {
       let time = getTime( item.t );
       let pos = getXYposition( item );
       xPositions.push( {x: time, y: pos.x} );
       yPositions.push( {x: time, y: pos.y} );
+      totPositions.push( {x: time, y: Math.sqrt(pos.x**2 + pos.y**2)} );
     });
     positionChart.data.datasets[0].data = xPositions;
     positionChart.data.datasets[1].data = yPositions;
+    if( showTotalPosVelAcc ) positionChart.data.datasets[2].data = totPositions;
     positionChart.update();  
   }
 
@@ -2171,15 +2214,18 @@ SOFTWARE.
   function updateVelocityPlot() { 
     let xVelocities = [];
     let yVelocities = [];
+    let totVelocities = [];
     rawData.forEach(function (item, index) {
       if( index > integrationTime-1 ) {
         let velocity = getVelocity(index - integrationTime, index);
         xVelocities.push( {x: velocity.t, y: velocity.x} );
         yVelocities.push( {x: velocity.t, y: velocity.y} );
+        totVelocities.push( {x: velocity.t, y: Math.sqrt(velocity.x**2 + velocity.y**2)} );
       }
     });
     velocityChart.data.datasets[0].data = xVelocities;
     velocityChart.data.datasets[1].data = yVelocities;
+    if( showTotalPosVelAcc) velocityChart.data.datasets[2].data = totVelocities;
         
     // Set the time axis to be the same as the position chart
     velocityChart.options.scales.xAxes[0].ticks.suggestedMin = 
@@ -2190,7 +2236,7 @@ SOFTWARE.
     velocityChart.update();  
   }
 
-  // Calcuate the velocity from indeces of two raw data points
+  // Calculate the velocity from indices of two raw data points
   function getVelocity(index1, index2){
     let pos2 = getXYposition( rawData[index2] );    
     let pos1 = getXYposition( rawData[index1] );
@@ -2203,7 +2249,7 @@ SOFTWARE.
     return { t: meanT, x : velocityX, y : velocityY }; 
   }
 
-  // Update the acceletion plot
+  // Update the acceleration plot
   function updateAccelerationPlot() { 
     let xAcceleration = [];
     let xVelocities = velocityChart.data.datasets[0].data;
@@ -2221,8 +2267,14 @@ SOFTWARE.
         yAcceleration.push( {x: acceleration.t, y: acceleration.a} );
       }
     });
+    let totAcceleration = [];
+    xAcceleration.forEach( (xAcc, index) => {
+      yAcc = yAcceleration[index];
+      totAcceleration.push( {x: xAcc.x, y: Math.sqrt(xAcc.y**2 + yAcc.y**2) } );
+    });
     accelerationChart.data.datasets[0].data = xAcceleration;
     accelerationChart.data.datasets[1].data = yAcceleration;
+    if( showTotalPosVelAcc) accelerationChart.data.datasets[2].data = totAcceleration;
     
     // Set the time axis to be the same as the position chart
     accelerationChart.options.scales.xAxes[0].ticks.suggestedMin =
@@ -2230,11 +2282,10 @@ SOFTWARE.
     accelerationChart.options.scales.xAxes[0].ticks.suggestedMax = 
       positionChart.scales["x-axis-0"].max;
 
-
     accelerationChart.update();  
   }
 
-  // Calcuate the acceleration from velocity objects
+  // Calculate the acceleration from velocity objects
   function getAcceleration(velocity1, velocity2){
     let dt = velocity2.x - velocity1.x;
     let meanT = 0.5*( velocity1.x + velocity2.x );
