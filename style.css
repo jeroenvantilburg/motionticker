@@ -53,15 +53,20 @@ input:disabled+label {
 }
 
 /* Styling for Chartjs charts */
-.chart {
+.chart, .chartModal {
   border:1px solid #ccc;
 }
 
 .chart-container {
+  position: relative;
   width: 350px;
   height: 250px;
 }
-
+.chart-zoom-button {
+  position: absolute; 
+  top: 5px; 
+  left: 60px;
+}
 /* Video and its canvas */
 .container video, .container canvas {
   position:absolute;

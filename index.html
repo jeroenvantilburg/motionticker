@@ -106,12 +106,15 @@
         </table>
         <div class="chart-container">
           <canvas id="positionChart" class="chart"></canvas>
+          <button class="chart-zoom-button"><i class="fa fa-search-plus"></i></button>
         </div>
         <div class="chart-container">
           <canvas id="velocityChart" class="chart"></canvas>
+          <button class="chart-zoom-button"><i class="fa fa-search-plus"></i></button>
         </div>
-        <div class="chart-container">
-          <canvas id="accelerationChart" class="chart" style="display: none"></canvas>
+        <div class="chart-container" id="accelerationContainer" style="display: none">
+          <canvas id="accelerationChart" class="chart"></canvas>
+          <button class="chart-zoom-button"><i class="fa fa-search-plus"></i></button>
         </div>
       </div>
     </div>
@@ -121,7 +124,7 @@
   <div id="graphModal" class="modal">
     <div class="modal-content modal-large"> <span title="Close window" class="close">&times;</span>
       <div class="chart-container-modal">
-        <canvas id="modalChart" class="chart"></canvas>
+        <canvas id="modalChart" class="chartModal"></canvas>
       </div>
     </div>
   </div>

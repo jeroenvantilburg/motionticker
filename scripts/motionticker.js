@@ -140,7 +140,7 @@ SOFTWARE.
   $("#showAbout").click( evt => { showModal("aboutModal"); } );
   $("#showHelp").click( evt => { showModal("helpModal");} );
   $("#showSettings").click( evt => { showModal("settingsModal");} );
-  $(".chart").click( function() { showModalChart( this ); showModal("graphModal"); });
+  $(".chart-zoom-button").click( function() { showModalChart( this ); showModal("graphModal"); });
   
   // Showing modal box
   function showModal(name) { $("#"+name).toggle(); }
@@ -606,12 +606,18 @@ SOFTWARE.
   $('#showTotalPosVelAcc').on('change', function(e) {
     showTotalPosVelAcc = $('#showTotalPosVelAcc').is(':checked');
     if( showTotalPosVelAcc ){
-      let labelDict = { label: 'tot', fill: 'false', 
+      let labelDictp = { label: 'tot', fill: 'false', 
                         pointBackgroundColor: 'black', pointBorderColor: 'black',
                         borderColor: 'gray', borderWidth: 1 };
-      positionChart.data.datasets.push( labelDict );
-      velocityChart.data.datasets.push( labelDict );
-      accelerationChart.data.datasets.push( labelDict );
+      let labelDictv = { label: 'tot', fill: 'false', 
+                        pointBackgroundColor: 'black', pointBorderColor: 'black',
+                        borderColor: 'gray', borderWidth: 1 };
+      let labelDicta = { label: 'tot', fill: 'false', 
+                        pointBackgroundColor: 'black', pointBorderColor: 'black',
+                        borderColor: 'gray', borderWidth: 1 };
+      positionChart.data.datasets.push( labelDictp );
+      velocityChart.data.datasets.push( labelDictv );
+      accelerationChart.data.datasets.push( labelDicta );
 
     } else {
       positionChart.data.datasets.pop();
@@ -628,11 +634,11 @@ SOFTWARE.
     $('#velocityChart').toggle();
   });
   
-  let showAcceleration = ($('#accelerationChart').css('display') != 'none' );
+  let showAcceleration = ($('#accelerationContainer').css('display') != 'none' );
   $('#showAcceleration').prop('checked',showAcceleration);
   $('#showAcceleration').on('change', function(e) {
     showAcceleration = $('#showAcceleration').is(':checked');
-    $('#accelerationChart').toggle();
+    $('#accelerationContainer').toggle();
   });
   
   let decimalSeparator = getDecimalSeparator();
@@ -2228,10 +2234,13 @@ SOFTWARE.
     if( showTotalPosVelAcc) velocityChart.data.datasets[2].data = totVelocities;
         
     // Set the time axis to be the same as the position chart
-    velocityChart.options.scales.xAxes[0].ticks.suggestedMin = 
-      positionChart.scales["x-axis-0"].min;
-    velocityChart.options.scales.xAxes[0].ticks.suggestedMax = 
-      positionChart.scales["x-axis-0"].max;
+    let positionDataSize = positionChart.data.datasets[0].data.length
+    if( positionDataSize > 0 ) {
+      velocityChart.options.scales.xAxes[0].ticks.suggestedMin = 
+        positionChart.data.datasets[0].data[0].x;
+      velocityChart.options.scales.xAxes[0].ticks.suggestedMax = 
+        positionChart.data.datasets[0].data[positionDataSize-1].x;
+    }
     
     velocityChart.update();  
   }
@@ -2277,11 +2286,14 @@ SOFTWARE.
     if( showTotalPosVelAcc) accelerationChart.data.datasets[2].data = totAcceleration;
     
     // Set the time axis to be the same as the position chart
-    accelerationChart.options.scales.xAxes[0].ticks.suggestedMin =
-      positionChart.scales["x-axis-0"].min;
-    accelerationChart.options.scales.xAxes[0].ticks.suggestedMax = 
-      positionChart.scales["x-axis-0"].max;
-
+    let positionDataSize = positionChart.data.datasets[0].data.length
+    if( positionDataSize > 0 ) {
+      accelerationChart.options.scales.xAxes[0].ticks.suggestedMin = 
+        positionChart.data.datasets[0].data[0].x;
+      accelerationChart.options.scales.xAxes[0].ticks.suggestedMax = 
+        positionChart.data.datasets[0].data[positionDataSize-1].x;
+    }
+    
     accelerationChart.update();  
   }
 
@@ -2296,14 +2308,13 @@ SOFTWARE.
   // Draw and/or update the chart in the modal box
   let modalChart;
   function showModalChart( thisCanvas ) { 
-
     // Get the right chart
     let chart;
     Chart.helpers.each(Chart.instances, function(instance){
-      if( instance.canvas == thisCanvas ) chart = instance;
+      if( instance.canvas == thisCanvas.previousElementSibling ) chart = instance;
     });
     if( !chart ) return;
-    
+
     // create a new chart (only on first click) or just update
     if( (typeof modalChart === "undefined" ) ) {
       ctx = document.getElementById("modalChart").getContext('2d') ;
