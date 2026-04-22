@@ -89,11 +89,30 @@ SOFTWARE.
     }
   }
 
+  // Read the hash from the webaddress
+  function readHash() {
+    let hashString = window.location.hash.substr(1);  
+    if( hashString == "") return;
+    console.log("Applying the setting: "+hashString);
+  
+    // Apply the setting
+    if( hashString == "gl2") {
+      showTotalPosVelAcc = true;
+      $('#showTotalPosVelAcc').prop('checked',showTotalPosVelAcc);
+      $('#showTotalPosVelAcc').trigger("change");
+      hideXY = true;
+      $('#hideXY').prop('checked',hideXY);
+      $('#hideXY').trigger("change");
+    }
+  }
+
   // load all code after the document
   $("document").ready( () => {
     $("#videoImport").removeAttr('disabled'); // Videos can now be imported
     resizeWindow(); // Trigger resize for responsive effect
     setFeedback();
+
+    readHash();
   });
   
   // set the feedback tag
@@ -601,9 +620,32 @@ SOFTWARE.
     this.value = integrationTime || "";
   });
 
+  let hideXY = false;
+  $('#hideXY').prop('checked',hideXY);
+  $('#hideXY').on('change', function(e) {
+    hideXY = $('#hideXY').is(':checked');
+    if( hideXY ){
+      positionChart.data.datasets[0].hidden = true;
+      positionChart.data.datasets[1].hidden = true;
+      velocityChart.data.datasets[0].hidden = true;
+      velocityChart.data.datasets[1].hidden = true;
+      accelerationChart.data.datasets[0].hidden = true;
+      accelerationChart.data.datasets[1].hidden = true;
+    } else {
+      positionChart.data.datasets[0].hidden = false;
+      positionChart.data.datasets[1].hidden = false;
+      velocityChart.data.datasets[0].hidden = false;
+      velocityChart.data.datasets[1].hidden = false;
+      accelerationChart.data.datasets[0].hidden = false;
+      accelerationChart.data.datasets[1].hidden = false;
+    }
+    updatePlots();
+  });
+
   let showTotalPosVelAcc = false;
   $('#showTotalPosVelAcc').prop('checked',showTotalPosVelAcc);
   $('#showTotalPosVelAcc').on('change', function(e) {
+    $('#buttonHideXY').toggle();
     showTotalPosVelAcc = $('#showTotalPosVelAcc').is(':checked');
     if( showTotalPosVelAcc ){
       let labelDictp = { label: 'tot', fill: 'false', 
@@ -618,11 +660,18 @@ SOFTWARE.
       positionChart.data.datasets.push( labelDictp );
       velocityChart.data.datasets.push( labelDictv );
       accelerationChart.data.datasets.push( labelDicta );
-
     } else {
       positionChart.data.datasets.pop();
       velocityChart.data.datasets.pop();
       accelerationChart.data.datasets.pop();
+      positionChart.data.datasets[0].hidden = false;
+      positionChart.data.datasets[1].hidden = false;
+      velocityChart.data.datasets[0].hidden = false;
+      velocityChart.data.datasets[1].hidden = false;
+      accelerationChart.data.datasets[0].hidden = false;
+      accelerationChart.data.datasets[1].hidden = false;
+      hideXY = false;
+      $('#hideXY').prop('checked',hideXY);
     }
     updatePlots();
   });
@@ -631,7 +680,7 @@ SOFTWARE.
   $('#showVelocity').prop('checked',showVelocity);
   $('#showVelocity').on('change', function(e) {
     showVelocity = $('#showVelocity').is(':checked');
-    $('#velocityChart').toggle();
+    $('#velocityContainer').toggle();
   });
   
   let showAcceleration = ($('#accelerationContainer').css('display') != 'none' );
@@ -797,15 +846,18 @@ SOFTWARE.
     // Remove velocity and/or acceleration depending on user setting
     if( showTotalPosVelAcc == false ) {
       delete csvData[0][posTotStr];      
+    } else if( hideXY == true ) {
+      delete csvData[0][posXStr];      
+      delete csvData[0][posYStr];            
     }
-    if( showVelocity == false ) {
+    if( showVelocity == false || hideXY == true ) {
       delete csvData[0][velXStr];
       delete csvData[0][velYStr];
     }
     if( showVelocity == false || showTotalPosVelAcc == false ) {
       delete csvData[0][velTotStr];
     }
-    if( showAcceleration == false ) {
+    if( showAcceleration == false || hideXY == true ) {
       delete csvData[0][accXStr];
       delete csvData[0][accYStr];
     }
@@ -2140,7 +2192,8 @@ SOFTWARE.
   let options= { scales: { xAxes: [{ scaleLabel:{ labelString: 'time (s)', display: true},
                                      type: 'linear', position: 'bottom'}],
                            yAxes: [{ scaleLabel:{ labelString: 'Position (m)', display: true} }] },
-                legend: { align: "end", labels: { boxWidth: 6, usePointStyle: true } } };
+                legend: { align: "end", labels: { boxWidth: 6, usePointStyle: true,},
+                          onClick: (e) => e.stopPropagation() } };
 
   // Position data
   let pData = { datasets: [{ label: 'x', fill: 'false', pointStyle: 'rect',
@@ -2315,17 +2368,21 @@ SOFTWARE.
     });
     if( !chart ) return;
 
+    let myOptions = JSON.parse(JSON.stringify(chart.config.options));
+      // this chart legend is interactive
+    myOptions.legend.onClick = Chart.defaults.global.legend.onClick;
+    
     // create a new chart (only on first click) or just update
     if( (typeof modalChart === "undefined" ) ) {
       ctx = document.getElementById("modalChart").getContext('2d') ;
       modalChart = new Chart(ctx, {
         type: chart.config.type,
         data: chart.config.data, 
-        options: chart.config.options
+        options: myOptions
       });
     } else { // update
       modalChart.data = chart.config.data;
-      modalChart.options = chart.config.options;
+      modalChart.options = myOptions;
       modalChart.update();   
     } 
   } 
